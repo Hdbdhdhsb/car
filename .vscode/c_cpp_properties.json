@@ -1,0 +1,48 @@
+{
+    "configurations": [
+        {
+            "name": "stc32g144k246",
+            "cStandard": "c89",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "${default}",
+            "includePath": [
+                "D:/KEIL/C251/INC",
+                "libraries/zf_common",
+                "libraries/zf_components",
+                "libraries/zf_device",
+                "libraries/zf_driver",
+                "project/user",
+                "project/code",
+                "libraries/zf_components/stc32g_usb_lib",
+                "libraries/zf_components/seekfree_assistant"
+            ],
+            "defines": [
+                "__C251__",
+                "__VSCODE_C251__",
+                "reentrant=",
+                "compact=",
+                "small=",
+                "large=",
+                "data=",
+                "idata=",
+                "pdata=",
+                "bdata=",
+                "edata=",
+                "xdata=",
+                "code=",
+                "bit=char",
+                "sbit=char",
+                "sfr=char",
+                "sfr16=int",
+                "sfr32=int",
+                "interrupt=",
+                "using=",
+                "far=",
+                "_at_=",
+                "_priority_=",
+                "_task_="
+            ]
+        }
+    ],
+    "version": 4
+}

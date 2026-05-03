@@ -1,0 +1,130 @@
+C251 COMPILER V5.60.0,  main                                                               04/05/26  00:28:51  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE main
+OBJECT MODULE PLACED IN .\out_file\main.obj
+COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\user\main.c LARGE ROM(HUGE) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BROWSE IN
+                    -CDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;..\user
+                    -;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_assistant) DEBUG PRINT(.\ou
+                    -t_file\main.lst) TABS(2) OBJECT(.\out_file\main.obj) 
+
+stmt  level    source
+
+    1          /********************************************************************************************************
+             -*************
+    2          * STC32G144K Opensourec Library ¼´£¨STC32G144K ¿ªÔ´¿â£©ÊÇÒ»¸ö»ùÓÚ¹Ù·½ SDK ½Ó¿ÚµÄµÚÈý·½¿ªÔ´¿â
+    3          * Copyright (c) 2025 SEEKFREE Öð·É¿Æ¼¼
+    4          *
+    5          * ±¾ÎÄ¼þÊÇSTC32G144K¿ªÔ´¿âµÄÒ»²¿·Ö
+    6          *
+    7          * STC32G144K ¿ªÔ´¿â ÊÇÃâ·ÑÈí¼þ
+    8          * Äú¿ÉÒÔ¸ù¾Ý×ÔÓÉÈí¼þ»ù½ð»á·¢²¼µÄ GPL£¨GNU General Public License£¬¼´ GNUÍ¨ÓÃ¹«¹²Ðí¿ÉÖ¤£©µÄÌõ¿î
+    9          * ¼´ GPL µÄµÚ3°æ£¨¼´ GPL3.0£©»ò£¨ÄúÑ¡ÔñµÄ£©ÈÎºÎºóÀ´µÄ°æ±¾£¬ÖØÐÂ·¢²¼ºÍ/»òÐÞ¸ÄËü
+   10          *
+   11          * ±¾¿ªÔ´¿âµÄ·¢²¼ÊÇÏ£ÍûËüÄÜ·¢»Ó×÷ÓÃ£¬µ«²¢Î´¶ÔÆä×÷ÈÎºÎµÄ±£Ö¤
+   12          * ÉõÖÁÃ»ÓÐÒþº¬µÄÊÊÏúÐÔ»òÊÊºÏÌØ¶¨ÓÃÍ¾µÄ±£Ö¤
+   13          * ¸ü¶àÏ¸½ÚÇë²Î¼û GPL
+   14          *
+   15          * ÄúÓ¦¸ÃÔÚÊÕµ½±¾¿ªÔ´¿âµÄÍ¬Ê±ÊÕµ½Ò»·Ý GPL µÄ¸±±¾
+   16          * Èç¹ûÃ»ÓÐ£¬Çë²ÎÔÄ<https://www.gnu.org/licenses/>
+   17          *
+   18          * ¶îÍâ×¢Ã÷£º
+   19          * ±¾¿ªÔ´¿âÊ¹ÓÃ GPL3.0 ¿ªÔ´Ðí¿ÉÖ¤Ð­Òé ÒÔÉÏÐí¿ÉÉêÃ÷ÎªÒëÎÄ°æ±¾
+   20          * Ðí¿ÉÉêÃ÷Ó¢ÎÄ°æÔÚ libraries/doc ÎÄ¼þ¼ÐÏÂµÄ GPL3_permission_statement.txt ÎÄ¼þÖÐ
+   21          * Ðí¿ÉÖ¤¸±±¾ÔÚ libraries ÎÄ¼þ¼ÐÏÂ ¼´¸ÃÎÄ¼þ¼ÐÏÂµÄ LICENSE ÎÄ¼þ
+   22          * »¶Ó­¸÷Î»Ê¹ÓÃ²¢´«²¥±¾³ÌÐò µ«ÐÞ¸ÄÄÚÈÝÊ±±ØÐë±£ÁôÖð·É¿Æ¼¼µÄ°æÈ¨ÉùÃ÷£¨¼´±¾ÉùÃ÷£©
+   23          *
+   24          * ÎÄ¼þÃû³Æ          
+   25          * ¹«Ë¾Ãû³Æ          ³É¶¼Öð·É¿Æ¼¼ÓÐÏÞ¹«Ë¾
+   26          * °æ±¾ÐÅÏ¢          ²é¿´ libraries/doc ÎÄ¼þ¼ÐÄÚ version ÎÄ¼þ °æ±¾ËµÃ÷
+   27          * ¿ª·¢»·¾³          MDK FOR C251
+   28          * ÊÊÓÃÆ½Ì¨          STC32G144K
+   29          * µêÆÌÁ´½Ó          https://seekfree.taobao.com/
+   30          *
+   31          * ÐÞ¸Ä¼ÇÂ¼
+   32          * ÈÕÆÚ              ×÷Õß           ±¸×¢
+   33          * 2025-11-20        ´óW            first version
+   34          *********************************************************************************************************
+             -***********/
+   35          #include "main.h"
+   36          
+   37          volatile uint32 g_sysTick_ms = 0;
+   38          
+   39          void main(void)
+   40          {   
+   41   1          static uint32 current_tick = 0;
+   42   1          static uint32 last_10ms_tick = 0;
+   43   1          static uint32 last_200ms_tick = 0;
+   44   1      
+   45   1          pid_ctrl_parameter_t pid_param = {
+   46   1              0.8f,
+   47   1              0.2f,
+   48   1              0.1f,
+   49   1              600.0f,
+   50   1              -600.0f,
+   51   1              400.0f,
+   52   1              -400.0f,
+   53   1              PID_CAL_TYPE_INCREMENTAL
+   54   1          };
+C251 COMPILER V5.60.0,  main                                                               04/05/26  00:28:51  PAGE 2   
+
+   55   1          float target = 0;
+   56   1      
+   57   1          clock_init(SYSTEM_CLOCK_96M);         
+   58   1          debug_init();   
+   59   1          pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                         
+   60   1          gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL); 
+   61   1          uart_init(UART_2, 115200, UART2_TX, UART2_RX);
+   62   1      
+   63   1          while(g_sysTick_ms <=1500);                         //ÕâÀï¿ÉÒÔ·ÅÈë°´¼ü¼ì²â£¬È»¶øÄ¿Ç°¿ª·¢°åÉÏ°´¼üÒý½ÅÊ
+             -ÇÐü¿ÕµÄ£¬¹ÊÑÓÊ±´¦Àí
+   64   1      
+   65   1          enable_control(CTRL_PIN);
+   66   1          send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
+   67   1          send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);
+   68   1          while(1)
+   69   1          {   
+   70   2              current_tick = g_sysTick_ms;
+   71   2      
+   72   2              if (current_tick - last_10ms_tick >= 10) {
+   73   3                  last_10ms_tick = current_tick;
+   74   3                  target = sin(current_tick / 5000.0 * 2 * 3.14159) * 20;             // Éú³ÉÒ»¸öÖÜÆÚÎª5Ãë£¬Õñ·
+             -ùÎª20µÄÕýÏÒ²¨
+   75   3                  send_error_data(target*6, target*10, UART_2);                         
+   76   3              }
+   77   2      
+   78   2              if((current_tick - last_200ms_tick) >= 200){
+   79   3                  last_200ms_tick = current_tick; 
+   80   3                  gpio_toggle_level(IO_P33); 
+   81   3              }
+   82   2          }
+   83   1      }
+   84          
+   85          
+   86          void sys_tick_handler (void){
+   87   1          g_sysTick_ms++;                                                                 // ÏµÍ³ÐÄÌø       
+   88   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =    ------     ------
+  ecode size           =       537     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =        50     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        68     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
