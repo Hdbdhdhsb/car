@@ -1,12 +1,13 @@
-C251 COMPILER V5.60.0,  PID                                                                04/05/26  00:28:51  PAGE 1   
+C251 COMPILER V5.60.0,  PID                                                                09/05/26  22:18:16  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE PID
 OBJECT MODULE PLACED IN .\out_file\PID.obj
-COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\code\PID\PID.c LARGE ROM(HUGE) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BROWSE
-                    - INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;..\u
-                    -ser;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_assistant) DEBUG PRINT(.
-                    -\out_file\PID.lst) TABS(2) OBJECT(.\out_file\PID.obj) 
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\code\PID\PID.c LARGE ROM(HUGE) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BRO
+                    -WSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;.
+                    -.\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_assistant;..\code\Cam
+                    -era;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRINT(.\out_file\PID.lst) TAB
+                    -S(3) OBJECT(.\out_file\PID.obj) 
 
 stmt  level    source
 
@@ -65,9 +66,9 @@ stmt  level    source
    53   1          float output;
    54   1          output = (error - pid->previous_err1) * pid->Kp +
    55   1                   (error - 2.0f * pid->previous_err1 + pid->previous_err2) * pid->Kd +
-   56   1                   error * pid->Ki +
-C251 COMPILER V5.60.0,  PID                                                                04/05/26  00:28:51  PAGE 2   
+C251 COMPILER V5.60.0,  PID                                                                09/05/26  22:18:16  PAGE 2   
 
+   56   1                   error * pid->Ki +
    57   1                   pid->last_output;
    58   1      
    59   1          output = PID_MIN(output, pid->max_output);
@@ -80,105 +81,104 @@ stmt  level    source
    66   1      }
    67          
    68          /* 创建控制块 */
-   69          /* 创建控制块 */
-   70          uint8 pid_new_control_block(const pid_ctrl_parameter_t *init_param,
-   71                                      pid_ctrl_block_handle_t *ret_pid)
-   72          {
-   73   1          uint8 i;
-   74   1          if (init_param == NULL || ret_pid == NULL) return PID_ERR_INV;
-   75   1      
-   76   1          for (i = 0; i < MAX_PID_BLOCKS; i++) {
-   77   2              if (pid_used[i] == false) {
-   78   3                  pid_used[i] = true;
-   79   3                  pid_pool[i].Kp           = init_param->kp;
-   80   3                  pid_pool[i].Ki           = init_param->ki;
-   81   3                  pid_pool[i].Kd           = init_param->kd;
-   82   3                  pid_pool[i].max_output   = init_param->max_output;
-   83   3                  pid_pool[i].min_output   = init_param->min_output;
-   84   3                  pid_pool[i].max_integral = init_param->max_integral;
-   85   3                  pid_pool[i].min_integral = init_param->min_integral;
-   86   3      
-   87   3                  if (init_param->cal_type == PID_CAL_TYPE_INCREMENTAL)
-   88   3                      pid_pool[i].calculate_func = pid_calc_incremental;
-   89   3                  else
-   90   3                      pid_pool[i].calculate_func = pid_calc_positional;
-   91   3      
-   92   3                  pid_pool[i].integral_err = 0.0f;
-   93   3                  pid_pool[i].previous_err1 = 0.0f;
-   94   3                  pid_pool[i].previous_err2 = 0.0f;
-   95   3                  pid_pool[i].last_output = 0.0f;
-   96   3      
-   97   3                  *ret_pid = &pid_pool[i];
-   98   3                  return PID_OK;
-   99   3              }
-  100   2          }
-  101   1          return PID_ERR_MEM;
-  102   1      }
-  103          
-  104          /* 删除控制块 */
-  105          uint8 pid_del_control_block(pid_ctrl_block_handle_t pid)
-  106          {
-  107   1          uint8 i;
-  108   1          unsigned long addr_pid, addr_pool;   /* 用于整数比较，避免指针空间警告 */
-  109   1      
-  110   1          if (pid == NULL) return PID_ERR_INV;
-  111   1      
-  112   1          addr_pid = (unsigned long)pid;
-  113   1          for (i = 0; i < MAX_PID_BLOCKS; i++) {
-  114   2              addr_pool = (unsigned long)&pid_pool[i];
-  115   2              if (addr_pid == addr_pool) {
-  116   3                  if (pid_used[i]) {
-  117   4                      pid_used[i] = false;
-  118   4                      return PID_OK;
-  119   4                  } else {
-  120   4                      return PID_ERR_INV;     /* 重复释放 */
-  121   4                  }
-  122   3              }
-C251 COMPILER V5.60.0,  PID                                                                04/05/26  00:28:51  PAGE 3   
+   69          uint8 pid_new_control_block(const pid_ctrl_parameter_t *init_param,
+   70                                      pid_ctrl_block_handle_t *ret_pid)
+   71          {
+   72   1          uint8 i;
+   73   1          if (init_param == NULL || ret_pid == NULL) return PID_ERR_INV;
+   74   1      
+   75   1          for (i = 0; i < MAX_PID_BLOCKS; i++) {
+   76   2              if (pid_used[i] == false) {
+   77   3                  pid_used[i] = true;
+   78   3                  pid_pool[i].Kp           = init_param->kp;
+   79   3                  pid_pool[i].Ki           = init_param->ki;
+   80   3                  pid_pool[i].Kd           = init_param->kd;
+   81   3                  pid_pool[i].max_output   = init_param->max_output;
+   82   3                  pid_pool[i].min_output   = init_param->min_output;
+   83   3                  pid_pool[i].max_integral = init_param->max_integral;
+   84   3                  pid_pool[i].min_integral = init_param->min_integral;
+   85   3      
+   86   3                  if (init_param->cal_type == PID_CAL_TYPE_INCREMENTAL)
+   87   3                      pid_pool[i].calculate_func = pid_calc_incremental;
+   88   3                  else
+   89   3                      pid_pool[i].calculate_func = pid_calc_positional;
+   90   3      
+   91   3                  pid_pool[i].integral_err = 0.0f;
+   92   3                  pid_pool[i].previous_err1 = 0.0f;
+   93   3                  pid_pool[i].previous_err2 = 0.0f;
+   94   3                  pid_pool[i].last_output = 0.0f;
+   95   3      
+   96   3                  *ret_pid = &pid_pool[i];
+   97   3                  return PID_OK;
+   98   3              }
+   99   2          }
+  100   1          return PID_ERR_MEM;
+  101   1      }
+  102          
+  103          /* 删除控制块 */
+  104          uint8 pid_del_control_block(pid_ctrl_block_handle_t pid)
+  105          {
+  106   1          uint8 i;
+  107   1          unsigned long addr_pid, addr_pool;   /* 用于整数比较，避免指针空间警告 */
+  108   1      
+  109   1          if (pid == NULL) return PID_ERR_INV;
+  110   1      
+  111   1          addr_pid = (unsigned long)pid;
+  112   1          for (i = 0; i < MAX_PID_BLOCKS; i++) {
+  113   2              addr_pool = (unsigned long)&pid_pool[i];
+  114   2              if (addr_pid == addr_pool) {
+  115   3                  if (pid_used[i]) {
+  116   4                      pid_used[i] = false;
+  117   4                      return PID_OK;
+  118   4                  } else {
+  119   4                      return PID_ERR_INV;     /* 重复释放 */
+  120   4                  }
+  121   3              }
+C251 COMPILER V5.60.0,  PID                                                                09/05/26  22:18:16  PAGE 3   
 
-  123   2          }
-  124   1          return PID_ERR_INV;                 /* 无效句柄 */
-  125   1      }
-  126          
-  127          /* 更新参数 */
-  128          uint8 pid_update_parameters(pid_ctrl_block_handle_t pid, const pid_ctrl_parameter_t *params)
-  129          {
-  130   1          if (pid == NULL || params == NULL) return PID_ERR_INV;
-  131   1      
-  132   1          pid->Kp = params->kp;
-  133   1          pid->Ki = params->ki;
-  134   1          pid->Kd = params->kd;
-  135   1          pid->max_output = params->max_output;
-  136   1          pid->min_output = params->min_output;
-  137   1          pid->max_integral = params->max_integral;
-  138   1          pid->min_integral = params->min_integral;
-  139   1      
-  140   1          if (params->cal_type == PID_CAL_TYPE_INCREMENTAL)
-  141   1              pid->calculate_func = pid_calc_incremental;
-  142   1          else
-  143   1              pid->calculate_func = pid_calc_positional;
-  144   1      
-  145   1          return PID_OK;
-  146   1      }
-  147          
-  148          /* 计算输出 */
-  149          uint8 pid_compute(pid_ctrl_block_handle_t pid, float input_error, float *ret_result)
-  150          {
-  151   1          if (pid == NULL || ret_result == NULL) return PID_ERR_INV;
-  152   1          *ret_result = pid->calculate_func(pid, input_error);
-  153   1          return PID_OK;
-  154   1      }
-  155          
-  156          /* 重置历史状态 */
-  157          uint8 pid_reset_ctrl_block(pid_ctrl_block_handle_t pid)
-  158          {
-  159   1          if (pid == NULL) return PID_ERR_INV;
-  160   1          pid->integral_err = 0.0f;
-  161   1          pid->previous_err1 = 0.0f;
-  162   1          pid->previous_err2 = 0.0f;
-  163   1          pid->last_output = 0.0f;
-  164   1          return PID_OK;
-  165   1      }
+  122   2          }
+  123   1          return PID_ERR_INV;                 /* 无效句柄 */
+  124   1      }
+  125          
+  126          /* 更新参数 */
+  127          uint8 pid_update_parameters(pid_ctrl_block_handle_t pid, const pid_ctrl_parameter_t *params)
+  128          {
+  129   1          if (pid == NULL || params == NULL) return PID_ERR_INV;
+  130   1      
+  131   1          pid->Kp = params->kp;
+  132   1          pid->Ki = params->ki;
+  133   1          pid->Kd = params->kd;
+  134   1          pid->max_output = params->max_output;
+  135   1          pid->min_output = params->min_output;
+  136   1          pid->max_integral = params->max_integral;
+  137   1          pid->min_integral = params->min_integral;
+  138   1      
+  139   1          if (params->cal_type == PID_CAL_TYPE_INCREMENTAL)
+  140   1              pid->calculate_func = pid_calc_incremental;
+  141   1          else
+  142   1              pid->calculate_func = pid_calc_positional;
+  143   1      
+  144   1          return PID_OK;
+  145   1      }
+  146          
+  147          /* 计算输出 */
+  148          uint8 pid_compute(pid_ctrl_block_handle_t pid, float input_error, float *ret_result)
+  149          {
+  150   1          if (pid == NULL || ret_result == NULL) return PID_ERR_INV;
+  151   1          *ret_result = pid->calculate_func(pid, input_error);
+  152   1          return PID_OK;
+  153   1      }
+  154          
+  155          /* 重置历史状态 */
+  156          uint8 pid_reset_ctrl_block(pid_ctrl_block_handle_t pid)
+  157          {
+  158   1          if (pid == NULL) return PID_ERR_INV;
+  159   1          pid->integral_err = 0.0f;
+  160   1          pid->previous_err1 = 0.0f;
+  161   1          pid->previous_err2 = 0.0f;
+  162   1          pid->last_output = 0.0f;
+  163   1          return PID_OK;
+  164   1      }
 
 
 Module Information          Static   Overlayable

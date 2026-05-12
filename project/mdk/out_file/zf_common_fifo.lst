@@ -1,12 +1,13 @@
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 1   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_common_fifo
 OBJECT MODULE PLACED IN .\out_file\zf_common_fifo.obj
-COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\..\libraries\zf_common\zf_common_fifo.c LARGE ROM(HUGE) WARNINGLEVEL(3
-                    -) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..
-                    -\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree
-                    -_assistant) DEBUG PRINT(.\out_file\zf_common_fifo.lst) TABS(2) OBJECT(.\out_file\zf_common_fifo.obj) 
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_common\zf_common_fifo.c LARGE ROM(HUGE) WARNINGLEVE
+                    -L(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..
+                    -\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekf
+                    -ree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRIN
+                    -T(.\out_file\zf_common_fifo.lst) TABS(3) OBJECT(.\out_file\zf_common_fifo.obj) 
 
 stmt  level    source
 
@@ -65,9 +66,9 @@ stmt  level    source
    49          static void fifo_head_offset (fifo_struct *fifo, uint32 offset)
    50          {
    51   1          fifo->head += offset;
-   52   1          
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 2   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 2   
 
+   52   1          
    53   1          while(fifo->max <= fifo->head)                                              // 如果范围超过则减缓冲区
              -大小 直到小于最大缓冲区大小
    54   1          {
@@ -107,9 +108,9 @@ stmt  level    source
              -------------
    84          fifo_state_enum fifo_clear (fifo_struct *fifo)
    85          {
-   86   1        fifo_state_enum return_state = FIFO_SUCCESS;                                // 操作结果初值
+   86   1         fifo_state_enum return_state = FIFO_SUCCESS;                                // 操作结果初值
    87   1          zf_assert(NULL != fifo);
-   88   1        
+   88   1         
    89   1          do
    90   1          {
    91   2              if(FIFO_IDLE != fifo->execution)                                        // 判断是否当前 FIFO 是否
@@ -133,9 +134,9 @@ stmt  level    source
   108   1          return return_state;
   109   1      }
   110          
-  111          //-------------------------------------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 3   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 3   
 
+  111          //-------------------------------------------------------------------------------------------------------
              -------------
   112          // 函数简介     FIFO 查询当前数据个数
   113          // 参数说明     *fifo               FIFO 对象指针
@@ -201,9 +202,9 @@ stmt  level    source
   166          
   167          //-------------------------------------------------------------------------------------------------------
              -------------
-  168          // 函数简介     向 FIFO 中写入数据
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 4   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 4   
 
+  168          // 函数简介     向 FIFO 中写入数据
   169          // 参数说明     *fifo               FIFO 对象指针
   170          // 参数说明     *dat                数据来源缓冲区指针
   171          // 参数说明     length              需要写入的数据长度
@@ -216,8 +217,8 @@ stmt  level    source
   177          {
   178   1          fifo_state_enum return_state = FIFO_SUCCESS;                                // 操作结果初值
   179   1          uint32 temp_length = 0;
-  180   1        zf_assert(NULL != fifo);
-  181   1        
+  180   1         zf_assert(NULL != fifo);
+  181   1         
   182   1          do
   183   1          {
   184   2              if(NULL == dat)
@@ -269,9 +270,9 @@ stmt  level    source
   226   6                              fifo_head_offset(fifo, length - temp_length);           // 头指针偏移
   227   6                          }break;
   228   5                          case FIFO_DATA_32BIT:
-  229   5                          {
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 5   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 5   
 
+  229   5                          {
   230   6                              memcpy(
   231   6                                  &(((uint32 *)fifo->buffer)[fifo->head]),
   232   6                                  dat, temp_length * 4);                              // 拷贝第一段数据
@@ -337,9 +338,9 @@ stmt  level    source
   289          //// 备注信息
   290          ////-----------------------------------------------------------------------------------------------------
              ---------------
-  291          //fifo_state_enum fifo_read_element (fifo_struct *fifo, void *dat, fifo_operation_enum flag)
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 6   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 6   
 
+  291          //fifo_state_enum fifo_read_element (fifo_struct *fifo, void *dat, fifo_operation_enum flag)
   292          //{
   293          //    zf_assert(NULL != fifo);
   294          //    fifo_state_enum return_state = FIFO_SUCCESS;                                // 操作结果初值
@@ -405,9 +406,9 @@ stmt  level    source
   349          // 返回参数     fifo_state_enum     操作状态
   350          // 使用示例     zf_log(fifo_read_buffer(&fifo, data, &length, FIFO_READ_ONLY) == FIFO_SUCCESS, "fifo_read
              -_buffer error");
-  351          // 备注信息
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 7   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 7   
 
+  351          // 备注信息
   352          //-------------------------------------------------------------------------------------------------------
              -------------
   353          fifo_state_enum fifo_read_buffer (fifo_struct *fifo, void *dat, uint32 *length, fifo_operation_enum flag)
@@ -415,10 +416,10 @@ stmt  level    source
   355   1          fifo_state_enum return_state = FIFO_SUCCESS;                                // 操作结果初值
   356   1          uint32 temp_length = 0;
   357   1          uint32 fifo_data_length = 0;
-  358   1        
+  358   1         
   359   1          zf_assert(NULL != fifo);
   360   1          zf_assert(NULL != length);
-  361   1        
+  361   1         
   362   1          do
   363   1          {
   364   2              if(NULL == dat)
@@ -473,9 +474,9 @@ stmt  level    source
   407   6                              memcpy(&(((uint8 *)dat)[temp_length]), fifo->buffer, *length - temp_length);
   408   6                          }break;
   409   5                          case FIFO_DATA_16BIT:
-  410   5                          {
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 8   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 8   
 
+  410   5                          {
   411   6                              memcpy(dat, &(((uint16 *)fifo->buffer)[fifo->end]), temp_length * 2);
   412   6                              memcpy(&(((uint16 *)dat)[temp_length]), fifo->buffer, (*length - temp_length) * 2
              -);
@@ -541,9 +542,9 @@ stmt  level    source
   465          //            return_state = FIFO_BUFFER_NULL;
   466          //        }
   467          //        else
-  468          //        {
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 9   
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 9   
 
+  468          //        {
   469          //            if((FIFO_RESET | FIFO_CLEAR | FIFO_WRITE) & fifo->execution)        // 判断是否当前 FIFO 是
              -否在执行清空或重置操作
   470          //            {
@@ -609,9 +610,9 @@ stmt  level    source
   520          //            fifo->execution &= ~FIFO_READ;                                      // 读操作复位
   521          //        }
   522          
-  523          //        if(FIFO_READ_AND_CLEAN == flag)                                         // 如果选择读取并更改 F
-C251 COMPILER V5.60.0,  zf_common_fifo                                                     03/05/26  21:05:15  PAGE 10  
+C251 COMPILER V5.60.0,  zf_common_fifo                                                     09/05/26  22:18:11  PAGE 10  
 
+  523          //        if(FIFO_READ_AND_CLEAN == flag)                                         // 如果选择读取并更改 F
              -IFO 状态
   524          //        {
   525          //            if((FIFO_RESET | FIFO_CLEAR | FIFO_READ) == fifo->execution)        // 不在 重置 清空 读取 

@@ -1,12 +1,13 @@
-C251 COMPILER V5.60.0,  zf_driver_delay                                                    03/05/26  21:05:16  PAGE 1   
+C251 COMPILER V5.60.0,  zf_driver_delay                                                    09/05/26  22:18:12  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_driver_delay
 OBJECT MODULE PLACED IN .\out_file\zf_driver_delay.obj
-COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\..\libraries\zf_driver\zf_driver_delay.c LARGE ROM(HUGE) WARNINGLEVEL(
-                    -3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\.
-                    -.\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfre
-                    -e_assistant) DEBUG PRINT(.\out_file\zf_driver_delay.lst) TABS(2) OBJECT(.\out_file\zf_driver_delay.obj) 
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_driver\zf_driver_delay.c LARGE ROM(HUGE) WARNINGLEV
+                    -EL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;.
+                    -.\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seek
+                    -free_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRI
+                    -NT(.\out_file\zf_driver_delay.lst) TABS(3) OBJECT(.\out_file\zf_driver_delay.obj) 
 
 stmt  level    source
 
@@ -61,13 +62,13 @@ stmt  level    source
    45          {
    46   1          uint32 edata i = 0;
    47   1      
-   48   1        i = count;
-   49   1        while (i) i--;
+   48   1         i = count;
+   49   1         while (i) i--;
    50   1      }
    51          
-   52          
-C251 COMPILER V5.60.0,  zf_driver_delay                                                    03/05/26  21:05:16  PAGE 2   
+C251 COMPILER V5.60.0,  zf_driver_delay                                                    09/05/26  22:18:12  PAGE 2   
 
+   52          
    53          //-------------------------------------------------------------------------------------------------------
              -------------
    54          // 函数简介     系统延时，使用定时器11
@@ -99,10 +100,10 @@ stmt  level    source
    79   1          period_temp = ((period) / (freq_div + 1));      // 计算自动重装载值
    80   1          temp = (uint16)65535 - period_temp;
    81   1      
-   82   1          T11PS = freq_div;                             // 设置分频值
+   82   1          T11PS = freq_div;                               // 设置分频值
    83   1          T11L = temp;
    84   1          T11H = temp >> 8;
-   85   1          T11CR |= 0x80;                                  // 启动定时器
+   85   1          T11CR |= 0x80;                                   // 启动定时器
    86   1          
    87   1          while(!(T11CR & 0x01));                         // 等待硬件定时器溢出
    88   1      

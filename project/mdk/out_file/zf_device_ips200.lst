@@ -1,12 +1,13 @@
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 1   
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_device_ips200
 OBJECT MODULE PLACED IN .\out_file\zf_device_ips200.obj
-COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\..\libraries\zf_device\zf_device_ips200.c LARGE ROM(HUGE) WARNINGLEVEL
-                    -(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\
-                    -..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfr
-                    -ee_assistant) DEBUG PRINT(.\out_file\zf_device_ips200.lst) TABS(2) OBJECT(.\out_file\zf_device_ips200.obj) 
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_device\zf_device_ips200.c LARGE ROM(HUGE) WARNINGLE
+                    -VEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;
+                    -..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\see
+                    -kfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PR
+                    -INT(.\out_file\zf_device_ips200.lst) TABS(3) OBJECT(.\out_file\zf_device_ips200.obj) 
 
 stmt  level    source
 
@@ -65,9 +66,9 @@ stmt  level    source
              -***********/
    50          
    51          #include "zf_common_clock.h"
-   52          #include "zf_common_debug.h"
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 2   
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 2   
 
+   52          #include "zf_common_debug.h"
    53          #include "zf_common_font.h"
    54          #include "zf_common_function.h"
    55          #include "zf_driver_delay.h"
@@ -86,12 +87,12 @@ stmt  level    source
    68          uint16 ips200_y_max = IPS_WIGHT;
    69          
    70          #if (IPS200_USE_INTERFACE==SOFT_SPI) 
-                 static soft_spi_info_struct            ips200_spi;
-                 #define ips200_write_8bit_data(dat)    soft_spi_write_8bit(&ips200_spi, dat)
-                 #define ips200_write_16bit_data(dat)   soft_spi_write_16bit(&ips200_spi, dat)
+                  static soft_spi_info_struct            ips200_spi;
+                  #define ips200_write_8bit_data(dat)    soft_spi_write_8bit(&ips200_spi, dat)
+                  #define ips200_write_16bit_data(dat)   soft_spi_write_16bit(&ips200_spi, dat)
                #elif (IPS200_USE_INTERFACE==HARDWARE_SPI)
-   75            #define ips200_write_8bit_data(dat)                  spi_dma_write_8bit(IPS200_SPI, dat)
-   76            #define ips200_write_16bit_data(dat)                 spi_dma_write_16bit(IPS200_SPI, dat)
+   75             #define ips200_write_8bit_data(dat)                  spi_dma_write_8bit(IPS200_SPI, dat)
+   76             #define ips200_write_16bit_data(dat)                 spi_dma_write_16bit(IPS200_SPI, dat)
    77              #define ips200_write_16bit_data_array(dat, len)      spi_dma_write_16bit_array(IPS200_SPI, dat, len)
    78          
    79          #endif
@@ -132,15 +133,15 @@ stmt  level    source
   110   1          zf_assert(y2 < ips200_y_max);
   111   1      
   112   1      
-  113   1        ips200_write_index(0x2a);                                               // 列地址设置
-  114   1        ips200_write_16bit_data(x1);
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 3   
+  113   1         ips200_write_index(0x2a);                                               // 列地址设置
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 3   
 
-  115   1        ips200_write_16bit_data(x2);
-  116   1        ips200_write_index(0x2b);                                               // 行地址设置
-  117   1        ips200_write_16bit_data(y1);
-  118   1        ips200_write_16bit_data(y2);
-  119   1        ips200_write_index(0x2c);                                               // 储存器写
+  114   1         ips200_write_16bit_data(x1);
+  115   1         ips200_write_16bit_data(x2);
+  116   1         ips200_write_index(0x2b);                                               // 行地址设置
+  117   1         ips200_write_16bit_data(y1);
+  118   1         ips200_write_16bit_data(y2);
+  119   1         ips200_write_index(0x2c);                                               // 储存器写
   120   1      
   121   1      }
   122          
@@ -157,13 +158,13 @@ stmt  level    source
   131   1          uint16 i;
   132   1          uint16 tmp[IPS_LEN];
   133   1          ips200_set_region(0, 0, ips200_x_max - 1, ips200_y_max - 1);
-  134   1        
+  134   1         
   135   1          for(i = 0; i < IPS_LEN; i ++)
   136   1          {
   137   2              tmp[i] = color;
   138   2          }
   139   1      
-  140   1        for(i = 0; i < IPS_WIGHT; i ++)
+  140   1         for(i = 0; i < IPS_WIGHT; i ++)
   141   1          {
   142   2              ips200_write_16bit_data_array(tmp, IPS_LEN);
   143   2          }
@@ -201,9 +202,9 @@ stmt  level    source
   173          
   174          //-------------------------------------------------------------------------------------------------------
              -------------
-  175          // 函数简介       设置显示颜色
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 4   
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 4   
 
+  175          // 函数简介       设置显示颜色
   176          // 参数说明       pen             颜色格式 RGB565 或者可以使用 zf_common_font.h 内常用颜色宏定义
   177          // 参数说明       bgcolor         颜色格式 RGB565 或者可以使用 zf_common_font.h 内常用颜色宏定义
   178          // 返回参数       void
@@ -247,9 +248,9 @@ stmt  level    source
              -------------
   212          void ips200_show_char (uint16 x,uint16 y,const char dat)
   213          {
-  214   1        uint8 i,j;
+  214   1         uint8 i,j;
   215   1          uint8 temp;
-  216   1        
+  216   1         
   217   1          zf_assert(x < ips200_x_max);
   218   1          zf_assert(y < ips200_y_max);
   219   1      
@@ -269,9 +270,9 @@ stmt  level    source
   232   2          }
   233   1      }
   234          
-  235          //-------------------------------------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 5   
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 5   
 
+  235          //-------------------------------------------------------------------------------------------------------
              -------------
   236          // 函数简介       液晶显示字符串
   237          // 参数说明       x               坐标x方向的起点 参数范围 [0, ips200_x_max-1]
@@ -283,8 +284,8 @@ stmt  level    source
              -------------
   243          void ips200_show_string (uint16 x,uint16 y,const char dat[])
   244          {
-  245   1        uint16 j = 0;
-  246   1        
+  245   1         uint16 j = 0;
+  246   1         
   247   1          zf_assert(x < ips200_x_max);
   248   1          zf_assert(y < ips200_y_max);
   249   1      
@@ -307,9 +308,9 @@ stmt  level    source
              -------------
   265          void ips200_show_int8(uint16 x,uint16 y,int8 dat)
   266          {
-  267   1        uint8 a[3];
+  267   1         uint8 a[3];
   268   1          uint8 i;
-  269   1        
+  269   1         
   270   1          zf_assert(x < ips200_x_max);
   271   1          zf_assert(y < ips200_y_max);
   272   1      
@@ -337,19 +338,19 @@ stmt  level    source
   293          // 函数简介       液晶显示8位无符号
   294          // 参数说明       x               坐标x方向的起点 参数范围 [0, ips200_x_max-1]
   295          // 参数说明       y               坐标y方向的起点 参数范围 [0, ips200_y_max-1]
-  296          // 参数说明       dat             需要显示的变量 数据类型uint8
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 6   
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 6   
 
+  296          // 参数说明       dat             需要显示的变量 数据类型uint8
   297          // 返回参数       void
   298          // 使用示例                ips200_show_uint8(0,0,x);                       // x 为 uint8 类型
   299          //-------------------------------------------------------------------------------------------------------
              -------------
   300          void ips200_show_uint8(uint16 x,uint16 y,uint8 dat)
   301          {
-  302   1        
+  302   1         
   303   1          uint8 a[3];
   304   1          uint8 i;
-  305   1        
+  305   1         
   306   1          zf_assert(x < ips200_x_max);
   307   1          zf_assert(y < ips200_y_max);
   308   1      
@@ -377,7 +378,7 @@ stmt  level    source
              -------------
   329          void ips200_show_int16(uint16 x,uint16 y,int16 dat)
   330          {
-  331   1        uint8 a[5];
+  331   1         uint8 a[5];
   332   1          uint8 i;
   333   1      
   334   1          zf_assert(x < ips200_x_max);
@@ -405,9 +406,9 @@ stmt  level    source
   356   1      }
   357          
   358          //-------------------------------------------------------------------------------------------------------
-             -------------
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 7   
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 7   
 
+             -------------
   359          // 函数简介       液晶显示16位无符号
   360          // 参数说明       x               坐标x方向的起点 参数范围 [0, ips200_x_max-1]
   361          // 参数说明       y               坐标y方向的起点 参数范围 [0, ips200_y_max-1]
@@ -420,10 +421,10 @@ stmt  level    source
   367          {
   368   1          uint8 a[5];
   369   1          uint8 i;
-  370   1        
+  370   1         
   371   1          zf_assert(x < ips200_x_max);
   372   1          zf_assert(y < ips200_y_max);
-  373   1        
+  373   1         
   374   1          a[0] = dat/10000;
   375   1          a[1] = dat/1000%10;
   376   1          a[2] = dat/100%10;
@@ -455,10 +456,10 @@ stmt  level    source
   399          {
   400   1          int8    buff[34];
   401   1          uint8   length;
-  402   1        
+  402   1         
   403   1          zf_assert(x < ips200_x_max);
   404   1          zf_assert(y < ips200_y_max);
-  405   1        
+  405   1         
   406   1          if(10<num)      num = 10;
   407   1          
   408   1          num++;
@@ -473,9 +474,9 @@ stmt  level    source
   417   1          {
   418   2              buff[length] = ' ';
   419   2              length++;
-  420   2          }
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 8   
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 8   
 
+  420   2          }
   421   1          buff[num] = '\0';
   422   1      
   423   1          ips200_show_string(x, y, (const char *)buff);                               // 显示数字
@@ -503,7 +504,7 @@ stmt  level    source
   442   1          uint8   length;
   443   1          int8    buff[34];
   444   1          int8    start,end,point;
-  445   1        
+  445   1         
   446   1          zf_assert(x < ips200_x_max);
   447   1          zf_assert(y < ips200_y_max);
   448   1      
@@ -541,9 +542,9 @@ stmt  level    source
   478          // 函数简介       IPS200 显示波形
   479          // 参数说明       x               坐标x方向的起点 参数范围 [0, ips200_x_max-1]
   480          // 参数说明       y               坐标y方向的起点 参数范围 [0, ips200_y_max-1]
-  481          // 参数说明       *p              波形数组指针
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 9   
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 9   
 
+  481          // 参数说明       *p              波形数组指针
   482          // 参数说明       width           波形实际宽度
   483          // 参数说明       value_max       波形实际最大值
   484          // 参数说明       dis_width       波形显示宽度 参数范围 [0, ips200_x_max]
@@ -558,10 +559,10 @@ stmt  level    source
   490          {
   491   1          uint32 i = 0, j = 0;
   492   1          uint32 width_index, value_max_index;
-  493   1        
+  493   1         
   494   1          zf_assert(x < ips200_x_max);
   495   1          zf_assert(y < ips200_y_max);
-  496   1        
+  496   1         
   497   1          ips200_set_region(x, y, x+dis_width-1, y+dis_value_max-1);                  // 设置显示区域
   498   1          for(i=0;i<dis_value_max;i++)
   499   1          {
@@ -596,10 +597,10 @@ stmt  level    source
              -------------
   526          void ips200_show_chinese (uint16 x, uint16 y, uint8 siz, const uint8 *p, uint8 number, uint16 color)
   527          {
-  528   1        int i, j, k; 
+  528   1         int i, j, k; 
   529   1          uint8 temp, temp1, temp2;
   530   1          const uint8 *p_data;
-  531   1        
+  531   1         
   532   1          zf_assert(x < ips200_x_max);
   533   1          zf_assert(y < ips200_y_max);
   534   1      
@@ -609,9 +610,9 @@ stmt  level    source
   538   1          
   539   1          for(i=0;i<siz;i++)
   540   1          {
-  541   2              temp1 = number;
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 10  
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 10  
 
+  541   2              temp1 = number;
   542   2              p_data = p+i*temp2;
   543   2              while(temp1--)
   544   2              {
@@ -677,9 +678,9 @@ stmt  level    source
   599   2              {
   600   3                  temp = *(image_temp + i * width / dis_width);                       // 读取像素点
   601   3                  if(threshold == 0)
-  602   3                  {
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 11  
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 11  
 
+  602   3                  {
   603   4                      color = (0x001f & ((temp) >> 3)) << 11;
   604   4                      color = color | (((0x003f) & ((temp) >> 2)) << 5);
   605   4                      color = color | (0x001f & ((temp) >> 3));
@@ -745,9 +746,9 @@ stmt  level    source
   661   1          ips200_write_index(0xB2);
   662   1          ips200_write_8bit_data(0x0C);
   663   1          ips200_write_8bit_data(0x0C);
-  664   1          ips200_write_8bit_data(0x00);
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 12  
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 12  
 
+  664   1          ips200_write_8bit_data(0x00);
   665   1          ips200_write_8bit_data(0x33);
   666   1          ips200_write_8bit_data(0x33);
   667   1      
@@ -813,9 +814,9 @@ stmt  level    source
   727   1          ips200_write_index(0x11);
   728   1          system_delay_ms(120);
   729   1      
-  730   1          ips200_write_index(0x29);
-C251 COMPILER V5.60.0,  zf_device_ips200                                                   03/05/26  21:05:17  PAGE 13  
+C251 COMPILER V5.60.0,  zf_device_ips200                                                   09/05/26  22:18:14  PAGE 13  
 
+  730   1          ips200_write_index(0x29);
   731   1      
   732   1          ips200_clear(ips200_bgcolor);
   733   1      }

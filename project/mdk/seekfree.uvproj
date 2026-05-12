@@ -13,14 +13,14 @@
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>AI8052U-32Bit Series</Device>
-          <Vendor>AI</Vendor>
-          <Cpu>IRAM(0-0x3FFF) XRAM(0x10000-0x2FFFF) IROM(0xFC0000-0xFFFFFF) CLOCK(35000000)</Cpu>
+          <Device>STC32G144K246-32Bit Series</Device>
+          <Vendor>STC</Vendor>
+          <Cpu>IRAM(0-0x3FFF) XRAM(0x10000-0x2FFFF) IROM(0xFC2800-0xFFFFFF) CLOCK(35000000)</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile>"LIB\STARTUP251.ASM" ("80251 Startup Code")</StartupFile>
           <FlashDriverDll></FlashDriverDll>
-          <DeviceId>4096</DeviceId>
-          <RegisterFile>zf_common_headfile.h</RegisterFile>
+          <DeviceId>63697</DeviceId>
+          <RegisterFile>STC32G144K246.H</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>
@@ -45,14 +45,14 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\out_file\</OutputDirectory>
+          <OutputDirectory>.\Obj\</OutputDirectory>
           <OutputName>SEEKFREE</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
-          <ListingPath>.\out_file\</ListingPath>
+          <ListingPath>.\Obj\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
@@ -149,7 +149,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>1</TargetSelection>
+          <TargetSelection>-1</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -163,7 +163,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile></InitializationFile>
-            <Driver>BIN\STCMON251.DLL</Driver>
+            <Driver></Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -211,8 +211,8 @@
               </RCB>
               <IROM>
                 <Type>1</Type>
-                <StartAddress>0xfc0000</StartAddress>
-                <Size>0x40000</Size>
+                <StartAddress>0xfc2800</StartAddress>
+                <Size>0x3d800</Size>
               </IROM>
               <IRAM>
                 <Type>0</Type>
@@ -272,7 +272,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_assistant</IncludePath>
+              <IncludePath>..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contact_master;..\code\PID</IncludePath>
             </VariousControls>
           </C251>
           <Ax51>
@@ -849,6 +849,46 @@
               <FileType>5</FileType>
               <FilePath>..\code\PID\PID.h</FilePath>
             </File>
+            <File>
+              <FileName>camera.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\Camera\camera.c</FilePath>
+            </File>
+            <File>
+              <FileName>camera.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\code\Camera\camera.h</FilePath>
+            </File>
+            <File>
+              <FileName>circle2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\Camera\Circle\circle2.c</FilePath>
+            </File>
+            <File>
+              <FileName>circle2.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\code\Camera\Circle\circle2.h</FilePath>
+            </File>
+            <File>
+              <FileName>cross2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\Camera\Cross\cross2.c</FilePath>
+            </File>
+            <File>
+              <FileName>cross2.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\code\Camera\Cross\cross2.h</FilePath>
+            </File>
+            <File>
+              <FileName>circle_detection.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\Camera\Circle_detection\circle_detection.c</FilePath>
+            </File>
+            <File>
+              <FileName>circle_detection.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\code\Camera\Circle_detection\circle_detection.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -868,6 +908,11 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\user\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>main.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\main.h</FilePath>
             </File>
           </Files>
         </Group>

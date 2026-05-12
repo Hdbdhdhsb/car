@@ -1,88 +1,138 @@
-/*********************************************************************************************************************
-* STC32G144K Opensourec Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
-* Copyright (c) 2025 SEEKFREE 逐飞科技
-*
-* 本文件是STC32G144K开源库的一部分
-*
-* STC32G144K 开源库 是免费软件
-* 您可以根据自由软件基金会发布的 GPL（GNU General Public License，即 GNU通用公共许可证）的条款
-* 即 GPL 的第3版（即 GPL3.0）或（您选择的）任何后来的版本，重新发布和/或修改它
-*
-* 本开源库的发布是希望它能发挥作用，但并未对其作任何的保证
-* 甚至没有隐含的适销性或适合特定用途的保证
-* 更多细节请参见 GPL
-*
-* 您应该在收到本开源库的同时收到一份 GPL 的副本
-* 如果没有，请参阅<https://www.gnu.org/licenses/>
-*
-* 额外注明：
-* 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
-* 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
-* 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
-* 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
-*
-* 文件名称          
-* 公司名称          成都逐飞科技有限公司
-* 版本信息          查看 libraries/doc 文件夹内 version 文件 版本说明
-* 开发环境          MDK FOR C251
-* 适用平台          STC32G144K
-* 店铺链接          https://seekfree.taobao.com/
-*
-* 修改记录
-* 日期              作者           备注
-* 2025-11-20        大W            first version
-********************************************************************************************************************/
+#include "zf_common_headfile.h"
 #include "main.h"
+#include "camera.h"
+#include "PID.h"
 
-volatile uint32 g_sysTick_ms = 0;
+#define false 0
+#define true 1
+extern float track_error;
 
+#define INCLUDE_BOUNDARY_TYPE   3   /*摄像头返回数据类型*/
+#define BOUNDARY_NUM            (MT9V03X_H * 3 / 2)
+
+uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
+uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
+
+uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
+uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
+
+/* 图像备份数组，在发送前将图像备份再进行发送，避免图像出现撕裂的问题 */
+uint8 image_copy[MT9V03X_H][MT9V03X_W];
+
+#define LED1                    (P33 )
+int32 j;
+int32 i = MT9V03X_H - 1;
 void main(void)
-{   
+{
     static uint32 current_tick = 0;
     static uint32 last_10ms_tick = 0;
     static uint32 last_200ms_tick = 0;
 
-    pid_ctrl_parameter_t pid_param = {
-        0.8f,
-        0.2f,
-        0.1f,
-        600.0f,
-        -600.0f,
-        400.0f,
-        -400.0f,
-        PID_CAL_TYPE_INCREMENTAL
-    };
-    float target = 0;
-
-    clock_init(SYSTEM_CLOCK_96M); 				
-    debug_init();   
+    clock_init(SYSTEM_CLOCK_96M); 				/* 时钟配置及系统初始化<务必保留> */
+    debug_init();    
     pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                     		
     gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL); 
     uart_init(UART_2, 115200, UART2_TX, UART2_RX);
+    /* 初始化状态机 */
+    state_machine_init();
 
-    while(g_sysTick_ms <=1500);                         //这里可以放入按键检测，然而目前开发板上按键引脚是悬空的，故延时处理
+    while(g_sysTick_ms <=1500);                         /*这里可以放入按键检测，然而目前开发板上按键引脚是悬空的，故延时处理*/
 
     enable_control(CTRL_PIN);
     send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
-    send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);
+    send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);                   		
+    
+    /* 设置逐飞助手使用DEBUG串口进行收发 */
+    seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_DEBUG_UART);
+
+#if(3 == INCLUDE_BOUNDARY_TYPE)
+    j=0;
+#endif
+
+    /* 初始化摄像头 */
     while(1)
-    {   
-        current_tick = g_sysTick_ms;
+    {
+        if(mt9v03x_init())
+            gpio_toggle_level(LED1);                                            /* 翻转 LED 引脚输出电平 控制 LED 亮灭 初始化出错这个灯会闪的很慢 */
+        else
+            break;
+        system_delay_ms(500);                                                  /* 闪灯表示异常 */
+    }
+
+
+#if(3 == INCLUDE_BOUNDARY_TYPE)
+    j = 0;
+	 
+    for(i = MT9V03X_H - 1; i >= MT9V03X_H / 2; i--)
+    {
+        xy_x1_boundary[j] = 34;
+        xy_y1_boundary[j] = (uint8)i;
+
+        xy_x2_boundary[j] = 47;
+        xy_y2_boundary[j] = (uint8)i;
+
+        xy_x3_boundary[j] = 60;
+        xy_y3_boundary[j] = (uint8)i;
+        j++;
+    }
+
+    for(i = MT9V03X_H / 2 - 1; i >= 0; i--)
+    {
+        xy_x1_boundary[j] = 34 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 34) / (MT9V03X_H / 2);
+        xy_y1_boundary[j] = (uint8)i;
+
+        xy_x2_boundary[j] = 47 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 47) / (MT9V03X_H / 2);
+        xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
+
+        xy_x3_boundary[j] = 60 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 60) / (MT9V03X_H / 2);
+        xy_y3_boundary[j] = 30 + (uint8)i / 2;
+        j++;
+    }
+
+    for(i = 0; i < MT9V03X_H / 2; i++)
+    {
+        xy_x1_boundary[j] = MT9V03X_W / 2 + (uint8)i * (138 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+        xy_y1_boundary[j] = (uint8)i;
+
+        xy_x2_boundary[j] = MT9V03X_W / 2 + i * (133 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+        xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
+
+        xy_x3_boundary[j] = MT9V03X_W / 2 + i * (128 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+        xy_y3_boundary[j] = 30 + (uint8)i / 2;
+        j++;
+    }
+    seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, image_copy[0], MT9V03X_W, MT9V03X_H);
+    seekfree_assistant_camera_boundary_config(XY_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, xy_x3_boundary, xy_y1_boundary, xy_y2_boundary, xy_y3_boundary);
+
+#endif
+    while(1)
+    {
+         current_tick = g_sysTick_ms;
 
         if (current_tick - last_10ms_tick >= 10) {
             last_10ms_tick = current_tick;
-            target = sin(current_tick / 5000.0 * 2 * 3.14159) * 20;             // 生成一个周期为5秒，振幅为20的正弦波
-            send_error_data(target*6, target*10, UART_2);                         
+            
         }
 
         if((current_tick - last_200ms_tick) >= 200){
             last_200ms_tick = current_tick; 
             gpio_toggle_level(IO_P33); 
         }
+
+        if(mt9v03x_finish_flag)
+        {
+            mt9v03x_finish_flag = 0;
+            memcpy(image_copy[0], mt9v03x_image[0], MT9V03X_IMAGE_SIZE);
+        
+            seekfree_assistant_camera_send();
+            image_process();
+            send_error_data(track_error, 0.0f, UART_2);
+        }
+
     }
 }
 
-
 void sys_tick_handler (void){
-    g_sysTick_ms++;                                                                 // 系统心跳       
+    g_sysTick_ms += 1;                                                                 /* 系统心跳 */      
 }
+

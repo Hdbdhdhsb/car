@@ -28,7 +28,7 @@
     <TargetOption>
       <CLK251>35000000</CLK251>
       <OPTTT>
-        <gFlags>0</gFlags>
+        <gFlags>1</gFlags>
         <BeepAtEnd>1</BeepAtEnd>
         <RunSim>1</RunSim>
         <RunTarget>0</RunTarget>
@@ -45,7 +45,7 @@
         <PageWidth>120</PageWidth>
         <PageLength>65</PageLength>
         <TabStop>8</TabStop>
-        <ListingPath>.\out_file\</ListingPath>
+        <ListingPath>.\Obj\</ListingPath>
       </OPTLEX>
       <ListingPage>
         <CreateCListing>1</CreateCListing>
@@ -77,7 +77,7 @@
         <tvExpOptDlg>0</tvExpOptDlg>
         <IsCurrentTarget>1</IsCurrentTarget>
       </OPTFL>
-      <CpuCode>0</CpuCode>
+      <CpuCode>255</CpuCode>
       <DebugOpt>
         <uSim>0</uSim>
         <uTrg>1</uTrg>
@@ -103,7 +103,7 @@
         <bEvRecOn>1</bEvRecOn>
         <bSchkAxf>0</bSchkAxf>
         <bTchkAxf>0</bTchkAxf>
-        <nTsel>1</nTsel>
+        <nTsel>-1</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
         <sDlgDll></sDlgDll>
@@ -114,7 +114,7 @@
         <tDlgDll></tDlgDll>
         <tDlgPa></tDlgPa>
         <tIfile></tIfile>
-        <pMon>BIN\STCMON251.DLL</pMon>
+        <pMon></pMon>
       </DebugOpt>
       <Breakpoint/>
       <Tracepoint>
@@ -1408,17 +1408,113 @@
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>101</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\code\Camera\camera.c</PathWithFileName>
+      <FilenameWithoutPath>camera.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>102</FileNumber>
+      <FileType>5</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\code\Camera\camera.h</PathWithFileName>
+      <FilenameWithoutPath>camera.h</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>103</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\code\Camera\Circle\circle2.c</PathWithFileName>
+      <FilenameWithoutPath>circle2.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>104</FileNumber>
+      <FileType>5</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\code\Camera\Circle\circle2.h</PathWithFileName>
+      <FilenameWithoutPath>circle2.h</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>105</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\code\Camera\Cross\cross2.c</PathWithFileName>
+      <FilenameWithoutPath>cross2.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>106</FileNumber>
+      <FileType>5</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\code\Camera\Cross\cross2.h</PathWithFileName>
+      <FilenameWithoutPath>cross2.h</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>107</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\code\Camera\Circle_detection\circle_detection.c</PathWithFileName>
+      <FilenameWithoutPath>circle_detection.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>108</FileNumber>
+      <FileType>5</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\code\Camera\Circle_detection\circle_detection.h</PathWithFileName>
+      <FilenameWithoutPath>circle_detection.h</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
   </Group>
 
   <Group>
     <GroupName>user</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
     <File>
       <GroupNumber>7</GroupNumber>
-      <FileNumber>101</FileNumber>
+      <FileNumber>109</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1430,7 +1526,7 @@
     </File>
     <File>
       <GroupNumber>7</GroupNumber>
-      <FileNumber>102</FileNumber>
+      <FileNumber>110</FileNumber>
       <FileType>5</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -1442,13 +1538,25 @@
     </File>
     <File>
       <GroupNumber>7</GroupNumber>
-      <FileNumber>103</FileNumber>
+      <FileNumber>111</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>..\user\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>7</GroupNumber>
+      <FileNumber>112</FileNumber>
+      <FileType>5</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\user\main.h</PathWithFileName>
+      <FilenameWithoutPath>main.h</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

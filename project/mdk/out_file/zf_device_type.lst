@@ -1,12 +1,13 @@
-C251 COMPILER V5.60.0,  zf_device_type                                                     03/05/26  21:05:16  PAGE 1   
+C251 COMPILER V5.60.0,  zf_device_type                                                     09/05/26  22:18:13  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_device_type
 OBJECT MODULE PLACED IN .\out_file\zf_device_type.obj
-COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\..\libraries\zf_device\zf_device_type.c LARGE ROM(HUGE) WARNINGLEVEL(3
-                    -) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..
-                    -\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree
-                    -_assistant) DEBUG PRINT(.\out_file\zf_device_type.lst) TABS(2) OBJECT(.\out_file\zf_device_type.obj) 
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_device\zf_device_type.c LARGE ROM(HUGE) WARNINGLEVE
+                    -L(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..
+                    -\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekf
+                    -ree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRIN
+                    -T(.\out_file\zf_device_type.lst) TABS(3) OBJECT(.\out_file\zf_device_type.obj) 
 
 stmt  level    source
 
@@ -65,9 +66,9 @@ stmt  level    source
    47          callback_function   wireless_module_spi_handler     = type_default_callback;        // WIFI SPI GPIOÖÐ¶Ïº
              -¯ÊýÖ¸Õë£¬¸ù¾Ý³õÊ¼»¯Ê±ÉèÖÃµÄº¯Êý½øÐÐÌø×ª
    48          
-   49          tof_type_enum       tof_type                        = NO_TOF;
-C251 COMPILER V5.60.0,  zf_device_type                                                     03/05/26  21:05:16  PAGE 2   
+C251 COMPILER V5.60.0,  zf_device_type                                                     09/05/26  22:18:13  PAGE 2   
 
+   49          tof_type_enum       tof_type                        = NO_TOF;
    50          callback_function   tof_module_exti_handler         = type_default_callback;        // ToF Ä£¿é INT ¸üÐÂÖ
              -Ð¶Ï
    51          
@@ -133,9 +134,9 @@ stmt  level    source
   102          
   103          //-------------------------------------------------------------------------------------------------------
              -------------
-  104          // º¯Êý¼ò½é     ÉèÖÃ ToF Ä£¿éÀàÐÍ
-C251 COMPILER V5.60.0,  zf_device_type                                                     03/05/26  21:05:16  PAGE 3   
+C251 COMPILER V5.60.0,  zf_device_type                                                     09/05/26  22:18:13  PAGE 3   
 
+  104          // º¯Êý¼ò½é     ÉèÖÃ ToF Ä£¿éÀàÐÍ
   105          // ²ÎÊýËµÃ÷     type_set        Ñ¡¶¨µÄ ToF Ä£¿éÀàÐÍ
   106          // ²ÎÊýËµÃ÷     exti_callback   Éè±¸µÄÍâ²¿ÖÐ¶Ï»Øµ÷º¯Êý
   107          // ·µ»Ø²ÎÊý     void

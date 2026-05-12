@@ -1,12 +1,13 @@
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 1   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE usb_req_std
 OBJECT MODULE PLACED IN .\out_file\usb_req_std.obj
-COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\..\libraries\zf_components\stc32g_usb_lib\usb_req_std.c LARGE ROM(HUGE
-                    -) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries
-                    -\zf_device;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_com
-                    -ponents\seekfree_assistant) DEBUG PRINT(.\out_file\usb_req_std.lst) TABS(2) OBJECT(.\out_file\usb_req_std.obj) 
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_components\stc32g_usb_lib\usb_req_std.c LARGE ROM(H
+                    -UGE) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\librar
+                    -ies\zf_device;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_
+                    -components\seekfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cr
+                    -oss2) DEBUG PRINT(.\out_file\usb_req_std.lst) TABS(3) OBJECT(.\out_file\usb_req_std.obj) 
 
 stmt  level    source
 
@@ -65,9 +66,9 @@ stmt  level    source
    53   2          case SYNCH_FRAME:
    54   2              usb_synch_frame();
    55   2              break;
-   56   2          default:
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 2   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 2   
 
+   56   2          default:
    57   2              usb_setup_stall();
    58   2              return;
    59   2          }
@@ -133,9 +134,9 @@ stmt  level    source
   119   4      #ifdef EN_EP2IN
   120   4                  case EP2_IN:
   121   4      #endif
-  122   4      #ifdef EN_EP3IN
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 3   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 3   
 
+  122   4      #ifdef EN_EP3IN
                            case EP3_IN:
                #endif
   125   4      #ifdef EN_EP4IN
@@ -201,9 +202,9 @@ stmt  level    source
   183   1          usb_setup_in();
   184   1      }
   185          
-  186          void usb_clear_feature()
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 4   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 4   
 
+  186          void usb_clear_feature()
   187          {
   188   1          BYTE ep;
   189   1          
@@ -269,9 +270,9 @@ stmt  level    source
   247   2      #endif
   248   2          default:
   249   2              usb_setup_stall();
-  250   2              return;
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 5   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 5   
 
+  250   2              return;
   251   2          }
   252   1      
   253   1          usb_setup_status();
@@ -337,9 +338,9 @@ stmt  level    source
              -P5OUT))
   312   2              OutEpState |= (1 << ep);
   313   2              usb_write_reg(INDEX, ep);
-  314   2              usb_write_reg(OUTCSR1, OUTSDSTL);
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 6   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 6   
 
+  314   2              usb_write_reg(OUTCSR1, OUTSDSTL);
   315   2              usb_write_reg(INDEX, 0);
   316   2              break;
   317   2      #endif
@@ -405,9 +406,9 @@ stmt  level    source
   377   3                  Ep0State.pData = LANGIDDESC;
   378   3                  Ep0State.wSize = sizeof(LANGIDDESC);
   379   3                  break;
-  380   3              case 1:
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 7   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 7   
 
+  380   3              case 1:
   381   3                  Ep0State.pData = MANUFACTDESC;
   382   3                  Ep0State.wSize = sizeof(MANUFACTDESC);
   383   3                  break;
@@ -473,9 +474,9 @@ stmt  level    source
   443   1              (Setup.wIndexH != 0) ||
   444   1              (Setup.wIndexL != 0) ||
   445   1              (Setup.wLength != 0))
-  446   1          {
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 8   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 8   
 
+  446   1          {
   447   2              usb_setup_stall();
   448   2              return;
   449   2          }
@@ -541,9 +542,9 @@ stmt  level    source
   509   1          {
   510   2              DeviceState = DEVSTATE_ADDRESS;
   511   2              InEpState = 0xff;
-  512   2              OutEpState = 0xff;
-C251 COMPILER V5.60.0,  usb_req_std                                                        03/05/26  21:05:17  PAGE 9   
+C251 COMPILER V5.60.0,  usb_req_std                                                        09/05/26  22:18:15  PAGE 9   
 
+  512   2              OutEpState = 0xff;
   513   2          }
   514   1      
   515   1          usb_setup_status();

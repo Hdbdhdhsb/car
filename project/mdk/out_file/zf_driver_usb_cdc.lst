@@ -1,12 +1,13 @@
-C251 COMPILER V5.60.0,  zf_driver_usb_cdc                                                  03/05/26  21:05:16  PAGE 1   
+C251 COMPILER V5.60.0,  zf_driver_usb_cdc                                                  09/05/26  22:18:13  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_driver_usb_cdc
 OBJECT MODULE PLACED IN .\out_file\zf_driver_usb_cdc.obj
-COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\..\libraries\zf_driver\zf_driver_usb_cdc.c LARGE ROM(HUGE) WARNINGLEVE
-                    -L(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..
-                    -\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekf
-                    -ree_assistant) DEBUG PRINT(.\out_file\zf_driver_usb_cdc.lst) TABS(2) OBJECT(.\out_file\zf_driver_usb_cdc.obj) 
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_driver\zf_driver_usb_cdc.c LARGE ROM(HUGE) WARNINGL
+                    -EVEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device
+                    -;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\se
+                    -ekfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG P
+                    -RINT(.\out_file\zf_driver_usb_cdc.lst) TABS(3) OBJECT(.\out_file\zf_driver_usb_cdc.obj) 
 
 stmt  level    source
 
@@ -65,9 +66,9 @@ stmt  level    source
    51          // 返回剩余字节数
    52          uint16 usb_cdc_write_buffer(const uint8 *buff, uint16 len)
    53          {
-   54   1          int32 timeout = USB_TIME_OUT_COUNT;
-C251 COMPILER V5.60.0,  zf_driver_usb_cdc                                                  03/05/26  21:05:16  PAGE 2   
+C251 COMPILER V5.60.0,  zf_driver_usb_cdc                                                  09/05/26  22:18:13  PAGE 2   
 
+   54   1          int32 timeout = USB_TIME_OUT_COUNT;
    55   1          vuint8 tmp_len = 0;
    56   1          vuint8 idx = 0;
    57   1          
@@ -133,9 +134,9 @@ stmt  level    source
   117   1          // 设置中断回调函数
   118   1          usb_cdc_read_buffer_handler = handler;
   119   1      }
-  120          //            if(UsbInBusy == 0)
-C251 COMPILER V5.60.0,  zf_driver_usb_cdc                                                  03/05/26  21:05:16  PAGE 3   
+C251 COMPILER V5.60.0,  zf_driver_usb_cdc                                                  09/05/26  22:18:13  PAGE 3   
 
+  120          //            if(UsbInBusy == 0)
   121          //            {
   122          //                UsbInBusy = 1;
   123          //                

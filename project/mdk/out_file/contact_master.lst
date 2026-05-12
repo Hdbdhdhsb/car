@@ -1,12 +1,13 @@
-C251 COMPILER V5.60.0,  contact_master                                                     04/05/26  00:28:51  PAGE 1   
+C251 COMPILER V5.60.0,  contact_master                                                     09/05/26  22:18:16  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE contact_master
 OBJECT MODULE PLACED IN .\out_file\contact_master.obj
-COMPILER INVOKED BY: D:\KEIL\C251\BIN\C251.EXE ..\code\Contact_master\contact_master.c LARGE ROM(HUGE) WARNINGLEVEL(3) O
-                    -PTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\li
-                    -braries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_as
-                    -sistant) DEBUG PRINT(.\out_file\contact_master.lst) TABS(2) OBJECT(.\out_file\contact_master.obj) 
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\code\Contact_master\contact_master.c LARGE ROM(HUGE) WARNINGLEVEL(3
+                    -) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..
+                    -\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree
+                    -_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRINT(.
+                    -\out_file\contact_master.lst) TABS(3) OBJECT(.\out_file\contact_master.obj) 
 
 stmt  level    source
 
@@ -65,9 +66,9 @@ stmt  level    source
    53   1          buf[1] = payload_len;
    54   1          buf[2] = CMD_ERROR_IN;
    55   1          memcpy(&buf[3], &error_input, sizeof(float));
-   56   1          memcpy(&buf[7], &target_speed, sizeof(float));
-C251 COMPILER V5.60.0,  contact_master                                                     04/05/26  00:28:51  PAGE 2   
+C251 COMPILER V5.60.0,  contact_master                                                     09/05/26  22:18:16  PAGE 2   
 
+   56   1          memcpy(&buf[7], &target_speed, sizeof(float));
    57   1          crc = crc8_dvb_s2(&buf[1], 1 + payload_len);
    58   1          buf[payload_len + 2] = crc;           /* 2 = HEAD + LEN */
    59   1          uart_write_buffer(uart, buf, 1 + 1 + payload_len + FRAME_CRC_LEN);

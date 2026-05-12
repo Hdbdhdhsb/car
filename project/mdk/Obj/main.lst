@@ -1,0 +1,166 @@
+C251 COMPILER V5.60.0,  main                                                               12/05/26  23:56:45  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE main
+OBJECT MODULE PLACED IN .\Obj\main.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\user\main.c LARGE ROM(HUGE) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BROWSE
+                    - INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;..\u
+                    -ser;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_assistant;..\code\Camera
+                    -;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contact_master;..\code\PID) DEBUG PR
+                    -INT(.\Obj\main.lst) TABS(3) OBJECT(.\Obj\main.obj) 
+
+stmt  level    source
+
+    1          #include "zf_common_headfile.h"
+    2          #include "main.h"
+    3          #include "camera.h"
+    4          #include "PID.h"
+    5          
+    6          #define false 0
+    7          #define true 1
+    8          extern float track_error;
+    9          
+   10          #define INCLUDE_BOUNDARY_TYPE   3   /*ÉãÏñÍ··µ»ØÊý¾ÝÀàÐÍ*/
+   11          #define BOUNDARY_NUM            (MT9V03X_H * 3 / 2)
+   12          
+   13          uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
+   14          uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
+   15          
+   16          uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
+   17          uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
+   18          
+   19          /* Í¼Ïñ±¸·ÝÊý×é£¬ÔÚ·¢ËÍÇ°½«Í¼Ïñ±¸·ÝÔÙ½øÐÐ·¢ËÍ£¬±ÜÃâÍ¼Ïñ³öÏÖËºÁÑµÄÎÊÌâ */
+   20          uint8 image_copy[MT9V03X_H][MT9V03X_W];
+   21          
+   22          #define LED1                    (P33 )
+   23          int32 j;
+   24          int32 i = MT9V03X_H - 1;
+   25          void main(void)
+   26          {
+   27   1          static uint32 current_tick = 0;
+   28   1          static uint32 last_10ms_tick = 0;
+   29   1          static uint32 last_200ms_tick = 0;
+   30   1      
+   31   1          clock_init(SYSTEM_CLOCK_96M);            /* Ê±ÖÓÅäÖÃ¼°ÏµÍ³³õÊ¼»¯<Îñ±Ø±£Áô> */
+   32   1          debug_init();    
+   33   1          pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                         
+   34   1          gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL); 
+   35   1          uart_init(UART_2, 115200, UART2_TX, UART2_RX);
+   36   1          /* ³õÊ¼»¯×´Ì¬»ú */
+   37   1          state_machine_init();
+   38   1      
+   39   1          while(g_sysTick_ms <=1500);                         /*ÕâÀï¿ÉÒÔ·ÅÈë°´¼ü¼ì²â£¬È»¶øÄ¿Ç°¿ª·¢°åÉÏ°´¼üÒý½ÅÊ
+             -ÇÐü¿ÕµÄ£¬¹ÊÑÓÊ±´¦Àí*/
+   40   1      
+   41   1          enable_control(CTRL_PIN);
+   42   1          send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
+*** ERROR C67 IN LINE 42 OF ..\user\main.c: 'pid_param': undefined identifier
+*** WARNING C96 IN LINE 42 OF ..\user\main.c: 'send_pid_debug_data': too few actual parameters
+   43   1          send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);                         
+*** ERROR C67 IN LINE 43 OF ..\user\main.c: 'pid_param': undefined identifier
+*** WARNING C96 IN LINE 43 OF ..\user\main.c: 'send_pid_debug_data': too few actual parameters
+   44   1          
+   45   1          /* ÉèÖÃÖð·ÉÖúÊÖÊ¹ÓÃDEBUG´®¿Ú½øÐÐÊÕ·¢ */
+   46   1          seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_DEBUG_UART);
+   47   1      
+   48   1      #if(3 == INCLUDE_BOUNDARY_TYPE)
+   49   1          j=0;
+   50   1      #endif
+C251 COMPILER V5.60.0,  main                                                               12/05/26  23:56:45  PAGE 2   
+
+   51   1      
+   52   1          /* ³õÊ¼»¯ÉãÏñÍ· */
+   53   1          while(1)
+   54   1          {
+   55   2              if(mt9v03x_init())
+   56   2                  gpio_toggle_level(LED1);                                            /* ·­×ª LED Òý½ÅÊä³öµçÆ½ 
+             -¿ØÖÆ LED ÁÁÃð ³õÊ¼»¯³ö´íÕâ¸öµÆ»áÉÁµÄºÜÂý */
+   57   2              else
+   58   2                  break;
+   59   2              system_delay_ms(500);                                                  /* ÉÁµÆ±íÊ¾Òì³£ */
+   60   2          }
+   61   1      
+   62   1      
+   63   1      #if(3 == INCLUDE_BOUNDARY_TYPE)
+   64   1          j = 0;
+   65   1          
+   66   1          for(i = MT9V03X_H - 1; i >= MT9V03X_H / 2; i--)
+   67   1          {
+   68   2              xy_x1_boundary[j] = 34;
+   69   2              xy_y1_boundary[j] = (uint8)i;
+   70   2      
+   71   2              xy_x2_boundary[j] = 47;
+   72   2              xy_y2_boundary[j] = (uint8)i;
+   73   2      
+   74   2              xy_x3_boundary[j] = 60;
+   75   2              xy_y3_boundary[j] = (uint8)i;
+   76   2              j++;
+   77   2          }
+   78   1      
+   79   1          for(i = MT9V03X_H / 2 - 1; i >= 0; i--)
+   80   1          {
+   81   2              xy_x1_boundary[j] = 34 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 34) / (MT9V03X_H / 2);
+   82   2              xy_y1_boundary[j] = (uint8)i;
+   83   2      
+   84   2              xy_x2_boundary[j] = 47 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 47) / (MT9V03X_H / 2);
+   85   2              xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
+   86   2      
+   87   2              xy_x3_boundary[j] = 60 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 60) / (MT9V03X_H / 2);
+   88   2              xy_y3_boundary[j] = 30 + (uint8)i / 2;
+   89   2              j++;
+   90   2          }
+   91   1      
+   92   1          for(i = 0; i < MT9V03X_H / 2; i++)
+   93   1          {
+   94   2              xy_x1_boundary[j] = MT9V03X_W / 2 + (uint8)i * (138 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+   95   2              xy_y1_boundary[j] = (uint8)i;
+   96   2      
+   97   2              xy_x2_boundary[j] = MT9V03X_W / 2 + i * (133 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+   98   2              xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
+   99   2      
+  100   2              xy_x3_boundary[j] = MT9V03X_W / 2 + i * (128 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+  101   2              xy_y3_boundary[j] = 30 + (uint8)i / 2;
+  102   2              j++;
+  103   2          }
+  104   1          seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, image_copy[0], MT9V03X_W, MT
+             -9V03X_H);
+  105   1          seekfree_assistant_camera_boundary_config(XY_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, 
+             -xy_x3_boundary, xy_y1_boundary, xy_y2_boundary, xy_y3_boundary);
+  106   1      
+  107   1      #endif
+  108   1          while(1)
+  109   1          {
+  110   2               current_tick = g_sysTick_ms;
+  111   2      
+  112   2              if (current_tick - last_10ms_tick >= 10) {
+  113   3                  last_10ms_tick = current_tick;
+C251 COMPILER V5.60.0,  main                                                               12/05/26  23:56:45  PAGE 3   
+
+  114   3                  
+  115   3              }
+  116   2      
+  117   2              if((current_tick - last_200ms_tick) >= 200){
+  118   3                  last_200ms_tick = current_tick; 
+  119   3                  gpio_toggle_level(IO_P33); 
+  120   3              }
+  121   2      
+  122   2              if(mt9v03x_finish_flag)
+  123   2              {
+  124   3                  mt9v03x_finish_flag = 0;
+  125   3                  memcpy(image_copy[0], mt9v03x_image[0], MT9V03X_IMAGE_SIZE);
+  126   3              
+  127   3                  seekfree_assistant_camera_send();
+  128   3                  image_process();
+  129   3                  send_error_data(track_error, 0.0f, UART_2);
+  130   3              }
+  131   2      
+  132   2          }
+  133   1      }
+  134          
+  135          void sys_tick_handler (void){
+  136   1          g_sysTick_ms += 1;                                                                 /* ÏµÍ³ÐÄÌø */    
+             -  
+  137   1      }
+  138          
+
+C251 COMPILATION COMPLETE.  2 WARNING(S),  2 ERROR(S)

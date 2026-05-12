@@ -66,7 +66,6 @@ static float pid_calc_incremental(struct pid_ctrl_block_t *pid, float error)
 }
 
 /* 创建控制块 */
-/* 创建控制块 */
 uint8 pid_new_control_block(const pid_ctrl_parameter_t *init_param,
                             pid_ctrl_block_handle_t *ret_pid)
 {
