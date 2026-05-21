@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_device_ble6a20                                                  09/05/26  22:18:14  PAGE 1   
+C251 COMPILER V5.60.0,  zf_device_ble6a20                                                  21/05/26  14:44:16  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_device_ble6a20
@@ -6,19 +6,19 @@ OBJECT MODULE PLACED IN .\out_file\zf_device_ble6a20.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_device\zf_device_ble6a20.c LARGE ROM(HUGE) WARNINGL
                     -EVEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device
                     -;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\se
-                    -ekfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG P
-                    -RINT(.\out_file\zf_device_ble6a20.lst) TABS(3) OBJECT(.\out_file\zf_device_ble6a20.obj) 
+                    -ekfree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Conta
+                    -ct_master;..\code\PID) DEBUG PRINT(.\out_file\zf_device_ble6a20.lst) TABS(2) OBJECT(.\out_file\zf_device_ble6a20.obj) 
 
 stmt  level    source
 
     1          /********************************************************************************************************
              -*************
-    2          * STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+    2          * STC32G Opensourec Library 即（STC32G 开源库）是一个基于官方 SDK 接口的第三方开源库
     3          * Copyright (c) 2025 SEEKFREE 逐飞科技
     4          *
     5          * 本文件是STC32G144K开源库的一部分
     6          *
-    7          * STC32G144K 开源库 是免费软件
+    7          * STC32G 开源库 是免费软件
     8          * 您可以根据自由软件基金会发布的 GPL（GNU General Public License，即 GNU通用公共许可证）的条款
     9          * 即 GPL 的第3版（即 GPL3.0）或（您选择的）任何后来的版本，重新发布和/或修改它
    10          *
@@ -30,8 +30,8 @@ stmt  level    source
    16          * 如果没有，请参阅<https://www.gnu.org/licenses/>
    17          *
    18          * 额外注明：
-   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-   20          * 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+   20          * 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
    21          * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
    22          * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
    23          *
@@ -66,7 +66,7 @@ stmt  level    source
    49          #include "zf_device_ble6a20.h"
    50          #include "zf_common_clock.h"
    51          #include "zf_common_debug.h"
-C251 COMPILER V5.60.0,  zf_device_ble6a20                                                  09/05/26  22:18:14  PAGE 2   
+C251 COMPILER V5.60.0,  zf_device_ble6a20                                                  21/05/26  14:44:16  PAGE 2   
 
    52          #include "zf_common_fifo.h"
    53          #include "zf_driver_delay.h"
@@ -94,13 +94,13 @@ stmt  level    source
    73   1          uint16 time_cnt = BLE6A20_TIMEOUT_COUNT;
    74   1          
    75   1          while (time_cnt && gpio_get_level(BLE6A20_RTS_PIN)) 
-   76   1         {
+   76   1        {
    77   2              system_delay_ms(1);
    78   2              time_cnt--;
    79   2          }
    80   1          
    81   1          if (time_cnt) 
-   82   1         {
+   82   1        {
    83   2              uart_write_byte(BLE6A20_INDEX, dat);
    84   2          }
    85   1          
@@ -123,26 +123,26 @@ stmt  level    source
   100   1          #define DELAY_MS 1
   101   1          
   102   1          uint16 time_cnt = 0;
-  103   1         uint16 send_len = 0;
+  103   1        uint16 send_len = 0;
   104   1          zf_assert(NULL != buff);  // 确保缓冲区非空
   105   1          
   106   1          while(len && time_cnt < BLE6A20_TIMEOUT_COUNT)
   107   1          {
-  108   2              if(!gpio_get_level(BLE6A20_RTS_PIN)) // RTS低电平，可发送
+  108   2              if(!gpio_get_level(BLE6A20_RTS_PIN))  // RTS低电平，可发送
   109   2              {
   110   3                  send_len = len < PKT_SIZE ? len : PKT_SIZE;
   111   3                  uart_write_buffer(BLE6A20_INDEX, buff, send_len);
   112   3                  buff += send_len;
   113   3                  len -= send_len;
-C251 COMPILER V5.60.0,  zf_device_ble6a20                                                  09/05/26  22:18:14  PAGE 3   
+C251 COMPILER V5.60.0,  zf_device_ble6a20                                                  21/05/26  14:44:16  PAGE 3   
 
-  114   3                  time_cnt = 0;   // 重置超时计数
+  114   3                  time_cnt = 0;  // 重置超时计数
   115   3              }
-  116   2            else  // RTS高电平，模块忙
-  117   2            {
-  118   3               system_delay_ms(DELAY_MS);
-  119   3               time_cnt++;
-  120   3            }
+  116   2          else  // RTS高电平，模块忙
+  117   2          {
+  118   3            system_delay_ms(DELAY_MS);
+  119   3            time_cnt++;
+  120   3          }
   121   2          }
   122   1          
   123   1          return len;
@@ -161,7 +161,7 @@ stmt  level    source
   134          {
   135   1          uint32 len = strlen(str);
   136   1          zf_assert(NULL != str);
-  137   1         
+  137   1        
   138   1          return  ble6a20_send_buffer(str, len);
   139   1      }
   140          
@@ -202,7 +202,7 @@ stmt  level    source
   171   1      }
   172          
   173          //-------------------------------------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  zf_device_ble6a20                                                  09/05/26  22:18:14  PAGE 4   
+C251 COMPILER V5.60.0,  zf_device_ble6a20                                                  21/05/26  14:44:16  PAGE 4   
 
              -------------
   174          // 函数简介     蓝牙转串口模块 初始化

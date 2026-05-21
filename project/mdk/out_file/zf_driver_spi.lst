@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 1   
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_driver_spi
@@ -6,14 +6,14 @@ OBJECT MODULE PLACED IN .\out_file\zf_driver_spi.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_driver\zf_driver_spi.c LARGE ROM(HUGE) WARNINGLEVEL
                     -(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\
                     -..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfr
-                    -ee_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRINT
-                    -(.\out_file\zf_driver_spi.lst) TABS(3) OBJECT(.\out_file\zf_driver_spi.obj) 
+                    -ee_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contact_m
+                    -aster;..\code\PID) DEBUG PRINT(.\out_file\zf_driver_spi.lst) TABS(2) OBJECT(.\out_file\zf_driver_spi.obj) 
 
 stmt  level    source
 
     1          /********************************************************************************************************
              -*************
-    2          * STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+    2          * STC32G144K Opensourec Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
     3          * Copyright (c) 2022 SEEKFREE 逐飞科技
     4          *
     5          * 本文件是STC 开源库的一部分
@@ -30,8 +30,8 @@ stmt  level    source
    16          * 如果没有，请参阅<https://www.gnu.org/licenses/>
    17          *
    18          * 额外注明：
-   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-   20          * 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+   20          * 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
    21          * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
    22          * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
    23          *
@@ -58,39 +58,39 @@ stmt  level    source
    43          #pragma warning disable = 177
    44          
    45          /*
-   46          #define SPI0_WRITE_DAT(dat)      \
-   47                SPSTAT = 0xc0;              \
-   48                SPDAT = dat;            \
-   49                while (!(SPSTAT & 0x80));
+   46          #define SPI0_WRITE_DAT(dat)     \
+   47              SPSTAT = 0xc0;              \
+   48              SPDAT = dat;        \
+   49              while (!(SPSTAT & 0x80));
    50          
-   51          #define SPI1_WRITE_DAT(dat)      \
-   52                TI = 0x0;                  \
-   53                SBUF = dat;             \
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 2   
+   51          #define SPI1_WRITE_DAT(dat)     \
+   52              TI = 0x0;                 \
+   53              SBUF = dat;         \
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 2   
 
-   54                while (!TI)
+   54              while (!TI)
    55          
-   56          #define SPI2_WRITE_DAT(dat)      \
-   57                S2TI = 0x0;                \
-   58                S2BUF = dat;            \
-   59                while (!S2TI)
-   60                
-   61          #define SPI_WRITE_DAT(spi_n, dat)   \
-   62             switch (spi_n)             \
-   63             {                               \
-   64                case SPI_0:                 \
-   65                   SPI0_WRITE_DAT(dat);    \
-   66                   break;                  \
-   67                case SPI_1:                 \
-   68                   SPI1_WRITE_DAT(dat);    \
-   69                   break;                  \
-   70                case SPI_2:                 \
-   71                   SPI2_WRITE_DAT(dat);    \
-   72                   break;                  \
-   73                default:                    \
-   74                   zf_assert(0);           \
-   75                   break;                  \
-   76             }
+   56          #define SPI2_WRITE_DAT(dat)     \
+   57              S2TI = 0x0;               \
+   58              S2BUF = dat;        \
+   59              while (!S2TI)
+   60              
+   61          #define SPI_WRITE_DAT(spi_n, dat) \
+   62            switch (spi_n)          \
+   63            {                               \
+   64              case SPI_0:                 \
+   65                SPI0_WRITE_DAT(dat);    \
+   66                break;                  \
+   67              case SPI_1:                 \
+   68                SPI1_WRITE_DAT(dat);    \
+   69                break;                  \
+   70              case SPI_2:                 \
+   71                SPI2_WRITE_DAT(dat);    \
+   72                break;                  \
+   73              default:                    \
+   74                zf_assert(0);           \
+   75                break;                  \
+   76            }
    77          
    78          */
    79          
@@ -134,7 +134,7 @@ stmt  level    source
   117          
   118          const vuint32 DMA_SPIx_TXAL_ADDR[] = 
   119          {
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 3   
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 3   
 
   120              0x7efa26,
   121              0x7ef819,
@@ -202,7 +202,7 @@ stmt  level    source
   183          #define DMA_SPIX_CFG(pin)       (*(vuint8 far *)(DMA_SPIx_CFG_ADDR[pin]))
   184          #define DMA_SPIX_AMT(pin)       (*(vuint8 far *)(DMA_SPIx_AMT_ADDR[pin]))
   185          #define DMA_SPIX_AMTH(pin)      (*(vuint8 far *)(DMA_SPIx_AMTH_ADDR[pin]))    
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 4   
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 4   
 
   186          #define DMA_SPIX_TXAH(pin)      (*(vuint8 far *)(DMA_SPIx_TXAH_ADDR[pin]))
   187          #define DMA_SPIX_TXAL(pin)      (*(vuint8 far *)(DMA_SPIx_TXAL_ADDR[pin]))
@@ -225,59 +225,59 @@ stmt  level    source
              -------------
   203          void spi_dma_transfer(spi_index_enum spi_n, uint8 *write_buffer, uint8 *read_buffer, uint32 len)
   204          {
-  205   1         #define BUFF_LEN 64
-  206   1         
-  207   1         // 因DMA只能操作xdata区域的数据，所以，这里新建一个数组，搬移。
-  208   1         uint8 xdata tmp_buff[BUFF_LEN] = {0};
+  205   1        #define BUFF_LEN 64
+  206   1        
+  207   1        // 因DMA只能操作xdata区域的数据，所以，这里新建一个数组，搬移。
+  208   1        uint8 xdata tmp_buff[BUFF_LEN] = {0};
   209   1          uint16 tmp_len = 0;
   210   1          uint16 read_idx = 0;
   211   1          // 指针地址大于0x800000的时候，为FLASH地址
   212   1          // FLASH地址，不支持DMA搬移。
-  213   1         if((uint32)write_buffer >= 0x800000)
+  213   1        if((uint32)write_buffer >= 0x800000)
   214   1          {
   215   2              while(len)
   216   2              {
-  217   3                  tmp_len = (len > BUFF_LEN) ? BUFF_LEN : len;                         // 计算长度
-  218   3                  memcpy(tmp_buff, write_buffer, tmp_len);                             // 拷贝
-  219   3                  len -= tmp_len;                                                      // 去掉已经发送的长度
-  220   3                  write_buffer += tmp_len;                                             // 指针指向后面
-  221   3                     
+  217   3                  tmp_len = (len > BUFF_LEN) ? BUFF_LEN : len;                        // 计算长度
+  218   3                  memcpy(tmp_buff, write_buffer, tmp_len);                            // 拷贝
+  219   3                  len -= tmp_len;                                                     // 去掉已经发送的长度
+  220   3                  write_buffer += tmp_len;                                            // 指针指向后面
+  221   3                
   222   3                  DMA_SPIX_AMT(spi_n)  = (uint8)((tmp_len - 1) & 0xFF);             // 设置传输总字节数(低8位)：n
              -+1
-  223   3                  DMA_SPIX_AMTH(spi_n) = (uint8)(((tmp_len - 1) & 0xFF00) >> 8);       // 设置传输总字节数(高8位)：
+  223   3                  DMA_SPIX_AMTH(spi_n) = (uint8)(((tmp_len - 1) & 0xFF00) >> 8);      // 设置传输总字节数(高8位)：
              -n+1
-  224   3            
-  225   3                  DMA_SPIX_TXAH(spi_n) = (uint8)((uint16)&tmp_buff[0] >> 8);           // SPI发送数据存储地址
+  224   3          
+  225   3                  DMA_SPIX_TXAH(spi_n) = (uint8)((uint16)&tmp_buff[0] >> 8);          // SPI发送数据存储地址
   226   3                  DMA_SPIX_TXAL(spi_n) = (uint8)((uint16)&tmp_buff[0]);
-  227   3               
-  228   3               DMA_SPIX_TXAH(spi_n) = (uint8)((uint16)&read_buffer[read_idx] >> 8); // SPI接收数据存储地址
+  227   3            
+  228   3            DMA_SPIX_TXAH(spi_n) = (uint8)((uint16)&read_buffer[read_idx] >> 8);  // SPI接收数据存储地址
   229   3                  DMA_SPIX_TXAL(spi_n) = (uint8)((uint16)&read_buffer[read_idx]);
-  230   3               
-  231   3                  DMA_SPIX_CFG(spi_n)  = 1 << 6;                                       // 发送数据
-  232   3                  DMA_SPIX_CR(spi_n)   = 0xC1;                                         // 使能SPI_DMA 设置为主机模
+  230   3            
+  231   3                  DMA_SPIX_CFG(spi_n)  = 1 << 6;                                      // 发送数据
+  232   3                  DMA_SPIX_CR(spi_n)   = 0xC1;                                        // 使能SPI_DMA 设置为主机模
              -式 清空FIFO
-  233   3                  while(!(DMA_SPIX_STA(spi_n) & 0x01));     
-  234   3                  DMA_SPIX_STA(spi_n)  = 0;                                            // 清空标志位
-  235   3                     
-  236   3               read_idx += tmp_len;
+  233   3                  while(!(DMA_SPIX_STA(spi_n) & 0x01));   
+  234   3                  DMA_SPIX_STA(spi_n)  = 0;                                           // 清空标志位
+  235   3                
+  236   3            read_idx += tmp_len;
   237   3              }
   238   2          }
-  239   1         else
-  240   1         {
-  241   2            DMA_SPIX_AMT(spi_n)  = (uint8)((len - 1) & 0xFF);              // 设置传输总字节数(低8位)：n+1
-  242   2            DMA_SPIX_AMTH(spi_n) = (uint8)(((len - 1) & 0xFF00) >> 8);     // 设置传输总字节数(高8位)：n+1
-  243   2            DMA_SPIX_TXAH(spi_n) = (uint8)((uint16)&write_buffer[0] >> 8);  // SPI发送数据存储地址
-  244   2            DMA_SPIX_TXAL(spi_n) = (uint8)((uint16)&write_buffer[0]);
-  245   2            DMA_SPIX_RXAH(spi_n) = (uint8)((uint16)&read_buffer[0] >> 8);  // SPI接收数据存储地址
-  246   2            DMA_SPIX_RXAL(spi_n) = (uint8)((uint16)&read_buffer[0]);
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 5   
+  239   1        else
+  240   1        {
+  241   2          DMA_SPIX_AMT(spi_n)  = (uint8)((len - 1) & 0xFF);             // 设置传输总字节数(低8位)：n+1
+  242   2          DMA_SPIX_AMTH(spi_n) = (uint8)(((len - 1) & 0xFF00) >> 8);    // 设置传输总字节数(高8位)：n+1
+  243   2          DMA_SPIX_TXAH(spi_n) = (uint8)((uint16)&write_buffer[0] >> 8);  // SPI发送数据存储地址
+  244   2          DMA_SPIX_TXAL(spi_n) = (uint8)((uint16)&write_buffer[0]);
+  245   2          DMA_SPIX_RXAH(spi_n) = (uint8)((uint16)&read_buffer[0] >> 8); // SPI接收数据存储地址
+  246   2          DMA_SPIX_RXAL(spi_n) = (uint8)((uint16)&read_buffer[0]);
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 5   
 
-  247   2            
-  248   2            DMA_SPIX_CFG(spi_n)  = 1 << 6 | 1 <<5;                          // 发送数据，读取数据
-  249   2            DMA_SPIX_CR(spi_n)   = 0xC1;                                    // 使能SPI_DMA 设置为主机模式 清空FIFO
-  250   2            while(!(DMA_SPIX_STA(spi_n) & 0x01));
-  251   2            DMA_SPIX_STA(spi_n)  = 0;                                       // 清空标志位
-  252   2         }
+  247   2          
+  248   2          DMA_SPIX_CFG(spi_n)  = 1 << 6 | 1 <<5;                          // 发送数据，读取数据
+  249   2          DMA_SPIX_CR(spi_n)   = 0xC1;                                    // 使能SPI_DMA 设置为主机模式 清空FIFO
+  250   2          while(!(DMA_SPIX_STA(spi_n) & 0x01));
+  251   2          DMA_SPIX_STA(spi_n)  = 0;                                       // 清空标志位
+  252   2        }
   253   1      }
   254          
   255          //-------------------------------------------------------------------------------------------------------
@@ -290,9 +290,9 @@ stmt  level    source
   260          void spi_dma_write(spi_index_enum spi_n, const uint8 *write_buffer, uint32 len)
   261          {
   262   1          #define BUFF_LEN 64
-  263   1         
-  264   1         // 因DMA只能操作xdata区域的数据，所以，这里新建一个数组，搬移。
-  265   1         uint8 xdata tmp_buff[BUFF_LEN] = {0};
+  263   1        
+  264   1        // 因DMA只能操作xdata区域的数据，所以，这里新建一个数组，搬移。
+  265   1        uint8 xdata tmp_buff[BUFF_LEN] = {0};
   266   1          uint16 tmp_len = 0;
   267   1      
   268   1          // 指针地址大于0x800000的时候，为FLASH地址
@@ -307,7 +307,7 @@ stmt  level    source
   277   3                  write_buffer += tmp_len;                                               // 指针指向后面
   278   3                  
   279   3                  DMA_SPIX_AMT(spi_n)  = (uint8)((tmp_len - 1) & 0xFF);         //设置传输总字节数(低8位)：n+1
-  280   3                  DMA_SPIX_AMTH(spi_n) = (uint8)(((tmp_len - 1) & 0xFF00) >> 8); //设置传输总字节数(高8位)：n+1
+  280   3                  DMA_SPIX_AMTH(spi_n) = (uint8)(((tmp_len - 1) & 0xFF00) >> 8);  //设置传输总字节数(高8位)：n+1
   281   3      
   282   3                  DMA_SPIX_TXAH(spi_n) = (uint8)((uint16)&tmp_buff[0] >> 8);      // SPI发送数据存储地址
   283   3                  DMA_SPIX_TXAL(spi_n) = (uint8)((uint16)&tmp_buff[0]);
@@ -321,9 +321,9 @@ stmt  level    source
   290   2          }
   291   1          else
   292   1          {
-  293   2              DMA_SPIX_AMT(spi_n)  = (uint8)((len - 1) & 0xFF);            //设置传输总字节数(低8位)：n+1
-  294   2              DMA_SPIX_AMTH(spi_n) = (uint8)(((len - 1) & 0xFF00) >> 8);      //设置传输总字节数(高8位)：n+1
-  295   2         
+  293   2              DMA_SPIX_AMT(spi_n)  = (uint8)((len - 1) & 0xFF);           //设置传输总字节数(低8位)：n+1
+  294   2              DMA_SPIX_AMTH(spi_n) = (uint8)(((len - 1) & 0xFF00) >> 8);    //设置传输总字节数(高8位)：n+1
+  295   2        
   296   2              DMA_SPIX_TXAH(spi_n) = (uint8)((uint16)&write_buffer[0] >> 8);        // SPI发送数据存储地址
   297   2              DMA_SPIX_TXAL(spi_n) = (uint8)((uint16)&write_buffer[0]);
   298   2      
@@ -338,7 +338,7 @@ stmt  level    source
   306          //-------------------------------------------------------------------------------------------------------
              -------------
   307          // 函数简介     SPI读接口
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 6   
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 6   
 
   308          // 返回参数     void
   309          // 使用示例     内部使用，用户无需关心
@@ -406,7 +406,7 @@ stmt  level    source
   362          // 函数简介     SPI_DMA 接口写 16bit 数组
   363          // 参数说明     spi_n           SPI 模块号 参照 zf_driver_spi.h 内 spi_index_enum 枚举体定义
   364          // 参数说明     *data           数据存放缓冲区
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 7   
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 7   
 
   365          // 参数说明     len             缓冲区长度
   366          // 返回参数     void
@@ -474,7 +474,7 @@ stmt  level    source
   419          // 参数说明     spi_n           SPI 模块号 参照 zf_driver_spi.h 内 spi_index_enum 枚举体定义
   420          // 参数说明     register_name   寄存器地址
   421          // 参数说明     *data           数据存放缓冲区
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 8   
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 8   
 
   422          // 参数说明     len             缓冲区长度
   423          // 返回参数     void
@@ -542,7 +542,7 @@ stmt  level    source
   476          // 参数说明     *data           数据存放缓冲区
   477          // 参数说明     len             发送缓冲区长度
   478          // 返回参数     void
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 9   
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 9   
 
   479          // 使用示例     spi_read_16bit_array(SPI_1,data,64);
   480          //-------------------------------------------------------------------------------------------------------
@@ -610,7 +610,7 @@ stmt  level    source
   533          // 参数说明     spi_n           SPI 模块号 参照 zf_driver_spi.h 内 spi_index_enum 枚举体定义
   534          // 参数说明     register_name   寄存器地址
   535          // 参数说明     *dat           数据存放缓冲区
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 10  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 10  
 
   536          // 参数说明     len             发送缓冲区长度
   537          // 返回参数     void
@@ -678,7 +678,7 @@ stmt  level    source
   587          {
   588   1          // 使用SPI_DMA CLK频率就必须要两分频，所以这里填写时钟
   589   1          uint32 spi_psc = 0;
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 11  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 11  
 
   590   1          
   591   1          if((sck_pin & 0xFF00) != (mosi_pin & 0xFF00))
@@ -700,20 +700,20 @@ stmt  level    source
   607   2              gpio_init(cs_pin & 0xFF, GPO, 0, GPO_PUSH_PULL);
   608   2          }
   609   1      
-  610   1         // 波特率大于等于10M就需要设置GPIO电平转换速度
-  611   1         if(baud >= (10*1000*1000U))
-  612   1         {
-  613   2            gpio_set_level_speed(sck_pin  & 0xFF, GPIO_SPEED_FAST);
-  614   2            gpio_set_level_speed(mosi_pin  & 0xFF, GPIO_SPEED_FAST);
-  615   2            if(miso_pin != SPI_NULL_PIN)
-  616   2            {
-  617   3               gpio_set_level_speed(miso_pin & 0xFF, GPIO_SPEED_FAST);
-  618   3            }
-  619   2            if(cs_pin != SPI_NULL_PIN)
-  620   2            {
-  621   3               gpio_set_level_speed(cs_pin & 0xFF, GPIO_SPEED_FAST);
-  622   3            }
-  623   2         }
+  610   1        // 波特率大于等于10M就需要设置GPIO电平转换速度
+  611   1        if(baud >= (10*1000*1000U))
+  612   1        {
+  613   2          gpio_set_level_speed(sck_pin  & 0xFF, GPIO_SPEED_FAST);
+  614   2          gpio_set_level_speed(mosi_pin  & 0xFF, GPIO_SPEED_FAST);
+  615   2          if(miso_pin != SPI_NULL_PIN)
+  616   2          {
+  617   3            gpio_set_level_speed(miso_pin & 0xFF, GPIO_SPEED_FAST);
+  618   3          }
+  619   2          if(cs_pin != SPI_NULL_PIN)
+  620   2          {
+  621   3            gpio_set_level_speed(cs_pin & 0xFF, GPIO_SPEED_FAST);
+  622   3          }
+  623   2        }
   624   1          
   625   1          switch(spi_n)
   626   1          {
@@ -746,7 +746,7 @@ stmt  level    source
   653   3              }
   654   2              
   655   2              case SPI_2:
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 12  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 12  
 
   656   2              {
   657   3                  P_SWX4 &= ~(0x03 << 0); // 清除SPI_2引脚选择位
@@ -814,7 +814,7 @@ stmt  level    source
   719   1          // HSSPI2_CFG2 = 1<<5 | 1<<4 | 1<< 7; // 使能SPI高速模式， 使能FIFO
   720   1      
   721   1          HSSPIX_CFG2(spi_n) = 0x10; // 使能SPI高速模式， 使能FIFO
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 13  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 13  
 
   722   1      
   723   1          spi_psc = system_clock / baud + ((system_clock % baud) == 0? 0:1);
@@ -822,75 +822,75 @@ stmt  level    source
   725   1          SPIX_CLKDIV(spi_n) = spi_psc;
   726   1          
   727   1          DMA_SPIX_STA(spi_n)  = 0x00;
-  728   1         DMA_SPIX_CFG(spi_n)  = 0x00;     // bit7->SPI_DMA中断 bit6->发送数据控制位 bit5->接受数据控制位 
+  728   1        DMA_SPIX_CFG(spi_n)  = 0x00;    // bit7->SPI_DMA中断 bit6->发送数据控制位 bit5->接受数据控制位 
   729   1                                              // bit[3:2] 中断优先级
   730   1                                              // bit[1:0] DMA总线优先级
   731   1      
   732   1          DMA_SPIX_ITVH(spi_n) = 0;
   733   1          DMA_SPIX_ITVL(spi_n) = 0;
   734   1      
-  735   1         DMA_SPIX_CR(spi_n)   = 0xc1;     //bit7 1:使能 SPI_DMA, bit6 1:开始 SPI_DMA 主机模式,  bit5 1:开始 SPI_DMA 
+  735   1        DMA_SPIX_CR(spi_n)   = 0xc1;    //bit7 1:使能 SPI_DMA, bit6 1:开始 SPI_DMA 主机模式,  bit5 1:开始 SPI_DMA 
              -从机模式, bit0 1:清除 SPI_DMA FIFO
   736   1      }
   737          
   738          #define SPI_WRITE_DAT(spi_n, dat) spi_write_dat(spi_n, dat)
   739          void spi_write_dat(spi_index_enum spi_n, const uint8 dat)
   740          {
-  741   1         switch (spi_n)             
-  742   1         {                               
-  743   2            case SPI_1:                 
+  741   1        switch (spi_n)          
+  742   1        {                               
+  743   2          case SPI_1:                 
   744   2                  SPSTAT = 0xc0;              
-  745   2               SPDAT = dat;            
-  746   2               while (!(SPSTAT & 0x80));  
-  747   2               break;                  
-  748   2            case SPI_2:
+  745   2            SPDAT = dat;        
+  746   2            while (!(SPSTAT & 0x80));  
+  747   2            break;                  
+  748   2          case SPI_2:
   749   2                  SPI2STAT = 0xc0;              
-  750   2               SPI2DAT = dat;          
-  751   2               while (!(SPI2STAT & 0x80));
-  752   2               break;     
+  750   2            SPI2DAT = dat;        
+  751   2            while (!(SPI2STAT & 0x80));
+  752   2            break;     
   753   2              case SPI_3:
   754   2                  SPI3STAT = 0xc0;              
-  755   2               SPI3DAT = dat;          
-  756   2               while (!(SPI3STAT & 0x80));  
-  757   2               break;           
-  758   2            default:                    
-  759   2               zf_assert(0);           
-  760   2               break;                  
-  761   2         }
+  755   2            SPI3DAT = dat;        
+  756   2            while (!(SPI3STAT & 0x80));  
+  757   2            break;           
+  758   2          default:                    
+  759   2            zf_assert(0);           
+  760   2            break;                  
+  761   2        }
   762   1      }
-  763             
+  763            
   764          #define SPI_READ_DAT(spi_n, dat) spi_read_dat(spi_n, dat)
   765          uint8 spi_read_dat(spi_index_enum spi_n, const uint8 dat)
   766          {
-  767   1         uint8 ret = 0xFF;
-  768   1         switch (spi_n)             
-  769   1         {                               
-  770   2            case SPI_1:                 
-  771   2               SPSTAT = 0xc0;              
-  772   2               SPDAT = dat;            
-  773   2               while (!(SPSTAT & 0x80));  
-  774   2               ret = SPDAT;
-  775   2               break;             
-  776   2            case SPI_2:
-  777   2               SPI2STAT = 0xc0;              
-  778   2               SPI2DAT = dat;          
-  779   2               while (!(SPI2STAT & 0x80));  
-  780   2               ret = SPI2DAT;
-  781   2               break;   
+  767   1        uint8 ret = 0xFF;
+  768   1        switch (spi_n)          
+  769   1        {                               
+  770   2          case SPI_1:                 
+  771   2            SPSTAT = 0xc0;              
+  772   2            SPDAT = dat;        
+  773   2            while (!(SPSTAT & 0x80));  
+  774   2            ret = SPDAT;
+  775   2            break;             
+  776   2          case SPI_2:
+  777   2            SPI2STAT = 0xc0;              
+  778   2            SPI2DAT = dat;        
+  779   2            while (!(SPI2STAT & 0x80));  
+  780   2            ret = SPI2DAT;
+  781   2            break;   
   782   2              case SPI_3:
-  783   2               SPI3STAT = 0xc0;              
-  784   2               SPI3DAT = dat;          
-  785   2               while (!(SPI3STAT & 0x80));  
-  786   2               ret = SPI3DAT;
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 14  
+  783   2            SPI3STAT = 0xc0;              
+  784   2            SPI3DAT = dat;        
+  785   2            while (!(SPI3STAT & 0x80));  
+  786   2            ret = SPI3DAT;
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 14  
 
-  787   2               break;         
-  788   2            default:                    
-  789   2               zf_assert(0);           
-  790   2               break;                  
-  791   2         }
-  792   1         
-  793   1         return ret;
+  787   2            break;         
+  788   2          default:                    
+  789   2            zf_assert(0);           
+  790   2            break;                  
+  791   2        }
+  792   1        
+  793   1        return ret;
   794   1      }
   795          
   796          
@@ -906,7 +906,7 @@ stmt  level    source
              -------------
   805          void spi_write_8bit (spi_index_enum spi_n, const uint8 dat)
   806          {
-  807   1         SPI_WRITE_DAT(spi_n, dat);
+  807   1        SPI_WRITE_DAT(spi_n, dat);
   808   1      }
   809          
   810          //-------------------------------------------------------------------------------------------------------
@@ -921,10 +921,10 @@ stmt  level    source
              -------------
   818          void spi_write_8bit_array (spi_index_enum spi_n, const uint8 *dat, uint32 len)
   819          {
-  820   1         while(len--)
-  821   1         {
-  822   2            SPI_WRITE_DAT(spi_n, *dat++);
-  823   2         }
+  820   1        while(len--)
+  821   1        {
+  822   2          SPI_WRITE_DAT(spi_n, *dat++);
+  823   2        }
   824   1      }
   825          
   826          //-------------------------------------------------------------------------------------------------------
@@ -938,8 +938,8 @@ stmt  level    source
              -------------
   833          void spi_write_16bit (spi_index_enum spi_n, const uint16 dat)
   834          {
-  835   1         SPI_WRITE_DAT(spi_n, (uint8)((dat & 0xFF00) >> 8));
-  836   1         SPI_WRITE_DAT(spi_n, (uint8)(dat & 0x00FF));
+  835   1        SPI_WRITE_DAT(spi_n, (uint8)((dat & 0xFF00) >> 8));
+  836   1        SPI_WRITE_DAT(spi_n, (uint8)(dat & 0x00FF));
   837   1      }
   838          
   839          //-------------------------------------------------------------------------------------------------------
@@ -950,7 +950,7 @@ stmt  level    source
   843          // 参数说明     len             缓冲区长度
   844          // 返回参数     void
   845          // 使用示例     spi_write_16bit_array(SPI_1,data,64);
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 15  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 15  
 
   846          //-------------------------------------------------------------------------------------------------------
              -------------
@@ -958,8 +958,8 @@ stmt  level    source
   848          {
   849   1          while(len--)
   850   1          {
-  851   2            SPI_WRITE_DAT(spi_n, (uint8)((*dat & 0xFF00) >> 8));
-  852   2            SPI_WRITE_DAT(spi_n, (uint8)(*dat++ & 0x00FF));
+  851   2          SPI_WRITE_DAT(spi_n, (uint8)((*dat & 0xFF00) >> 8));
+  852   2          SPI_WRITE_DAT(spi_n, (uint8)(*dat++ & 0x00FF));
   853   2          }
   854   1      }
   855          
@@ -975,8 +975,8 @@ stmt  level    source
              -------------
   864          void spi_write_8bit_register (spi_index_enum spi_n, const uint8 register_name, const uint8 dat)
   865          {
-  866   1         SPI_WRITE_DAT(spi_n, register_name);
-  867   1         SPI_WRITE_DAT(spi_n, dat);
+  866   1        SPI_WRITE_DAT(spi_n, register_name);
+  867   1        SPI_WRITE_DAT(spi_n, dat);
   868   1      }
   869          
   870          
@@ -994,10 +994,10 @@ stmt  level    source
   880          void spi_write_8bit_registers (spi_index_enum spi_n, const uint8 register_name, const uint8 *dat, uint32 
              -len)
   881          {
-  882   1         SPI_WRITE_DAT(spi_n, register_name);
+  882   1        SPI_WRITE_DAT(spi_n, register_name);
   883   1          while(len--)
   884   1          {
-  885   2            SPI_WRITE_DAT(spi_n, *dat++);
+  885   2          SPI_WRITE_DAT(spi_n, *dat++);
   886   2          }
   887   1      }
   888          
@@ -1013,12 +1013,12 @@ stmt  level    source
              -------------
   897          void spi_write_16bit_register (spi_index_enum spi_n, const uint16 register_name, const uint16 dat)
   898          {
-  899   1         SPI_WRITE_DAT(spi_n, (uint8)((register_name & 0xFF00) >> 8));
-  900   1         SPI_WRITE_DAT(spi_n, (uint8)(register_name & 0x00FF));
-  901   1         SPI_WRITE_DAT(spi_n, (uint8)((dat & 0xFF00) >> 8));
-  902   1         SPI_WRITE_DAT(spi_n, (uint8)(dat & 0x00FF));
+  899   1        SPI_WRITE_DAT(spi_n, (uint8)((register_name & 0xFF00) >> 8));
+  900   1        SPI_WRITE_DAT(spi_n, (uint8)(register_name & 0x00FF));
+  901   1        SPI_WRITE_DAT(spi_n, (uint8)((dat & 0xFF00) >> 8));
+  902   1        SPI_WRITE_DAT(spi_n, (uint8)(dat & 0x00FF));
   903   1      }
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 16  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 16  
 
   904          
   905          //-------------------------------------------------------------------------------------------------------
@@ -1035,10 +1035,10 @@ stmt  level    source
   914          void spi_write_16bit_registers (spi_index_enum spi_n, const uint16 register_name, const uint16 *dat, uint
              -32 len)
   915          {
-  916   1         SPI_WRITE_DAT(spi_n, (uint8)((register_name & 0xFF00) >> 8));
-  917   1         SPI_WRITE_DAT(spi_n, (uint8)(register_name & 0x00FF));
-  918   1         SPI_WRITE_DAT(spi_n, (uint8)((*dat & 0xFF00) >> 8));
-  919   1         SPI_WRITE_DAT(spi_n, (uint8)(*dat++ & 0x00FF));
+  916   1        SPI_WRITE_DAT(spi_n, (uint8)((register_name & 0xFF00) >> 8));
+  917   1        SPI_WRITE_DAT(spi_n, (uint8)(register_name & 0x00FF));
+  918   1        SPI_WRITE_DAT(spi_n, (uint8)((*dat & 0xFF00) >> 8));
+  919   1        SPI_WRITE_DAT(spi_n, (uint8)(*dat++ & 0x00FF));
   920   1      }
   921          
   922          //-------------------------------------------------------------------------------------------------------
@@ -1086,7 +1086,7 @@ stmt  level    source
   958          {
   959   1          uint16 dat = 0;
   960   1      
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 17  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 17  
 
   961   1          dat = SPI_READ_DAT(spi_n, 0);
   962   1      
@@ -1126,7 +1126,7 @@ stmt  level    source
              -------------
   993          uint8 spi_read_8bit_register (spi_index_enum spi_n, const uint8 register_name)
   994          {
-  995   1         SPI_WRITE_DAT(spi_n, register_name);
+  995   1        SPI_WRITE_DAT(spi_n, register_name);
   996   1          return SPI_READ_DAT(spi_n, 0);
   997   1      }
   998          
@@ -1143,7 +1143,7 @@ stmt  level    source
              -------------
  1008          void spi_read_8bit_registers (spi_index_enum spi_n, const uint8 register_name, uint8 *dat, uint32 len)
  1009          {
- 1010   1         SPI_WRITE_DAT(spi_n, register_name);
+ 1010   1        SPI_WRITE_DAT(spi_n, register_name);
  1011   1          while(len--)
  1012   1          {
  1013   2              *dat++ = SPI_READ_DAT(spi_n, 0);
@@ -1154,7 +1154,7 @@ stmt  level    source
              -------------
  1018          // 函数简介      SPI 接口从传感器的寄存器读 16bit 数据
  1019          // 参数说明     spi_n           SPI 模块号 参照 zf_driver_spi.h 内 spi_index_enum 枚举体定义
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 18  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 18  
 
  1020          // 参数说明     register_name   寄存器地址
  1021          // 返回参数     uint16        数据
@@ -1165,11 +1165,11 @@ stmt  level    source
  1025          {
  1026   1          uint16 dat = 0;
  1027   1          
- 1028   1         SPI_WRITE_DAT(spi_n, (uint8)((register_name & 0xFF00) >> 8));
- 1029   1         SPI_WRITE_DAT(spi_n, (uint8)(register_name & 0x00FF));
- 1030   1         
- 1031   1         dat = SPI_READ_DAT(spi_n, 0);
- 1032   1         dat = ((dat << 8) |  SPI_READ_DAT(spi_n, 0));
+ 1028   1        SPI_WRITE_DAT(spi_n, (uint8)((register_name & 0xFF00) >> 8));
+ 1029   1        SPI_WRITE_DAT(spi_n, (uint8)(register_name & 0x00FF));
+ 1030   1        
+ 1031   1        dat = SPI_READ_DAT(spi_n, 0);
+ 1032   1        dat = ((dat << 8) |  SPI_READ_DAT(spi_n, 0));
  1033   1      
  1034   1          return dat;
  1035   1      }
@@ -1187,13 +1187,13 @@ stmt  level    source
              -------------
  1046          void spi_read_16bit_registers (spi_index_enum spi_n, const uint16 register_name, uint16 *dat, uint32 len)
  1047          {
- 1048   1         SPI_WRITE_DAT(spi_n, (uint8)((register_name & 0xFF00) >> 8));
- 1049   1         SPI_WRITE_DAT(spi_n, (uint8)(register_name & 0x00FF));
+ 1048   1        SPI_WRITE_DAT(spi_n, (uint8)((register_name & 0xFF00) >> 8));
+ 1049   1        SPI_WRITE_DAT(spi_n, (uint8)(register_name & 0x00FF));
  1050   1          
  1051   1          while(len--)
  1052   1          {
- 1053   2            *dat = SPI_READ_DAT(spi_n, 0);
- 1054   2            *dat = ((*dat << 8) |  SPI_READ_DAT(spi_n, 0));
+ 1053   2          *dat = SPI_READ_DAT(spi_n, 0);
+ 1054   2          *dat = ((*dat << 8) |  SPI_READ_DAT(spi_n, 0));
  1055   2              dat++;
  1056   2          }
  1057   1      }
@@ -1217,12 +1217,12 @@ stmt  level    source
  1073   2              {
  1074   3                  *read_buffer++ = SPI_READ_DAT(spi_n, *(write_buffer++));
  1075   3              }
- 1076   2            else
- 1077   2            {
- 1078   3               SPI_WRITE_DAT(spi_n, *(write_buffer++));
- 1079   3            }
+ 1076   2          else
+ 1077   2          {
+ 1078   3            SPI_WRITE_DAT(spi_n, *(write_buffer++));
+ 1079   3          }
  1080   2          }
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 19  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 19  
 
  1081   1      }
  1082          
@@ -1242,17 +1242,17 @@ stmt  level    source
  1093          {
  1094   1          while(len--)
  1095   1          {
- 1096   2            if(read_buffer != NULL)
+ 1096   2          if(read_buffer != NULL)
  1097   2              {
  1098   3                  *read_buffer = SPI_READ_DAT(spi_n, (uint8)((*write_buffer & 0xFF00) >> 8));
- 1099   3               *read_buffer = *read_buffer << 8 | (uint8)(SPI_READ_DAT(spi_n, (*write_buffer & 0x00FF)));
- 1100   3               read_buffer++;
+ 1099   3            *read_buffer = *read_buffer << 8 | (uint8)(SPI_READ_DAT(spi_n, (*write_buffer & 0x00FF)));
+ 1100   3            read_buffer++;
  1101   3              }
- 1102   2            else
- 1103   2            {
- 1104   3               SPI_WRITE_DAT(spi_n, (uint8)((*write_buffer & 0xFF00) >> 8));
- 1105   3               SPI_WRITE_DAT(spi_n, (uint8)(*write_buffer & 0x00FF));
- 1106   3            }
+ 1102   2          else
+ 1103   2          {
+ 1104   3            SPI_WRITE_DAT(spi_n, (uint8)((*write_buffer & 0xFF00) >> 8));
+ 1105   3            SPI_WRITE_DAT(spi_n, (uint8)(*write_buffer & 0x00FF));
+ 1106   3          }
  1107   2              write_buffer++;
  1108   2          }
  1109   1      }
@@ -1290,7 +1290,7 @@ stmt  level    source
  1137   1          if(miso_pin != SPI_NULL_PIN)
  1138   1          {
  1139   2              gpio_init(miso_pin & 0xFF, GPI, 1, GPI_IMPEDANCE);
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 20  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 20  
 
  1140   2          }
  1141   1          
@@ -1299,20 +1299,20 @@ stmt  level    source
  1144   2              gpio_init(cs_pin & 0xFF, GPO, 0, GPO_PUSH_PULL);
  1145   2          }
  1146   1      
- 1147   1         // 波特率大于等于10M就需要设置GPIO电平转换速度
- 1148   1         if(baud >= (10*1000*1000U))
- 1149   1         {
- 1150   2            gpio_set_level_speed(sck_pin  & 0xFF, GPIO_SPEED_FAST);
- 1151   2            gpio_set_level_speed(mosi_pin  & 0xFF, GPIO_SPEED_FAST);
- 1152   2            if(miso_pin != SPI_NULL_PIN)
- 1153   2            {
- 1154   3               gpio_set_level_speed(miso_pin & 0xFF, GPIO_SPEED_FAST);
- 1155   3            }
- 1156   2            if(cs_pin != SPI_NULL_PIN)
- 1157   2            {
- 1158   3               gpio_set_level_speed(cs_pin & 0xFF, GPIO_SPEED_FAST);
- 1159   3            }
- 1160   2         }
+ 1147   1        // 波特率大于等于10M就需要设置GPIO电平转换速度
+ 1148   1        if(baud >= (10*1000*1000U))
+ 1149   1        {
+ 1150   2          gpio_set_level_speed(sck_pin  & 0xFF, GPIO_SPEED_FAST);
+ 1151   2          gpio_set_level_speed(mosi_pin  & 0xFF, GPIO_SPEED_FAST);
+ 1152   2          if(miso_pin != SPI_NULL_PIN)
+ 1153   2          {
+ 1154   3            gpio_set_level_speed(miso_pin & 0xFF, GPIO_SPEED_FAST);
+ 1155   3          }
+ 1156   2          if(cs_pin != SPI_NULL_PIN)
+ 1157   2          {
+ 1158   3            gpio_set_level_speed(cs_pin & 0xFF, GPIO_SPEED_FAST);
+ 1159   3          }
+ 1160   2        }
  1161   1          
  1162   1          switch(spi_n)
  1163   1          {
@@ -1358,7 +1358,7 @@ stmt  level    source
  1203   4                      case 0: P_SWX4 |= 0x00 << 0; break;
  1204   4                      case 1: P_SWX4 |= 0x01 << 0; break;
  1205   4                      case 2: P_SWX4 |= 0x02 << 0; break;
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 21  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 21  
 
  1206   4                      case 3: P_SWX4 |= 0x03 << 0; break;
  1207   4                  }
@@ -1426,7 +1426,7 @@ stmt  level    source
  1269   1      }
  1270          
  1271          
-C251 COMPILER V5.60.0,  zf_driver_spi                                                      09/05/26  22:18:13  PAGE 22  
+C251 COMPILER V5.60.0,  zf_driver_spi                                                      21/05/26  14:44:14  PAGE 22  
 
  1272          
 

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 1   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_device_tft180
@@ -6,19 +6,19 @@ OBJECT MODULE PLACED IN .\out_file\zf_device_tft180.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_device\zf_device_tft180.c LARGE ROM(HUGE) WARNINGLE
                     -VEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;
                     -..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\see
-                    -kfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PR
-                    -INT(.\out_file\zf_device_tft180.lst) TABS(3) OBJECT(.\out_file\zf_device_tft180.obj) 
+                    -kfree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contac
+                    -t_master;..\code\PID) DEBUG PRINT(.\out_file\zf_device_tft180.lst) TABS(2) OBJECT(.\out_file\zf_device_tft180.obj) 
 
 stmt  level    source
 
     1          /********************************************************************************************************
              -*************
-    2          * STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+    2          * STC32G Opensourec Library 即（STC32G 开源库）是一个基于官方 SDK 接口的第三方开源库
     3          * Copyright (c) 2025 SEEKFREE 逐飞科技
     4          *
     5          * 本文件是STC32G144K开源库的一部分
     6          *
-    7          * STC32G144K 开源库 是免费软件
+    7          * STC32G 开源库 是免费软件
     8          * 您可以根据自由软件基金会发布的 GPL（GNU General Public License，即 GNU通用公共许可证）的条款
     9          * 即 GPL 的第3版（即 GPL3.0）或（您选择的）任何后来的版本，重新发布和/或修改它
    10          *
@@ -30,8 +30,8 @@ stmt  level    source
    16          * 如果没有，请参阅<https://www.gnu.org/licenses/>
    17          *
    18          * 额外注明：
-   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-   20          * 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+   20          * 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
    21          * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
    22          * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
    23          *
@@ -66,7 +66,7 @@ stmt  level    source
              -***********/
    50          
    51          #include "zf_common_clock.h"
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 2   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 2   
 
    52          #include "zf_common_debug.h"
    53          #include "zf_common_font.h"
@@ -87,12 +87,12 @@ stmt  level    source
    68          uint8 tft180_y_max = TFT180_WIGHT;
    69          
    70          #if (TFT180_USE_INTERFACE==SOFT_SPI)  
-                  static soft_spi_info_struct             tft180_spi;
-                  #define tft180_write_8bit_data(dat)    soft_spi_write_8bit(&TFT180_spi, dat)
-                  #define tft180_write_16bit_data(dat)   soft_spi_write_16bit(&TFT180_spi, dat)
+                 static soft_spi_info_struct             tft180_spi;
+                 #define tft180_write_8bit_data(dat)    soft_spi_write_8bit(&TFT180_spi, dat)
+                 #define tft180_write_16bit_data(dat)   soft_spi_write_16bit(&TFT180_spi, dat)
                #elif (TFT180_USE_INTERFACE==HARDWARE_SPI)
-   75             #define tft180_write_8bit_data(dat)             spi_dma_write_8bit(TFT180_SPI, dat)
-   76             #define tft180_write_16bit_data(dat)            spi_dma_write_16bit(TFT180_SPI, dat)
+   75            #define tft180_write_8bit_data(dat)             spi_dma_write_8bit(TFT180_SPI, dat)
+   76            #define tft180_write_16bit_data(dat)            spi_dma_write_16bit(TFT180_SPI, dat)
    77              #define tft180_write_16bit_data_arry(dat, len)  spi_dma_write_16bit_array(TFT180_SPI, dat, len)
    78          #endif
    79          
@@ -134,7 +134,7 @@ stmt  level    source
   111   1          if(tft180_display_dir==TFT180_PORTAIT || tft180_display_dir==TFT180_PORTAIT_180)
   112   1          {
   113   2              tft180_write_index(0x2a);
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 3   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 3   
 
   114   2              tft180_write_16bit_data(x1+2);
   115   2              tft180_write_16bit_data(x2+2);
@@ -171,12 +171,12 @@ stmt  level    source
   144   1          uint16 i;
   145   1          uint16 tmp[TFT180_LEN];
   146   1          tft180_set_region(0,0,tft180_x_max-1,tft180_y_max-1);
-  147   1         
+  147   1        
   148   1          for(i = 0; i < TFT180_LEN; i ++)
   149   1          {
   150   2              tmp[i] = color;
   151   2          }
-  152   1         for(i = 0; i < TFT180_WIGHT; i ++)
+  152   1        for(i = 0; i < TFT180_WIGHT; i ++)
   153   1          {
   154   2              tft180_write_16bit_data_arry(tmp, TFT180_LEN);
   155   2          }
@@ -202,7 +202,7 @@ stmt  level    source
   173   1          {
   174   2              tft180_x_max = 160;
   175   2              tft180_y_max = 128;
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 4   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 4   
 
   176   2          }
   177   1      }
@@ -255,10 +255,10 @@ stmt  level    source
   218          {
   219   1          uint8 i,j;
   220   1          uint8 temp;
-  221   1         
+  221   1        
   222   1          zf_assert(x < tft180_x_max);
   223   1          zf_assert(y < tft180_y_max);
-  224   1         
+  224   1        
   225   1          for(i=0; i<16; i++)
   226   1          {
   227   2              tft180_set_region(x,y+i,x+7,y+i);
@@ -270,7 +270,7 @@ stmt  level    source
   232   3                      tft180_write_16bit_data(tft180_pencolor);
   233   3                  else
   234   3                      tft180_write_16bit_data(tft180_bgcolor);
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 5   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 5   
 
   235   3                  temp>>=1;
   236   3              }
@@ -290,7 +290,7 @@ stmt  level    source
   248          void tft180_show_string (uint16 x,uint16 y,const char dat[])
   249          {
   250   1          uint16 j = 0;
-  251   1         
+  251   1        
   252   1          zf_assert(x < tft180_x_max);
   253   1          zf_assert(y < tft180_y_max);
   254   1          
@@ -316,7 +316,7 @@ stmt  level    source
   272          {
   273   1          uint8 a[3];
   274   1          uint8 i;
-  275   1         
+  275   1        
   276   1          zf_assert(x < tft180_x_max);
   277   1          zf_assert(y < tft180_y_max);
   278   1      
@@ -338,7 +338,7 @@ stmt  level    source
   294   2              tft180_show_char(x+(8*(i+1)),y,(uint8)('0' + a[i]));
   295   2              i++;
   296   2          }
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 6   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 6   
 
   297   1      }
   298          
@@ -356,7 +356,7 @@ stmt  level    source
   308          {
   309   1          uint8 a[3];
   310   1          uint8 i;
-  311   1         
+  311   1        
   312   1          zf_assert(x < tft180_x_max);
   313   1          zf_assert(y < tft180_y_max);
   314   1      
@@ -406,7 +406,7 @@ stmt  level    source
   356   1          i = 0;
   357   1          while(i<5)
   358   1          {
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 7   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 7   
 
   359   2              tft180_show_char(x+(8*(i+1)),y,(uint8)('0' + a[i]));
   360   2              i++;
@@ -427,7 +427,7 @@ stmt  level    source
   373          {
   374   1          uint8 a[5];
   375   1          uint8 i;
-  376   1         
+  376   1        
   377   1          zf_assert(x < tft180_x_max);
   378   1          zf_assert(y < tft180_y_max);
   379   1      
@@ -462,7 +462,7 @@ stmt  level    source
   405          {
   406   1          int8    buff[34];
   407   1          uint8   length;
-  408   1         
+  408   1        
   409   1          zf_assert(x < tft180_x_max);
   410   1          zf_assert(y < tft180_y_max);
   411   1      
@@ -474,7 +474,7 @@ stmt  level    source
   417   1          {
   418   2              buff[0] = ' ';
   419   2              length = zf_sprintf( &buff[1],(const int8 *)"%d",dat);
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 8   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 8   
 
   420   2              length++;
   421   2          }
@@ -510,10 +510,10 @@ stmt  level    source
   448   1          uint8   length;
   449   1          int8    buff[34];
   450   1          int8    start,end,point;
-  451   1         
+  451   1        
   452   1          zf_assert(x < tft180_x_max);
   453   1          zf_assert(y < tft180_y_max);
-  454   1         
+  454   1        
   455   1          if(6<pointnum)  pointnum = 6;
   456   1          if(10<num)      num = 10;
   457   1              
@@ -542,7 +542,7 @@ stmt  level    source
   479   1          tft180_show_string(x, y, (const char *)buff);                               // 显示数字
   480   1      }
   481          
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 9   
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 9   
 
   482          //-------------------------------------------------------------------------------------------------------
              -------------
@@ -610,7 +610,7 @@ stmt  level    source
   540   1          TFT180_CS(1);
   541   1      }
   542          
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 10  
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 10  
 
   543          //-------------------------------------------------------------------------------------------------------
              -------------
@@ -632,10 +632,10 @@ stmt  level    source
   556          {
   557   1          uint32 i = 0, j = 0;
   558   1          uint32 width_index, value_max_index;
-  559   1         
+  559   1        
   560   1          zf_assert(x < tft180_x_max);
   561   1          zf_assert(y < tft180_y_max);
-  562   1         
+  562   1        
   563   1          tft180_set_region(x, y, x+dis_width-1, y+dis_value_max-1);                  // 设置显示区域
   564   1          for(i=0;i<dis_value_max;i++)
   565   1          {
@@ -678,7 +678,7 @@ stmt  level    source
   598   1          tft180_set_dir(tft180_display_dir);
   599   1          tft180_set_color(tft180_pencolor, tft180_bgcolor);
   600   1      
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 11  
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 11  
 
   601   1          TFT180_RES(0);
   602   1          system_delay_ms(10);
@@ -746,7 +746,7 @@ stmt  level    source
   662   1          tft180_write_8bit_data(0x0f);
   663   1          tft180_write_8bit_data(0x1a);
   664   1          tft180_write_8bit_data(0x0f);
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 12  
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 12  
 
   665   1          tft180_write_8bit_data(0x18);
   666   1          tft180_write_8bit_data(0x2f);
@@ -815,7 +815,7 @@ Module Information          Static   Overlayable
   xdata size           =       890     ------
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
-C251 COMPILER V5.60.0,  zf_device_tft180                                                   09/05/26  22:18:14  PAGE 13  
+C251 COMPILER V5.60.0,  zf_device_tft180                                                   21/05/26  14:44:15  PAGE 13  
 
   bit size             =    ------     ------
   ebit size            =    ------     ------

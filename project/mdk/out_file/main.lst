@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               09/05/26  22:18:16  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               21/05/26  15:00:33  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -6,231 +6,224 @@ OBJECT MODULE PLACED IN .\out_file\main.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\user\main.c LARGE ROM(HUGE) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BROWSE
                     - INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;..\u
                     -ser;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_assistant;..\code\Camera
-                    -;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRINT(.\out_file\main.lst) TABS(
-                    -3) OBJECT(.\out_file\main.obj) 
+                    -;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contact_master;..\code\PID) DEBUG PR
+                    -INT(.\out_file\main.lst) TABS(2) OBJECT(.\out_file\main.obj) 
 
 stmt  level    source
 
     1          #include "zf_common_headfile.h"
     2          #include "main.h"
     3          #include "camera.h"
-*** ERROR C318 IN LINE 6 OF ..\code\Camera\camera.h: can't open file 'cross.h'
-*** WARNING C34 IN LINE 47 OF ..\code\Camera\camera.h: 'emergency_stop': missing declaration specifiers
-*** ERROR C42 IN LINE 47 OF ..\code\Camera\camera.h: 'emergency_stop': not in formal parameter list
-*** ERROR C29 IN LINE 52 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 52 OF ..\code\Camera\camera.h: 'points_l': invalid storage class
-*** ERROR C29 IN LINE 53 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 53 OF ..\code\Camera\camera.h: 'points_r': invalid storage class
-*** ERROR C29 IN LINE 54 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 54 OF ..\code\Camera\camera.h: 'dir_r': invalid storage class
-*** ERROR C29 IN LINE 55 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 55 OF ..\code\Camera\camera.h: 'dir_l': invalid storage class
-*** ERROR C29 IN LINE 56 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 56 OF ..\code\Camera\camera.h: 'l_border': invalid storage class
-*** ERROR C29 IN LINE 57 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 57 OF ..\code\Camera\camera.h: 'r_border': invalid storage class
-*** ERROR C29 IN LINE 58 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 58 OF ..\code\Camera\camera.h: 'l_border_valid': invalid storage class
-*** ERROR C29 IN LINE 59 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 59 OF ..\code\Camera\camera.h: 'r_border_valid': invalid storage class
-*** ERROR C29 IN LINE 65 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 65 OF ..\code\Camera\camera.h: 'zebra_detected': invalid storage class
-*** ERROR C29 IN LINE 66 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 66 OF ..\code\Camera\camera.h: 'change_point': invalid storage class
-*** ERROR C29 IN LINE 67 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C129 IN LINE 67 OF ..\code\Camera\camera.h: 'last_zebra_time' uses undefined struct/union 'timeval'
-*** ERROR C33 IN LINE 67 OF ..\code\Camera\camera.h: 'last_zebra_time': invalid storage class
-*** ERROR C29 IN LINE 68 OF ..\code\Camera\camera.h: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 68 OF ..\code\Camera\camera.h: 'zebra_count': invalid storage class
-*** ERROR C42 IN LINE 74 OF ..\code\Camera\camera.h: 'Bin_Image_Filter': not in formal parameter list
-*** ERROR C42 IN LINE 76 OF ..\code\Camera\camera.h: 'limit_a_b': not in formal parameter list
-*** ERROR C42 IN LINE 77 OF ..\code\Camera\camera.h: 'limit1': not in formal parameter list
-*** ERROR C42 IN LINE 79 OF ..\code\Camera\camera.h: 'otsuThreshold': not in formal parameter list
-*** ERROR C42 IN LINE 80 OF ..\code\Camera\camera.h: 'turn_to_bin': not in formal parameter list
-*** ERROR C42 IN LINE 82 OF ..\code\Camera\camera.h: 'get_start_point': not in formal parameter list
-*** ERROR C42 IN LINE 83 OF ..\code\Camera\camera.h: 'search_l_r': not in formal parameter list
-*** ERROR C42 IN LINE 84 OF ..\code\Camera\camera.h: 'get_left': not in formal parameter list
-*** ERROR C42 IN LINE 85 OF ..\code\Camera\camera.h: 'get_right': not in formal parameter list
-*** ERROR C42 IN LINE 86 OF ..\code\Camera\camera.h: 'extract_borders': not in formal parameter list
-*** ERROR C42 IN LINE 87 OF ..\code\Camera\camera.h: 'calc_midline': not in formal parameter list
-*** ERROR C42 IN LINE 88 OF ..\code\Camera\camera.h: 'image_filter': not in formal parameter list
-*** ERROR C42 IN LINE 89 OF ..\code\Camera\camera.h: 'image_draw_rectan': not in formal parameter list
-*** ERROR C42 IN LINE 96 OF ..\code\Camera\camera.h: 'state_machine_init': not in formal parameter list
-*** ERROR C42 IN LINE 97 OF ..\code\Camera\camera.h: 'detect_track_type': not in formal parameter list
-*** ERROR C42 IN LINE 98 OF ..\code\Camera\camera.h: 'normal_track_process': not in formal parameter list
-*** ERROR C42 IN LINE 99 OF ..\code\Camera\camera.h: 'cross2_process': not in formal parameter list
-*** ERROR C42 IN LINE 100 OF ..\code\Camera\camera.h: 'circle2_process': not in formal parameter list
-*** ERROR C42 IN LINE 101 OF ..\code\Camera\camera.h: 'image_process': not in formal parameter list
     4          #include "PID.h"
     5          
     6          #define false 0
     7          #define true 1
     8          extern float track_error;
-C251 COMPILER V5.60.0,  main                                                               09/05/26  22:18:16  PAGE 2   
-
-*** ERROR C29 IN LINE 8 OF ..\user\main.c: formal/parameter has illegal storage class
-*** ERROR C33 IN LINE 8 OF ..\user\main.c: 'track_error': invalid storage class
-    9          
-   10          #define INCLUDE_BOUNDARY_TYPE   3   /*ÉãÏñÍ··µ»ØÊý¾ÝÀàÐÍ*/
-   11          #define BOUNDARY_NUM            (MT9V03X_H * 3 / 2)
-   12          
-   13          uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
-*** ERROR C42 IN LINE 13 OF ..\user\main.c: 'xy_x1_boundary': not in formal parameter list
-*** ERROR C42 IN LINE 13 OF ..\user\main.c: 'xy_x2_boundary': not in formal parameter list
-*** ERROR C42 IN LINE 13 OF ..\user\main.c: 'xy_x3_boundary': not in formal parameter list
-   14          uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
-*** ERROR C42 IN LINE 14 OF ..\user\main.c: 'xy_y1_boundary': not in formal parameter list
-*** ERROR C42 IN LINE 14 OF ..\user\main.c: 'xy_y2_boundary': not in formal parameter list
-*** ERROR C42 IN LINE 14 OF ..\user\main.c: 'xy_y3_boundary': not in formal parameter list
-   15          
-   16          uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
-*** ERROR C42 IN LINE 16 OF ..\user\main.c: 'x1_boundary': not in formal parameter list
-*** ERROR C42 IN LINE 16 OF ..\user\main.c: 'x2_boundary': not in formal parameter list
-*** ERROR C42 IN LINE 16 OF ..\user\main.c: 'x3_boundary': not in formal parameter list
-   17          uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
-*** ERROR C42 IN LINE 17 OF ..\user\main.c: 'y1_boundary': not in formal parameter list
-*** ERROR C42 IN LINE 17 OF ..\user\main.c: 'y2_boundary': not in formal parameter list
-*** ERROR C42 IN LINE 17 OF ..\user\main.c: 'y3_boundary': not in formal parameter list
-   18          
-   19          /* Í¼Ïñ±¸·ÝÊý×é£¬ÔÚ·¢ËÍÇ°½«Í¼Ïñ±¸·ÝÔÙ½øÐÐ·¢ËÍ£¬±ÜÃâÍ¼Ïñ³öÏÖËºÁÑµÄÎÊÌâ */
-   20          uint8 image_copy[MT9V03X_H][MT9V03X_W];
-*** ERROR C42 IN LINE 20 OF ..\user\main.c: 'image_copy': not in formal parameter list
-   21          
-   22          #define LED1                    (P33 )
+    9          uint32 g_sysTick_ms = 0;
+   10          
+   11          #define INCLUDE_BOUNDARY_TYPE   3   /*ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+   12          #define BOUNDARY_NUM            (MT9V03X_H * 3 / 2)
+   13          
+   14          uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
+   15          uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
+   16          
+   17          uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
+   18          uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
+   19          
+   20          #define LED1                    (P33 )
+   21          #define WIFI_SSID_TEST          "SEEKFREE_2.4G"
+   22          #define WIFI_PASSWORD_TEST      "SEEKFREEV2" 
    23          int32 j;
-*** ERROR C42 IN LINE 23 OF ..\user\main.c: 'j': not in formal parameter list
    24          int32 i = MT9V03X_H - 1;
-*** ERROR C142 IN LINE 24 OF ..\user\main.c: illegal initialization
    25          void main(void)
-*** ERROR C42 IN LINE 25 OF ..\user\main.c: 'main': not in formal parameter list
-*** ERROR C25 IN LINE 25 OF ..\user\main.c: syntax error near '{'
    26          {
-   27              static uint32 current_tick = 0;
-   28              static uint32 last_10ms_tick = 0;
-   29              static uint32 last_200ms_tick = 0;
-   30          
-   31              clock_init(SYSTEM_CLOCK_96M);            /* Ê±ÖÓÅäÖÃ¼°ÏµÍ³³õÊ¼»¯<Îñ±Ø±£Áô> */
-   32              debug_init();    
-   33              pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                         
-*** ERROR C25 IN LINE 33 OF ..\user\main.c: syntax error near '/'
-   34              gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL); 
-   35              uart_init(UART_2, 115200, UART2_TX, UART2_RX);
-   36              /* ³õÊ¼»¯×´Ì¬»ú */
-   37              state_machine_init();
-   38          
-   39              while(g_sysTick_ms <=1500);                         /*ÕâÀï¿ÉÒÔ·ÅÈë°´¼ü¼ì²â£¬È»¶øÄ¿Ç°¿ª·¢°åÉÏ°´¼üÒý½ÅÊ
-             -ÇÐü¿ÕµÄ£¬¹ÊÑÓÊ±´¦Àí*/
-   40          
-   41              enable_control(CTRL_PIN);
-   42              send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
-   43              send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);                         
-   44              
-   45              /* ÉèÖÃÖð·ÉÖúÊÖÊ¹ÓÃDEBUG´®¿Ú½øÐÐÊÕ·¢ */
-   46              seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_DEBUG_UART);
-   47          
-   48          #if(3 == INCLUDE_BOUNDARY_TYPE)
-   49              j=0;
-   50          #endif
-   51          
-   52              /* ³õÊ¼»¯ÉãÏñÍ· */
-   53              while(1)
-C251 COMPILER V5.60.0,  main                                                               09/05/26  22:18:16  PAGE 3   
+   27   1          static uint32 current_tick = 0;
+   28   1          static uint32 last_10ms_tick = 0;
+   29   1          static uint32 last_200ms_tick = 0;
+   30   1      
+   31   1          clock_init(SYSTEM_CLOCK_96M);         /* Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ÏµÍ³ï¿½ï¿½Ê¼ï¿½ï¿½<ï¿½ï¿½Ø±ï¿½ï¿½ï¿?> */
+   32   1          debug_init();    
+   33   1          while(wifi_spi_init(WIFI_SSID_TEST, WIFI_PASSWORD_TEST))
+   34   1          {
+   35   2              printf("\r\n connect wifi failed. \r\n");
+   36   2              system_delay_ms(100);                                                   // åˆå?‹åŒ–å¤±è´¥ ç­‰å¾…
+             - 100ms
+   37   2          }
+   38   1      
+   39   1          printf("\r\n module version:%s",wifi_spi_version);                          // æ¨¡å—å›ºä»¶ç‰ˆæœ¬
+   40   1          printf("\r\n module mac    :%s",wifi_spi_mac_addr);                         // æ¨¡å— MAC ä¿¡æ¯
+   41   1          printf("\r\n module ip     :%s",wifi_spi_ip_addr_port);                     // æ¨¡å— IP åœ°å€
+   42   1      
+   43   1          // zf_device_wifi_spi.h æ–‡ä»¶å†…çš„å®å®šä¹‰å¯ä»¥æ›´æ”¹æ¨¡å—è¿žæŽ?(å»ºç«‹) WIFI ä¹‹åŽï¼Œæ˜¯å¦è‡ª
+             -åŠ¨è¿žæŽ? TCP æœåŠ¡å™¨ã€åˆ›å»? UDP è¿žæŽ¥ã€åˆ›å»? TCP æœåŠ¡å™¨ç­‰æ“ä½œ
+   44   1          if(1 != WIFI_SPI_AUTO_CONNECT)                                              // å¦‚æžœæ²¡æœ‰å¼€å?è‡?å
+             -Š¨è¿žæŽ? å°±éœ€è¦æ‰‹åŠ¨è¿žæŽ¥ç›®æ ? IP
+   45   1          {
+   46   2              while(wifi_spi_socket_connect(                                          // å‘æŒ‡å®šç›®æ ? IP çš„
+             -ç??å£å»ºç«? TCP è¿žæŽ¥
+   47   2                  "TCP",                                                              // æŒ‡å®šä½¿ç”¨TCPæ–¹å¼é
+             -€šè??
+   48   2                  WIFI_SPI_TARGET_IP,                                                 // æŒ‡å®šè¿œç??çš„IPåœ°å
+             -€ï¼Œå¡«å†™ä¸Šä½æœºçš„IPåœ°å€
+   49   2                  WIFI_SPI_TARGET_PORT,                                               // æŒ‡å®šè¿œç??çš„ç??å£å
+C251 COMPILER V5.60.0,  main                                                               21/05/26  15:00:33  PAGE 2   
 
-   54              {
-   55                  if(mt9v03x_init())
-   56                      gpio_toggle_level(LED1);                                            /* ·­×ª LED Òý½ÅÊä³öµçÆ½ 
-             -¿ØÖÆ LED ÁÁÃð ³õÊ¼»¯³ö´íÕâ¸öµÆ»áÉÁµÄºÜÂý */
-   57                  else
-   58                      break;
-   59                  system_delay_ms(500);                                                  /* ÉÁµÆ±íÊ¾Òì³£ */
-*** ERROR C25 IN LINE 59 OF ..\user\main.c: syntax error near '/'
-   60              }
-   61          
-   62          
-   63          #if(3 == INCLUDE_BOUNDARY_TYPE)
-   64              j = 0;
-   65              
-   66              for(i = MT9V03X_H - 1; i >= MT9V03X_H / 2; i--)
-   67              {
-   68                  xy_x1_boundary[j] = 34;
-   69                  xy_y1_boundary[j] = (uint8)i;
-   70          
-   71                  xy_x2_boundary[j] = 47;
-   72                  xy_y2_boundary[j] = (uint8)i;
-   73          
-   74                  xy_x3_boundary[j] = 60;
-   75                  xy_y3_boundary[j] = (uint8)i;
-   76                  j++;
-   77              }
-   78          
-   79              for(i = MT9V03X_H / 2 - 1; i >= 0; i--)
-   80              {
-   81                  xy_x1_boundary[j] = 34 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 34) / (MT9V03X_H / 2);
-*** ERROR C25 IN LINE 81 OF ..\user\main.c: syntax error near '188'
-   82                  xy_y1_boundary[j] = (uint8)i;
-   83          
-   84                  xy_x2_boundary[j] = 47 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 47) / (MT9V03X_H / 2);
-*** ERROR C25 IN LINE 84 OF ..\user\main.c: syntax error near '188'
-   85                  xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
-   86          
-   87                  xy_x3_boundary[j] = 60 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 60) / (MT9V03X_H / 2);
-*** ERROR C25 IN LINE 87 OF ..\user\main.c: syntax error near '188'
-   88                  xy_y3_boundary[j] = 30 + (uint8)i / 2;
-   89                  j++;
-   90              }
-   91          
-   92              for(i = 0; i < MT9V03X_H / 2; i++)
-   93              {
-   94                  xy_x1_boundary[j] = MT9V03X_W / 2 + (uint8)i * (138 - MT9V03X_W / 2) / (MT9V03X_H / 2);
-   95                  xy_y1_boundary[j] = (uint8)i;
-   96          
-   97                  xy_x2_boundary[j] = MT9V03X_W / 2 + i * (133 - MT9V03X_W / 2) / (MT9V03X_H / 2);
-   98                  xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
-   99          
-  100                  xy_x3_boundary[j] = MT9V03X_W / 2 + i * (128 - MT9V03X_W / 2) / (MT9V03X_H / 2);
-  101                  xy_y3_boundary[j] = 30 + (uint8)i / 2;
-  102                  j++;
-  103              }
-  104              seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, image_copy[0], MT9V03X_W, MT
-             -9V03X_H);
-  105              seekfree_assistant_camera_boundary_config(XY_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, 
+             -·ï¼Œå¡«å†™ä¸Šä½æœºçš„ç??å£å·ï¼Œé€šå¸¸ä¸Šä½æœºé»˜è®¤æ˜¯8080
+   50   2                  WIFI_SPI_LOCAL_PORT))                                               // æŒ‡å®šæœ?æœºçš„ç«?å£å
+             -·
+   51   2              {
+   52   3                  // å¦‚æžœä¸€ç›´å»ºç«‹å¤±è´? è€ƒè™‘ä¸€ä¸‹æ˜¯ä¸æ˜¯æ²¡æœ‰æŽ¥ç¡¬ä»¶å?ä½
+   53   3                  printf("\r\n Connect TCP Servers error, try again.");
+   54   3                  system_delay_ms(100);                                               // å»ºç«‹è¿žæŽ¥å¤±è´¥ ç­‰
+             -å¾… 100ms
+   55   3              }
+   56   2          }
+   57   1      
+   58   1          // æŽ¨èå…ˆåˆå§‹åŒ–æ‘„åƒå¤´ï¼ŒåŽåˆå§‹åŒ–é€é?žåŠ©æ‰?
+   59   1          while(mt9v03x_init())
+   60   1          {
+   61   2              system_delay_ms(100); 
+   62   2          printf("\r\n mt9v03x_init error, try again.");
+   63   2          }
+   64   1      
+   65   1          // ä½¿ç”¨é«˜é€? WIFI SPIæ¨¡å—æ—¶æ— æ³•ä½¿ç”¨å±å¹•ï¼ˆå› ä¸ºå¼•è„šæœ‰å…±ç”?ï¼?
+   66   1          // é€é?žåŠ©æ‰‹åˆå§‹åŒ– æ•°æ®ä¼ è¾“ä½¿ç”¨é«˜é€ŸWIFI SPI
+   67   1          seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_WIFI_SPI);
+   68   1      
+   69   1          pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                         
+   70   1          gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL); 
+   71   1          uart_init(UART_2, 115200, UART2_TX, UART2_RX);
+   72   1          /* ï¿½ï¿½Ê¼ï¿½ï¿½×´Ì¬ï¿½ï¿½ */
+   73   1          state_machine_init();
+   74   1      
+   75   1          while(g_sysTick_ms <=1500);                         /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ë°´ï¿½ï¿½ï¿½ï¿½â£¬È»ï
+             -¿½ï¿½Ä¿Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÕµÄ£ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½*/
+   76   1      
+   77   1          enable_control(CTRL_PIN);
+   78   1          //send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
+   79   1          //send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);                      
+   80   1          
+   81   1      
+   82   1      #if(3 == INCLUDE_BOUNDARY_TYPE)
+   83   1          j=0;
+   84   1      #endif
+   85   1      
+   86   1          /* ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í· */
+   87   1          while(1)
+   88   1          {
+   89   2              if(mt9v03x_init())
+   90   2                  gpio_toggle_level(LED1);                                            /* ï¿½ï¿½×ª LED ï¿½ï¿½ï¿½
+             -ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ? ï¿½ï¿½ï¿½ï¿½ LED ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ»ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿? */
+   91   2              else
+   92   2                  break;
+   93   2              system_delay_ms(500);                                                  /* ï¿½ï¿½ï¿½Æ±ï¿½Ê¾ï¿½ì³£ 
+             -*/
+   94   2          }
+   95   1      
+   96   1      
+   97   1      #if(3 == INCLUDE_BOUNDARY_TYPE)
+   98   1          j = 0;
+   99   1         
+  100   1          for(i = MT9V03X_H - 1; i >= MT9V03X_H / 2; i--)
+  101   1          {
+  102   2              xy_x1_boundary[j] = 34;
+  103   2              xy_y1_boundary[j] = (uint8)i;
+  104   2      
+  105   2              xy_x2_boundary[j] = 47;
+  106   2              xy_y2_boundary[j] = (uint8)i;
+  107   2      
+  108   2              xy_x3_boundary[j] = 60;
+  109   2              xy_y3_boundary[j] = (uint8)i;
+C251 COMPILER V5.60.0,  main                                                               21/05/26  15:00:33  PAGE 3   
+
+  110   2              j++;
+  111   2          }
+  112   1      
+  113   1          for(i = MT9V03X_H / 2 - 1; i >= 0; i--)
+  114   1          {
+  115   2              xy_x1_boundary[j] = 34 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 34) / (MT9V03X_H / 2);
+  116   2              xy_y1_boundary[j] = (uint8)i;
+  117   2      
+  118   2              xy_x2_boundary[j] = 47 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 47) / (MT9V03X_H / 2);
+  119   2              xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
+  120   2      
+  121   2              xy_x3_boundary[j] = 60 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 60) / (MT9V03X_H / 2);
+  122   2              xy_y3_boundary[j] = 30 + (uint8)i / 2;
+  123   2              j++;
+  124   2          }
+  125   1      
+  126   1          for(i = 0; i < MT9V03X_H / 2; i++)
+  127   1          {
+  128   2              xy_x1_boundary[j] = MT9V03X_W / 2 + (uint8)i * (138 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+  129   2              xy_y1_boundary[j] = (uint8)i;
+  130   2      
+  131   2              xy_x2_boundary[j] = MT9V03X_W / 2 + i * (133 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+  132   2              xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
+  133   2      
+  134   2              xy_x3_boundary[j] = MT9V03X_W / 2 + i * (128 - MT9V03X_W / 2) / (MT9V03X_H / 2);
+  135   2              xy_y3_boundary[j] = 30 + (uint8)i / 2;
+  136   2              j++;
+  137   2          }
+  138   1          seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, mt9v03x_image[0], MT9V03X_W,
+             - MT9V03X_H);
+  139   1          seekfree_assistant_camera_boundary_config(XY_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, 
              -xy_x3_boundary, xy_y1_boundary, xy_y2_boundary, xy_y3_boundary);
-  106          
-  107          #endif
-  108              while(1)
-  109              {
-  110                   current_tick = g_sysTick_ms;
-  111          
-  112                  if (current_tick - last_10ms_tick >= 10) {
-C251 COMPILER V5.60.0,  main                                                               09/05/26  22:18:16  PAGE 4   
+  140   1      
+  141   1      #endif
+  142   1          while(1)
+  143   1          {
+  144   2              
+  145   2               current_tick = g_sysTick_ms;
+  146   2      
+  147   2              if (current_tick - last_10ms_tick >= 10) {
+  148   3                  last_10ms_tick = current_tick;
+  149   3                  
+  150   3              }
+  151   2      
+  152   2              if((current_tick - last_200ms_tick) >= 200){
+  153   3                  last_200ms_tick = current_tick; 
+  154   3                  gpio_toggle_level(IO_P33); 
+  155   3              }
+  156   2      
+  157   2              if(mt9v03x_finish_flag)
+  158   2              {
+  159   3                  mt9v03x_finish_flag = 0;
+  160   3                  seekfree_assistant_camera_send();
+  161   3                  image_process();
+  162   3                  send_error_data(track_error, 0.0f, UART_2);
+  163   3              }
+  164   2      
+  165   2          }
+  166   1      }
+  167          
+  168          void sys_tick_handler (void){
+  169   1          g_sysTick_ms += 1;                                                                 /* ÏµÍ³ï¿½ï¿½ï¿½ï¿
+             -½ */      
+  170   1      }
+  171          
 
-  113                      last_10ms_tick = current_tick;
-  114                      
-  115                  }
-  116          
-  117                  if((current_tick - last_200ms_tick) >= 200){
-  118                      last_200ms_tick = current_tick; 
-  119                      gpio_toggle_level(IO_P33); 
-  120                  }
-  121          
-  122                  if(mt9v03x_finish_flag)
-  123                  {
-  124                      mt9v03x_finish_flag = 0;
-  125                      memcpy(image_copy[0], mt9v03x_image[0], MT9V03X_IMAGE_SIZE);
-  126                  
-  127                      seekfree_assistant_camera_send();
-  128                      image_process();
-  129                      send_error_data(track_error, 0.0f, UART_2);
-  130                  }
-  131          
-  132              }
-  133          }
-  134          
-  135          void sys_tick_handler (void){
-  136              g_sysTick_ms += 1;                                                                 /* ÏµÍ³ÐÄÌø */    
-             -  
-  137          }
-  138          
-*** ERROR C7 IN LINE 138 OF ..\user\main.c: compilation aborted
+C251 COMPILER V5.60.0,  main                                                               21/05/26  15:00:33  PAGE 4   
 
-C251 COMPILATION COMPLETE.  1 WARNING(S),  71 ERROR(S)
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =    ------     ------
+  ecode size           =      1990     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =      2028     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =       259     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

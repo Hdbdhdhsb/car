@@ -1,10 +1,10 @@
 /*********************************************************************************************************************
-* STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
-* Copyright (c) 2025 SEEKFREE 逐飞科技
+* RT1064DVL6A Opensourec Library 即（RT1064DVL6A 开源库）是一个基于官方 SDK 接口的第三方开源库
+* Copyright (c) 2022 SEEKFREE 逐飞科技
 *
-* 本文件是STC32G144K开源库的一部分
+* 本文件是 RT1064DVL6A 开源库的一部分
 *
-* STC32G144K 开源库 是免费软件
+* RT1064DVL6A 开源库 是免费软件
 * 您可以根据自由软件基金会发布的 GPL（GNU General Public License，即 GNU通用公共许可证）的条款
 * 即 GPL 的第3版（即 GPL3.0）或（您选择的）任何后来的版本，重新发布和/或修改它
 *
@@ -16,21 +16,21 @@
 * 如果没有，请参阅<https://www.gnu.org/licenses/>
 *
 * 额外注明：
-* 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-* 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+* 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+* 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
 * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
 * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
 *
-* 文件名称          
+* 文件名称          zf_device_imu660rc
 * 公司名称          成都逐飞科技有限公司
 * 版本信息          查看 libraries/doc 文件夹内 version 文件 版本说明
-* 开发环境          MDK FOR C251
-* 适用平台          STC32G144K
+* 开发环境          IAR 8.32.4 or MDK 5.38
+* 适用平台          RT1064DVL6A
 * 店铺链接          https://seekfree.taobao.com/
 *
 * 修改记录
-* 日期              作者           备注
-* 2024-08-01        大W            first version
+* 日期              作者                备注
+* 2025-12-12        SeekFree            first version
 ********************************************************************************************************************/
 /*********************************************************************************************************************
 * 接线定义：
@@ -38,7 +38,7 @@
 *                   模块管脚            单片机管脚
 *                   // 硬件 SPI 引脚
 *                   SCL/SPC           查看 zf_device_imu660rc.h 中 IMU660RC_SPC_PIN 宏定义
-*                   SDA/SDI           查看 zf_device_imu660rc.h 中 IMU660RC_SDI_PIN 宏定义
+*                   SDA/DSI           查看 zf_device_imu660rc.h 中 IMU660RC_SDI_PIN 宏定义
 *                   SA0/SDO           查看 zf_device_imu660rc.h 中 IMU660RC_SDO_PIN 宏定义
 *                   CS                查看 zf_device_imu660rc.h 中 IMU660RC_CS_PIN 宏定义
 *										INT2              查看 zf_device_imu660rc.h 中 IMU660RC_INT2_PIN  宏定义
@@ -48,7 +48,7 @@
 *
 *                   // 软件 IIC 引脚
 *                   SCL/SPC           查看 zf_device_imu660rc.h 中 IMU660RC_SCL_PIN 宏定义
-*                   SDA/SDI           查看 zf_device_imu660rc.h 中 IMU660RC_SDA_PIN 宏定义
+*                   SDA/DSI           查看 zf_device_imu660rc.h 中 IMU660RC_SDA_PIN 宏定义
 *                   VCC               3.3V电源
 *                   GND               电源地
 *                   其余引脚悬空
@@ -90,8 +90,8 @@
 	#define IMU660RC_SDA_PIN            (IO_P41)                        // 软件 IIC SDA 引脚 连接 IMU660RC 的 SDA 引脚
 //====================================================软件 IIC 驱动====================================================
 #endif
+#define IMU660RC_INT2_PIN		( INT0_P32 )	// 中断信号引脚，在读取四元数时需要使用，因为IMU660RC中断方式是上升沿，所以只能选择支持上升沿的引脚 INT0_P32 / INT1_P33
 
-#define IMU660RC_INT2_PIN		( GPIO_INIT_P36 )	// 中断信号引脚，在读取四元数时需要使用，中断方式模式需要上升沿
 
 
 #define IMU660RC_QUARTERNION_GET_GYRO   ( 1 )                                   // 1：在输出四元数的模式时，读取四元数时自动读取角速度 0：不自动读取

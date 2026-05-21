@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  usb_req_vendor                                                     09/05/26  22:18:15  PAGE 1   
+C251 COMPILER V5.60.0,  usb_req_vendor                                                     21/05/26  14:44:19  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE usb_req_vendor
@@ -6,8 +6,9 @@ OBJECT MODULE PLACED IN .\out_file\usb_req_vendor.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_components\stc32g_usb_lib\usb_req_vendor.c LARGE RO
                     -M(HUGE) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\lib
                     -raries\zf_device;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\
-                    -zf_components\seekfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera
-                    -\Cross2) DEBUG PRINT(.\out_file\usb_req_vendor.lst) TABS(3) OBJECT(.\out_file\usb_req_vendor.obj) 
+                    -zf_components\seekfree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detecti
+                    -on;..\code\Contact_master;..\code\PID) DEBUG PRINT(.\out_file\usb_req_vendor.lst) TABS(2) OBJECT(.\out_file\usb_req_vend
+                    -or.obj) 
 
 stmt  level    source
 

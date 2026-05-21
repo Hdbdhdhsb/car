@@ -12,7 +12,7 @@ int midline[MT9V03X_H] = {0};
 int leftline[MT9V03X_H] = {0};
 int rightline[MT9V03X_H] = {0};
 float track_error = 0.0f;
-uint8 original_image[MT9V03X_H][MT9V03X_W] = {0};
+
 uint8 bin_image[MT9V03X_H][MT9V03X_W] = {0};/*二值化后的图像*/
 
 
@@ -56,10 +56,7 @@ int my_abs(int value) {
     return value >= 0 ? value : -value;
 }
 
-/* 使用系统心跳获取当前时间(ms) */
-static uint32 get_current_time_ms(void) {
-    return g_sysTick_ms;
-}
+
 
 int16 limit_a_b(int16 x, int a, int b) {
     if(x < a) x = a;
@@ -97,18 +94,7 @@ void Bin_Image_Filter(uint8 Bin_Image[MT9V03X_H][MT9V03X_W]) {
     }
 }
 
-// 获取图像数据
-void Get_image(uint8(*mt9v03x_image)[MT9V03X_W]) {
-    uint8 i, j, row = 0, line = 0;
-    for(i = 0; i < MT9V03X_H; i++) {
-        for(j = 0; j < MT9V03X_W; j++) {
-            original_image[row][line] = mt9v03x_image[i][j];
-            line++;
-        }
-        line = 0;
-        row++;
-    }
-}
+
 
 
 /* 图像二值化 */
@@ -117,7 +103,7 @@ void turn_to_bin(void) {
     
     for(i = 0; i < MT9V03X_H; i++) {
         for(j = 0; j < MT9V03X_W; j++) {
-            bin_image[i][j] = (original_image[i][j] > threshold) ? WHITE_PIXEL : BLACK_PIXEL;
+            bin_image[i][j] = (mt9v03x_image[i][j] > threshold) ? WHITE_PIXEL : BLACK_PIXEL;
         }
     }
 }
@@ -545,7 +531,7 @@ void detect_zebra_line(uint8 row) {
     
     /* 如果变化点超过阈值，判定为斑马线 */
     if(change_point > 15) {
-        current_time = get_current_time_ms();
+        current_time = g_sysTick_ms;
         last_time = last_zebra_time_ms;
         
         /* 如果是第一次检测到斑马线，或者距离上次检测时间超过最小间隔 */
@@ -657,9 +643,6 @@ void normal_track_process(void) {
 /* 主图像处理函数 */
 void image_process() {
     uint8 border_ok;
-    uint8 l_border_u8[MT9V03X_H];
-    uint8 r_border_u8[MT9V03X_H];
-    int i;
     
     turn_to_bin();                  
     image_filter(bin_image);       
@@ -717,14 +700,6 @@ void image_process() {
             break;
     }
     } 
-    
-    /* 屏幕显示图像 */
-    for(i = 0; i < MT9V03X_H; i++) {
-        l_border_u8[i] = (uint8)l_border[i];
-        r_border_u8[i] = (uint8)r_border[i];
-    }
 
     update_track_error();
-    ips200_show_binary_image_with_colored_lines(0, 0, bin_image[0], MT9V03X_W, MT9V03X_H, midline, l_border_u8, r_border_u8);
-
 }

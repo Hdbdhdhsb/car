@@ -1,5 +1,5 @@
 /*********************************************************************************************************************
-* STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+* STC32G144K Opensourec Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
 * Copyright (c) 2025 SEEKFREE 逐飞科技
 *
 * 本文件是STC32G144K开源库的一部分
@@ -16,8 +16,8 @@
 * 如果没有，请参阅<https://www.gnu.org/licenses/>
 *
 * 额外注明：
-* 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-* 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+* 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+* 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
 * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
 * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
 *
@@ -74,7 +74,7 @@
 #if     (WIFI_SPI_AUTO_CONNECT > 2)    
 #error "WIFI_SPI_AUTO_CONNECT 的值只能为 [0,1,2]" 
 #else   
-#define WIFI_SPI_TARGET_IP          "192.168.2.49"              // 连接目标的 IP,不要有空格！！！
+#define WIFI_SPI_TARGET_IP          "192.168.43.5"              // 连接目标的 IP,不要有空格！！！
 #define WIFI_SPI_TARGET_PORT        "8086"                      // 连接目标的端口
 #define WIFI_SPI_LOCAL_PORT         "8086"                      // 本机的端口 0：随机  可设置范围2048-65535  默认 6666
 #endif

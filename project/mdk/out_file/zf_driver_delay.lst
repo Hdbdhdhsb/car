@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_driver_delay                                                    09/05/26  22:18:12  PAGE 1   
+C251 COMPILER V5.60.0,  zf_driver_delay                                                    21/05/26  14:44:12  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_driver_delay
@@ -6,14 +6,14 @@ OBJECT MODULE PLACED IN .\out_file\zf_driver_delay.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_driver\zf_driver_delay.c LARGE ROM(HUGE) WARNINGLEV
                     -EL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;.
                     -.\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seek
-                    -free_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRI
-                    -NT(.\out_file\zf_driver_delay.lst) TABS(3) OBJECT(.\out_file\zf_driver_delay.obj) 
+                    -free_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contact
+                    -_master;..\code\PID) DEBUG PRINT(.\out_file\zf_driver_delay.lst) TABS(2) OBJECT(.\out_file\zf_driver_delay.obj) 
 
 stmt  level    source
 
     1          /********************************************************************************************************
              -*************
-    2          * STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+    2          * STC32G144K Opensourec Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
     3          * Copyright (c) 2025 SEEKFREE 逐飞科技
     4          *
     5          * 本文件是STC32G144K开源库的一部分
@@ -30,8 +30,8 @@ stmt  level    source
    16          * 如果没有，请参阅<https://www.gnu.org/licenses/>
    17          *
    18          * 额外注明：
-   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-   20          * 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+   20          * 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
    21          * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
    22          * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
    23          *
@@ -62,11 +62,11 @@ stmt  level    source
    45          {
    46   1          uint32 edata i = 0;
    47   1      
-   48   1         i = count;
-   49   1         while (i) i--;
+   48   1        i = count;
+   49   1        while (i) i--;
    50   1      }
    51          
-C251 COMPILER V5.60.0,  zf_driver_delay                                                    09/05/26  22:18:12  PAGE 2   
+C251 COMPILER V5.60.0,  zf_driver_delay                                                    21/05/26  14:44:12  PAGE 2   
 
    52          
    53          //-------------------------------------------------------------------------------------------------------
@@ -100,10 +100,10 @@ stmt  level    source
    79   1          period_temp = ((period) / (freq_div + 1));      // 计算自动重装载值
    80   1          temp = (uint16)65535 - period_temp;
    81   1      
-   82   1          T11PS = freq_div;                               // 设置分频值
+   82   1          T11PS = freq_div;                             // 设置分频值
    83   1          T11L = temp;
    84   1          T11H = temp >> 8;
-   85   1          T11CR |= 0x80;                                   // 启动定时器
+   85   1          T11CR |= 0x80;                                  // 启动定时器
    86   1          
    87   1          while(!(T11CR & 0x01));                         // 等待硬件定时器溢出
    88   1      

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  PID                                                                09/05/26  22:18:16  PAGE 1   
+C251 COMPILER V5.60.0,  PID                                                                21/05/26  14:44:20  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE PID
@@ -6,8 +6,8 @@ OBJECT MODULE PLACED IN .\out_file\PID.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\code\PID\PID.c LARGE ROM(HUGE) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BRO
                     -WSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;.
                     -.\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekfree_assistant;..\code\Cam
-                    -era;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRINT(.\out_file\PID.lst) TAB
-                    -S(3) OBJECT(.\out_file\PID.obj) 
+                    -era;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contact_master;..\code\PID) DEBUG
+                    - PRINT(.\out_file\PID.lst) TABS(2) OBJECT(.\out_file\PID.obj) 
 
 stmt  level    source
 
@@ -66,7 +66,7 @@ stmt  level    source
    53   1          float output;
    54   1          output = (error - pid->previous_err1) * pid->Kp +
    55   1                   (error - 2.0f * pid->previous_err1 + pid->previous_err2) * pid->Kd +
-C251 COMPILER V5.60.0,  PID                                                                09/05/26  22:18:16  PAGE 2   
+C251 COMPILER V5.60.0,  PID                                                                21/05/26  14:44:20  PAGE 2   
 
    56   1                   error * pid->Ki +
    57   1                   pid->last_output;
@@ -134,7 +134,7 @@ stmt  level    source
   119   4                      return PID_ERR_INV;     /* 重复释放 */
   120   4                  }
   121   3              }
-C251 COMPILER V5.60.0,  PID                                                                09/05/26  22:18:16  PAGE 3   
+C251 COMPILER V5.60.0,  PID                                                                21/05/26  14:44:20  PAGE 3   
 
   122   2          }
   123   1          return PID_ERR_INV;                 /* 无效句柄 */

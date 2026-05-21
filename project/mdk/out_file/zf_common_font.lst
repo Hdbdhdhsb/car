@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_common_font                                                     09/05/26  22:18:12  PAGE 1   
+C251 COMPILER V5.60.0,  zf_common_font                                                     21/05/26  14:44:11  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_common_font
@@ -6,14 +6,14 @@ OBJECT MODULE PLACED IN .\out_file\zf_common_font.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_common\zf_common_font.c LARGE ROM(HUGE) WARNINGLEVE
                     -L(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..
                     -\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekf
-                    -ree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRIN
-                    -T(.\out_file\zf_common_font.lst) TABS(3) OBJECT(.\out_file\zf_common_font.obj) 
+                    -ree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contact_
+                    -master;..\code\PID) DEBUG PRINT(.\out_file\zf_common_font.lst) TABS(2) OBJECT(.\out_file\zf_common_font.obj) 
 
 stmt  level    source
 
     1          /********************************************************************************************************
              -*************
-    2          * STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+    2          * STC32G144K Opensourec Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
     3          * Copyright (c) 2025 SEEKFREE 逐飞科技
     4          *
     5          * 本文件是STC32G144K开源库的一部分
@@ -30,8 +30,8 @@ stmt  level    source
    16          * 如果没有，请参阅<https://www.gnu.org/licenses/>
    17          *
    18          * 额外注明：
-   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-   20          * 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+   20          * 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
    21          * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
    22          * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
    23          *
@@ -51,7 +51,7 @@ stmt  level    source
    36          
    37          const uint8 code ascii_font_8x16[][16]=
    38          {
-   39             //阴码 逐行式 字宽16 字高16 逆向
+   39            //阴码 逐行式 字宽16 字高16 逆向
    40              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, //   0
    41              {0x00,0x00,0x00,0x08,0x08,0x08,0x08,0x08,0x08,0x08,0x00,0x00,0x08,0x08,0x00,0x00}, // ! 1
    42              {0x00,0x48,0x24,0x24,0x12,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, // " 2
@@ -66,7 +66,7 @@ stmt  level    source
    51              {0x00,0x00,0x00,0x00,0x00,0x10,0x10,0x10,0xFE,0x10,0x10,0x10,0x00,0x00,0x00,0x00}, // + 11
    52              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x06,0x04,0x04,0x02}, // , 12
    53              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x7E,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, // - 13
-C251 COMPILER V5.60.0,  zf_common_font                                                     09/05/26  22:18:12  PAGE 2   
+C251 COMPILER V5.60.0,  zf_common_font                                                     21/05/26  14:44:11  PAGE 2   
 
    54              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x06,0x06,0x00,0x00}, // . 14
    55              {0x00,0x00,0x40,0x20,0x20,0x20,0x10,0x10,0x08,0x08,0x08,0x04,0x04,0x02,0x02,0x00}, // / 15
@@ -134,7 +134,7 @@ stmt  level    source
   117              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x7F,0x92,0x92,0x92,0x92,0x92,0xB7,0x00,0x00}, // m 77
   118              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x3B,0x46,0x42,0x42,0x42,0x42,0xE7,0x00,0x00}, // n 78
   119              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x3C,0x42,0x42,0x42,0x42,0x42,0x3C,0x00,0x00}, // o 79
-C251 COMPILER V5.60.0,  zf_common_font                                                     09/05/26  22:18:12  PAGE 3   
+C251 COMPILER V5.60.0,  zf_common_font                                                     21/05/26  14:44:11  PAGE 3   
 
   120              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1B,0x26,0x42,0x42,0x42,0x26,0x1A,0x02,0x07}, // p 80
   121              {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x58,0x64,0x42,0x42,0x42,0x64,0x58,0x40,0xE0}, // q 81
@@ -202,7 +202,7 @@ stmt  level    source
   183          //    { 0x00, 0x00, 0x56, 0x36, 0x00, 0x00 },     // ; 27
   184          //    { 0x00, 0x08, 0x14, 0x22, 0x41, 0x00 },     // < 28
   185          //    { 0x00, 0x14, 0x14, 0x14, 0x14, 0x14 },     // = 29
-C251 COMPILER V5.60.0,  zf_common_font                                                     09/05/26  22:18:12  PAGE 4   
+C251 COMPILER V5.60.0,  zf_common_font                                                     21/05/26  14:44:11  PAGE 4   
 
   186          //    { 0x00, 0x00, 0x41, 0x22, 0x14, 0x08 },     // > 30
   187          //    { 0x00, 0x02, 0x01, 0x51, 0x09, 0x06 },     // ? 31
@@ -270,7 +270,7 @@ stmt  level    source
   249          
 
 
-C251 COMPILER V5.60.0,  zf_common_font                                                     09/05/26  22:18:12  PAGE 5   
+C251 COMPILER V5.60.0,  zf_common_font                                                     21/05/26  14:44:11  PAGE 5   
 
 Module Information          Static   Overlayable
 ------------------------------------------------

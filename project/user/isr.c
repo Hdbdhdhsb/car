@@ -107,7 +107,7 @@ void DMA_UART1_IRQHandler(void) interrupt DMA_UR1R_VECTOR
     }
 }
 
-void DMA_UART2_IRQHandler(void) interrupt DMA_UR2R_VECTOR
+void DMA_UART2_IRQHandler(void) interrupt DMA_UR2R_VECTOR//1
 {
     if (DMA_UR2R_STA & 0x01) // 接收完成
     {

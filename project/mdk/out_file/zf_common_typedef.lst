@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_common_typedef                                                  09/05/26  22:18:11  PAGE 1   
+C251 COMPILER V5.60.0,  zf_common_typedef                                                  21/05/26  14:44:10  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_common_typedef
@@ -6,14 +6,14 @@ OBJECT MODULE PLACED IN .\out_file\zf_common_typedef.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_common\zf_common_typedef.c LARGE ROM(HUGE) WARNINGL
                     -EVEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device
                     -;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\se
-                    -ekfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG P
-                    -RINT(.\out_file\zf_common_typedef.lst) TABS(3) OBJECT(.\out_file\zf_common_typedef.obj) 
+                    -ekfree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Conta
+                    -ct_master;..\code\PID) DEBUG PRINT(.\out_file\zf_common_typedef.lst) TABS(2) OBJECT(.\out_file\zf_common_typedef.obj) 
 
 stmt  level    source
 
     1          /********************************************************************************************************
              -*************
-    2          * STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+    2          * STC32G144K Opensourec Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
     3          * Copyright (c) 2025 SEEKFREE 逐飞科技
     4          *
     5          * 本文件是STC32G144K开源库的一部分
@@ -30,8 +30,8 @@ stmt  level    source
    16          * 如果没有，请参阅<https://www.gnu.org/licenses/>
    17          *
    18          * 额外注明：
-   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-   20          * 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+   20          * 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
    21          * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
    22          * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
    23          *
@@ -67,7 +67,7 @@ Module Information          Static   Overlayable
   xdata size           =    ------     ------
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
-C251 COMPILER V5.60.0,  zf_common_typedef                                                  09/05/26  22:18:11  PAGE 2   
+C251 COMPILER V5.60.0,  zf_common_typedef                                                  21/05/26  14:44:10  PAGE 2   
 
   bit size             =    ------     ------
   ebit size            =    ------     ------

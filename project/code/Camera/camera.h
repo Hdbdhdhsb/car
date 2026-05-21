@@ -40,7 +40,7 @@ extern int rightline[MT9V03X_H];
 extern float track_error;         /* 赛道中线与屏幕中线的偏差（用于PID反馈） */
 
 extern uint8 binaryArray[MT9V03X_H][MT9V03X_W];
-extern uint8 original_image[MT9V03X_H][MT9V03X_W];
+
 extern uint8 bin_image[MT9V03X_H][MT9V03X_W];
 
 extern TrackType current_track_type;/* 当前赛道元素 */
@@ -78,7 +78,7 @@ void Bin_Image_Filter(uint8 Bin_Image[MT9V03X_H][MT9V03X_W]);
 int16 limit_a_b(int16 x, int a, int b);
 int16 limit1(int16 x, int16 y);
 
-uint8 otsuThreshold(uint8 *image, uint16 col, uint16 row);
+
 void turn_to_bin(void);
 
 uint8 get_start_point(uint8 start_row);

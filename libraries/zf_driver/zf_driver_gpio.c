@@ -1,5 +1,5 @@
 /*********************************************************************************************************************
-* STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+* STC32G144K Opensourec Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
 * Copyright (c) 2025 SEEKFREE 逐飞科技
 *
 * 本文件是STC32G144K开源库的一部分
@@ -16,8 +16,8 @@
 * 如果没有，请参阅<https://www.gnu.org/licenses/>
 *
 * 额外注明：
-* 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-* 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+* 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+* 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
 * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
 * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
 *
@@ -48,7 +48,7 @@ static void gpio_set_push_pull(gpio_pin_enum pin)
     uint8 pin_bit = pin & 0x0F;
     uint8 port_flag = pin & 0xF0;
 
-    // 推挽输出配置（PnM0置位，PnM1清零）
+    // 统一高阻输入配置（PnM1置位，PnM0清零）
     switch(port_flag)
     {
         case IO_P00: P0M1 &= ~(1 << pin_bit); P0M0 |= (1 << pin_bit); break;
@@ -75,12 +75,12 @@ static void gpio_set_push_pull(gpio_pin_enum pin)
 // 返回参数     void
 // 使用示例     
 //-------------------------------------------------------------------------------------------------------------------
-static void gpio_set_open_drain(gpio_pin_enum pin)
+static void gpio_set_open_dtain(gpio_pin_enum pin)
 {
     uint8 pin_bit = pin & 0x0F;
     uint8 port_flag = pin & 0xF0;
 
-    // 开漏输出配置（PnM0置位，PnM1置位）
+    // 统一高阻输入配置（PnM1置位，PnM0清零）
     switch(port_flag)
     {
         case IO_P00: P0M1 |= (1 << pin_bit); P0M0 |= (1 << pin_bit); break;
@@ -412,7 +412,7 @@ void gpio_init(gpio_pin_enum pin, gpio_dir_enum dir, const uint8 dat, gpio_mode_
 		}
 		else if(mode == GPO_OPEN_DTAIN)
 		{
-			gpio_set_open_drain(pin);
+			gpio_set_open_dtain(pin);
 		}
         gpio_set_level(pin, dat);
 	}

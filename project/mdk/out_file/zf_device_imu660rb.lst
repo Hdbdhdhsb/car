@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 1   
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_device_imu660rb
@@ -6,19 +6,20 @@ OBJECT MODULE PLACED IN .\out_file\zf_device_imu660rb.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_device\zf_device_imu660rb.c LARGE ROM(HUGE) WARNING
                     -LEVEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_devic
                     -e;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\s
-                    -eekfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG 
-                    -PRINT(.\out_file\zf_device_imu660rb.lst) TABS(3) OBJECT(.\out_file\zf_device_imu660rb.obj) 
+                    -eekfree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Cont
+                    -act_master;..\code\PID) DEBUG PRINT(.\out_file\zf_device_imu660rb.lst) TABS(2) OBJECT(.\out_file\zf_device_imu660rb.obj)
+                    - 
 
 stmt  level    source
 
     1          /********************************************************************************************************
              -*************
-    2          * STC32G144K Opensource Library ¼´£¨STC32G144K ¿ªÔ´¿â£©ÊÇÒ»¸ö»ùÓÚ¹Ù·½ SDK ½Ó¿ÚµÄµÚÈý·½¿ªÔ´¿â
+    2          * STC32G Opensourec Library ¼´£¨STC32G ¿ªÔ´¿â£©ÊÇÒ»¸ö»ùÓÚ¹Ù·½ SDK ½Ó¿ÚµÄµÚÈý·½¿ªÔ´¿â
     3          * Copyright (c) 2025 SEEKFREE Öð·É¿Æ¼¼
     4          *
     5          * ±¾ÎÄ¼þÊÇSTC32G144K¿ªÔ´¿âµÄÒ»²¿·Ö
     6          *
-    7          * STC32G144K ¿ªÔ´¿â ÊÇÃâ·ÑÈí¼þ
+    7          * STC32G ¿ªÔ´¿â ÊÇÃâ·ÑÈí¼þ
     8          * Äú¿ÉÒÔ¸ù¾Ý×ÔÓÉÈí¼þ»ù½ð»á·¢²¼µÄ GPL£¨GNU General Public License£¬¼´ GNUÍ¨ÓÃ¹«¹²Ðí¿ÉÖ¤£©µÄÌõ¿î
     9          * ¼´ GPL µÄµÚ3°æ£¨¼´ GPL3.0£©»ò£¨ÄúÑ¡ÔñµÄ£©ÈÎºÎºóÀ´µÄ°æ±¾£¬ÖØÐÂ·¢²¼ºÍ/»òÐÞ¸ÄËü
    10          *
@@ -30,8 +31,8 @@ stmt  level    source
    16          * Èç¹ûÃ»ÓÐ£¬Çë²ÎÔÄ<https://www.gnu.org/licenses/>
    17          *
    18          * ¶îÍâ×¢Ã÷£º
-   19          * ±¾¿ªÔ´¿âÊ¹ÓÃ GPL3.0 ¿ªÔ´Ðí¿ÉÖ¤Ð­Òé ÒÔÉÏÐí¿ÉÉùÃ÷ÎªÒëÎÄ°æ±¾
-   20          * Ðí¿ÉÉùÃ÷Ó¢ÎÄ°æÔÚ libraries/doc ÎÄ¼þ¼ÐÏÂµÄ GPL3_permission_statement.txt ÎÄ¼þÖÐ
+   19          * ±¾¿ªÔ´¿âÊ¹ÓÃ GPL3.0 ¿ªÔ´Ðí¿ÉÖ¤Ð­Òé ÒÔÉÏÐí¿ÉÉêÃ÷ÎªÒëÎÄ°æ±¾
+   20          * Ðí¿ÉÉêÃ÷Ó¢ÎÄ°æÔÚ libraries/doc ÎÄ¼þ¼ÐÏÂµÄ GPL3_permission_statement.txt ÎÄ¼þÖÐ
    21          * Ðí¿ÉÖ¤¸±±¾ÔÚ libraries ÎÄ¼þ¼ÐÏÂ ¼´¸ÃÎÄ¼þ¼ÐÏÂµÄ LICENSE ÎÄ¼þ
    22          * »¶Ó­¸÷Î»Ê¹ÓÃ²¢´«²¥±¾³ÌÐò µ«ÐÞ¸ÄÄÚÈÝÊ±±ØÐë±£ÁôÖð·É¿Æ¼¼µÄ°æÈ¨ÉùÃ÷£¨¼´±¾ÉùÃ÷£©
    23          *
@@ -65,9 +66,9 @@ stmt  level    source
    49          *                   SCL/SPC           ²é¿´ zf_device_imu660rb.h ÖÐ IMU660RB_SCL_PIN ºê¶¨Òå
    50          *                   SDA/DSI           ²é¿´ zf_device_imu660rb.h ÖÐ IMU660RB_SDA_PIN ºê¶¨Òå
    51          *                   VCC               3.3VµçÔ´
-   52          *                   GND               µçÔ´µØ
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 2   
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 2   
 
+   52          *                   GND               µçÔ´µØ
    53          *                   ÆäÓàÒý½ÅÐü¿Õ
    54          *                   ------------------------------------
    55          *********************************************************************************************************
@@ -92,258 +93,258 @@ stmt  level    source
    71          
    72          #if (IMU660RB_USE_INTERFACE==HARDWARE_SPI) 
    73          
-   74             //------------------------------------------------------------------------------------------------------
+   74            //------------------------------------------------------------------------------------------------------
              --------------
-   75             // º¯Êý¼ò½é     IMU660RB Ð´¼Ä´æÆ÷
-   76             // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
-   77             // ²ÎÊýËµÃ÷     dat            Êý¾Ý
-   78             // ·µ»Ø²ÎÊý     void
-   79             // Ê¹ÓÃÊ¾Àý     imu660rb_write_register(IMU660RB_PWR_CONF, 0x00);             // ¹Ø±Õ¸ß¼¶Ê¡µçÄ£Ê½
-   80             // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
-   81             //------------------------------------------------------------------------------------------------------
+   75            // º¯Êý¼ò½é     IMU660RB Ð´¼Ä´æÆ÷
+   76            // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
+   77            // ²ÎÊýËµÃ÷     dat            Êý¾Ý
+   78            // ·µ»Ø²ÎÊý     void
+   79            // Ê¹ÓÃÊ¾Àý     imu660rb_write_register(IMU660RB_PWR_CONF, 0x00);           // ¹Ø±Õ¸ß¼¶Ê¡µçÄ£Ê½
+   80            // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
+   81            //------------------------------------------------------------------------------------------------------
              --------------
-   82             static void imu660rb_write_register(uint8 reg, uint8 dat)
-   83             {
-   84   1            IMU660RB_CS(0);
-   85   1            spi_write_8bit_register(IMU660RB_SPI, reg | IMU660RB_SPI_W, dat);
-   86   1            IMU660RB_CS(1);
-   87   1         }
+   82            static void imu660rb_write_register(uint8 reg, uint8 dat)
+   83            {
+   84   1          IMU660RB_CS(0);
+   85   1          spi_write_8bit_register(IMU660RB_SPI, reg | IMU660RB_SPI_W, dat);
+   86   1          IMU660RB_CS(1);
+   87   1        }
    88          
-   89             //------------------------------------------------------------------------------------------------------
+   89            //------------------------------------------------------------------------------------------------------
              --------------
-   90             // º¯Êý¼ò½é     IMU660RB Ð´Êý¾Ý
-   91             // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
-   92             // ²ÎÊýËµÃ÷     dat            Êý¾Ý
-   93             // ·µ»Ø²ÎÊý     void
-   94             // Ê¹ÓÃÊ¾Àý     imu660rb_write_registers(IMU660RB_INIT_DATA, imu660rb_config_file, sizeof(imu660rb_confi
+   90            // º¯Êý¼ò½é     IMU660RB Ð´Êý¾Ý
+   91            // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
+   92            // ²ÎÊýËµÃ÷     dat            Êý¾Ý
+   93            // ·µ»Ø²ÎÊý     void
+   94            // Ê¹ÓÃÊ¾Àý     imu660rb_write_registers(IMU660RB_INIT_DATA, imu660rb_config_file, sizeof(imu660rb_confi
              -g_file));
-   95             // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
-   96             //------------------------------------------------------------------------------------------------------
+   95            // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
+   96            //------------------------------------------------------------------------------------------------------
              --------------
-   97             // static void imu660rb_write_registers(uint8 reg, const uint8 *dat, uint32 len)
-   98             // {
-   99             //     IMU660RB_CS(0);
-  100             //     spi_write_8bit_registers(IMU660RB_SPI, reg | IMU660RB_SPI_W, dat, len);
-  101             //     IMU660RB_CS(1);
-  102             // }
+   97            // static void imu660rb_write_registers(uint8 reg, const uint8 *dat, uint32 len)
+   98            // {
+   99            //     IMU660RB_CS(0);
+  100            //     spi_write_8bit_registers(IMU660RB_SPI, reg | IMU660RB_SPI_W, dat, len);
+  101            //     IMU660RB_CS(1);
+  102            // }
   103          
-  104             //------------------------------------------------------------------------------------------------------
+  104            //------------------------------------------------------------------------------------------------------
              --------------
-  105             // º¯Êý¼ò½é     IMU660RB ¶Á¼Ä´æÆ÷
-  106             // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
-  107             // ·µ»Ø²ÎÊý     uint8           Êý¾Ý
-  108             // Ê¹ÓÃÊ¾Àý     imu660rb_read_register(IMU660RB_CHIP_ID);
-  109             // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 3   
+  105            // º¯Êý¼ò½é     IMU660RB ¶Á¼Ä´æÆ÷
+  106            // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
+  107            // ·µ»Ø²ÎÊý     uint8           Êý¾Ý
+  108            // Ê¹ÓÃÊ¾Àý     imu660rb_read_register(IMU660RB_CHIP_ID);
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 3   
 
-  110             //------------------------------------------------------------------------------------------------------
+  109            // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
+  110            //------------------------------------------------------------------------------------------------------
              --------------
-  111             static uint8 imu660rb_read_register(uint8 reg)
-  112             {
-  113   1            uint8 dat;
-  114   1            IMU660RB_CS(0);
-  115   1            dat = spi_read_8bit_register(IMU660RB_SPI, reg | IMU660RB_SPI_R);
-  116   1            IMU660RB_CS(1);
-  117   1            return dat;
-  118   1         }
+  111            static uint8 imu660rb_read_register(uint8 reg)
+  112            {
+  113   1          uint8 dat;
+  114   1          IMU660RB_CS(0);
+  115   1          dat = spi_read_8bit_register(IMU660RB_SPI, reg | IMU660RB_SPI_R);
+  116   1          IMU660RB_CS(1);
+  117   1          return dat;
+  118   1        }
   119          
-  120             //------------------------------------------------------------------------------------------------------
+  120            //------------------------------------------------------------------------------------------------------
              --------------
-  121             // º¯Êý¼ò½é     IMU660RB ¶ÁÊý¾Ý
-  122             // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
-  123             // ²ÎÊýËµÃ÷     dat            Êý¾Ý»º³åÇø
-  124             // ²ÎÊýËµÃ÷     len             Êý¾Ý³¤¶È
-  125             // ·µ»Ø²ÎÊý     void
-  126             // Ê¹ÓÃÊ¾Àý     imu660rb_read_registers(IMU660RB_ACC_ADDRESS, dat, 6);
-  127             // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
-  128             //------------------------------------------------------------------------------------------------------
+  121            // º¯Êý¼ò½é     IMU660RB ¶ÁÊý¾Ý
+  122            // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
+  123            // ²ÎÊýËµÃ÷     dat            Êý¾Ý»º³åÇø
+  124            // ²ÎÊýËµÃ÷     len             Êý¾Ý³¤¶È
+  125            // ·µ»Ø²ÎÊý     void
+  126            // Ê¹ÓÃÊ¾Àý     imu660rb_read_registers(IMU660RB_ACC_ADDRESS, dat, 6);
+  127            // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
+  128            //------------------------------------------------------------------------------------------------------
              --------------
-  129             static void imu660rb_read_registers(uint8 reg, uint8 *dat, uint32 len)
-  130             {
-  131   1            IMU660RB_CS(0);
-  132   1            spi_read_8bit_registers(IMU660RB_SPI, reg | IMU660RB_SPI_R, dat, len);
-  133   1            IMU660RB_CS(1);
+  129            static void imu660rb_read_registers(uint8 reg, uint8 *dat, uint32 len)
+  130            {
+  131   1          IMU660RB_CS(0);
+  132   1          spi_read_8bit_registers(IMU660RB_SPI, reg | IMU660RB_SPI_R, dat, len);
+  133   1          IMU660RB_CS(1);
   134   1      
-  135   1         }
+  135   1        }
   136          
   137          #elif (IMU660RB_USE_INTERFACE==SOFT_SPI)
-                  
-                  
-                  #define IMU660RB_SCK(x)          IMU660RB_SPC_PIN  = x
-                  #define IMU660RB_MOSI(x)         IMU660RB_SDI_PIN = x
-                  #define IMU660RB_MISO            IMU660RB_SDO_PIN
-                  #define IMU660RB_CS(x)           IMU660RB_CS_PIN  = x
+                 
+                 
+                 #define IMU660RB_SCK(x)       IMU660RB_SPC_PIN  = x
+                 #define IMU660RB_MOSI(x)      IMU660RB_SDI_PIN = x
+                 #define IMU660RB_MISO         IMU660RB_SDO_PIN
+                 #define IMU660RB_CS(x)        IMU660RB_CS_PIN  = x
                
-                  //------------------------------------------------------------------------------------------------------
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  //  @brief      Í¨¹ýSPIÐ´Ò»¸öbyte,Í¬Ê±¶ÁÈ¡Ò»¸öbyte
-                  //  @param      byte        ·¢ËÍµÄÊý¾Ý
-                  //  @return     uint8 edata       return ·µ»Østatus×´Ì¬
-                  //  @since      v1.0
-                  //  Sample usage:
-                  //------------------------------------------------------------------------------------------------------
+                 //  @brief      Í¨¹ýSPIÐ´Ò»¸öbyte,Í¬Ê±¶ÁÈ¡Ò»¸öbyte
+                 //  @param      byte        ·¢ËÍµÄÊý¾Ý
+                 //  @return     uint8 edata       return ·µ»Østatus×´Ì¬
+                 //  @since      v1.0
+                 //  Sample usage:
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  static uint8 imu660rb_simspi_wr_byte(uint8 byte)
-                  {
-                     uint8 i;
-                     for(i=0; i<8; i++)
-                     {
-                        IMU660RB_SCK (0);
-                        IMU660RB_MOSI(byte&0x80);
-                        byte <<= 1;
-                        IMU660RB_SCK (1);
-                        byte |= IMU660RB_MISO;
-                     }
+                 static uint8 imu660rb_simspi_wr_byte(uint8 byte)
+                 {
+                   uint8 i;
+                   for(i=0; i<8; i++)
+                   {
                      IMU660RB_SCK (0);
-                     return(byte);
-                  }
-                  
-                  //------------------------------------------------------------------------------------------------------
+                     IMU660RB_MOSI(byte&0x80);
+                     byte <<= 1;
+                     IMU660RB_SCK (1);
+                     byte |= IMU660RB_MISO;
+                   }
+                   IMU660RB_SCK (0);
+                   return(byte);
+                 }
+                 
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  //  @brief      ½«valÐ´Èëcmd¶ÔÓ¦µÄ¼Ä´æÆ÷µØÖ·,Í¬Ê±·µ»Østatus×Ö½Ú
-                  //  @param      cmd         ÃüÁî×Ö
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 4   
+                 //  @brief      ½«valÐ´Èëcmd¶ÔÓ¦µÄ¼Ä´æÆ÷µØÖ·,Í¬Ê±·µ»Østatus×Ö½Ú
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 4   
 
-                  //  @param      val         ´ýÐ´Èë¼Ä´æÆ÷µÄÊýÖµ
-                  //  @since      v1.0
-                  //  Sample usage:
-                  //------------------------------------------------------------------------------------------------------
+                 //  @param      cmd         ÃüÁî×Ö
+                 //  @param      val         ´ýÐ´Èë¼Ä´æÆ÷µÄÊýÖµ
+                 //  @since      v1.0
+                 //  Sample usage:
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  static void imu660rb_simspi_w_reg_byte(uint8 cmd, uint8 val)
-                  {
-                     cmd |= IMU660RB_SPI_W;
-                     imu660rb_simspi_wr_byte(cmd);
-                     imu660rb_simspi_wr_byte(val);
-                  }
+                 static void imu660rb_simspi_w_reg_byte(uint8 cmd, uint8 val)
+                 {
+                   cmd |= IMU660RB_SPI_W;
+                   imu660rb_simspi_wr_byte(cmd);
+                   imu660rb_simspi_wr_byte(val);
+                 }
                
-                  //------------------------------------------------------------------------------------------------------
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  //  @brief      ¶ÁÈ¡cmdËù¶ÔÓ¦µÄ¼Ä´æÆ÷µØÖ·
-                  //  @param      cmd         ÃüÁî×Ö
-                  //  @param      *val        ´æ´¢¶ÁÈ¡µÄÊý¾ÝµØÖ·
-                  //  @since      v1.0
-                  //  Sample usage:
-                  //------------------------------------------------------------------------------------------------------
+                 //  @brief      ¶ÁÈ¡cmdËù¶ÔÓ¦µÄ¼Ä´æÆ÷µØÖ·
+                 //  @param      cmd         ÃüÁî×Ö
+                 //  @param      *val        ´æ´¢¶ÁÈ¡µÄÊý¾ÝµØÖ·
+                 //  @since      v1.0
+                 //  Sample usage:
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  static void imu660rb_simspi_r_reg_byte(uint8 cmd, uint8 *val)
-                  {
-                     IMU660RB_SCK(0);
-                     cmd |= IMU660RB_SPI_R;
-                     imu660rb_simspi_wr_byte(cmd);
-                     *val = imu660rb_simspi_wr_byte(0);
-                     IMU660RB_SCK(1);
-                  }
-                  
+                 static void imu660rb_simspi_r_reg_byte(uint8 cmd, uint8 *val)
+                 {
+                   IMU660RB_SCK(0);
+                   cmd |= IMU660RB_SPI_R;
+                   imu660rb_simspi_wr_byte(cmd);
+                   *val = imu660rb_simspi_wr_byte(0);
+                   IMU660RB_SCK(1);
+                 }
+                 
                
-               // //----------------------------------------------------------------------------------------------------
+               //  //----------------------------------------------------------------------------------------------------
              ----------------
-               // //  @brief      ½«valÐ´Èëcmd¶ÔÓ¦µÄ¼Ä´æÆ÷µØÖ·
-               // //  @param      cmd         ÃüÁî×Ö
-               // //  @param      val         ´ýÐ´Èë¼Ä´æÆ÷µÄÊýÖµ
-               // //  @since      v1.0
-               // //  Sample usage:
-               // //----------------------------------------------------------------------------------------------------
+               //  //  @brief      ½«valÐ´Èëcmd¶ÔÓ¦µÄ¼Ä´æÆ÷µØÖ·
+               //  //  @param      cmd         ÃüÁî×Ö
+               //  //  @param      val         ´ýÐ´Èë¼Ä´æÆ÷µÄÊýÖµ
+               //  //  @since      v1.0
+               //  //  Sample usage:
+               //  //----------------------------------------------------------------------------------------------------
              ----------------
-               // static void imu660rb_simspi_w_reg_bytes(uint8 cmd, uint8 *dat_addr, uint32 len)
-               // {
+               //  static void imu660rb_simspi_w_reg_bytes(uint8 cmd, uint8 *dat_addr, uint32 len)
+               //  {
                //    cmd |= IMU660RB_SPI_W;
                //    imu660rb_simspi_wr_byte(cmd);
                //    while(len--)
                //    {
-               //       imu660rb_simspi_wr_byte(*dat_addr++);
+               //      imu660rb_simspi_wr_byte(*dat_addr++);
                //    }
-               // }
+               //  }
                
-                  //------------------------------------------------------------------------------------------------------
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  //  @brief      ¶ÁÈ¡cmdËù¶ÔÓ¦µÄ¼Ä´æÆ÷µØÖ·
-                  //  @param      cmd         ÃüÁî×Ö
-                  //  @param      *val        ´æ´¢¶ÁÈ¡µÄÊý¾ÝµØÖ·
-                  //  @param      num         ¶ÁÈ¡µÄÊýÁ¿
-                  //  @since      v1.0
-                  //  Sample usage:
-                  //------------------------------------------------------------------------------------------------------
+                 //  @brief      ¶ÁÈ¡cmdËù¶ÔÓ¦µÄ¼Ä´æÆ÷µØÖ·
+                 //  @param      cmd         ÃüÁî×Ö
+                 //  @param      *val        ´æ´¢¶ÁÈ¡µÄÊý¾ÝµØÖ·
+                 //  @param      num         ¶ÁÈ¡µÄÊýÁ¿
+                 //  @since      v1.0
+                 //  Sample usage:
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  static void imu660rb_simspi_r_reg_bytes(uint8 cmd, uint8 *val, uint32 num)
-                  {
-                     cmd |= IMU660RB_SPI_R;
-                     imu660rb_simspi_wr_byte(cmd);
-                     while(num--)
-                     {
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 5   
+                 static void imu660rb_simspi_r_reg_bytes(uint8 cmd, uint8 *val, uint32 num)
+                 {
+                   cmd |= IMU660RB_SPI_R;
+                   imu660rb_simspi_wr_byte(cmd);
+                   while(num--)
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 5   
 
-                        *val++ = imu660rb_simspi_wr_byte(0);
-                     }
-                  }
-                  
-                  //------------------------------------------------------------------------------------------------------
+                   {
+                     *val++ = imu660rb_simspi_wr_byte(0);
+                   }
+                 }
+                 
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  // º¯Êý¼ò½é     IMU660RB Ð´¼Ä´æÆ÷
-                  // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
-                  // ²ÎÊýËµÃ÷     dat            Êý¾Ý
-                  // ·µ»Ø²ÎÊý     void
-                  // Ê¹ÓÃÊ¾Àý     imu660rb_write_register(IMU660RB_PWR_CONF, 0x00);                   // ¹Ø±Õ¸ß¼¶Ê¡µçÄ£Ê½
-                  // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
-                  //------------------------------------------------------------------------------------------------------
+                 // º¯Êý¼ò½é     IMU660RB Ð´¼Ä´æÆ÷
+                 // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
+                 // ²ÎÊýËµÃ÷     dat            Êý¾Ý
+                 // ·µ»Ø²ÎÊý     void
+                 // Ê¹ÓÃÊ¾Àý     imu660rb_write_register(IMU660RB_PWR_CONF, 0x00);                   // ¹Ø±Õ¸ß¼¶Ê¡µçÄ£Ê½
+                 // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  static void imu660rb_write_register(uint8 reg, uint8 dat)
-                  {
-                     IMU660RB_CS(0);
-                     imu660rb_simspi_w_reg_byte(reg | IMU660RB_SPI_W, dat);
-                     IMU660RB_CS(1);
-                  }
+                 static void imu660rb_write_register(uint8 reg, uint8 dat)
+                 {
+                   IMU660RB_CS(0);
+                   imu660rb_simspi_w_reg_byte(reg | IMU660RB_SPI_W, dat);
+                   IMU660RB_CS(1);
+                 }
                
-                  //------------------------------------------------------------------------------------------------------
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  // º¯Êý¼ò½é     IMU660RB ¶Á¼Ä´æÆ÷
-                  // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
-                  // ·µ»Ø²ÎÊý     uint8           Êý¾Ý
-                  // Ê¹ÓÃÊ¾Àý     imu660rb_read_register(IMU660RB_CHIP_ID);
-                  // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
-                  //------------------------------------------------------------------------------------------------------
+                 // º¯Êý¼ò½é     IMU660RB ¶Á¼Ä´æÆ÷
+                 // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
+                 // ·µ»Ø²ÎÊý     uint8           Êý¾Ý
+                 // Ê¹ÓÃÊ¾Àý     imu660rb_read_register(IMU660RB_CHIP_ID);
+                 // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  static uint8 imu660rb_read_register(uint8 reg)
-                  {
-                     uint8 dat;
-                     IMU660RB_CS(0);
-                     imu660rb_simspi_r_reg_byte(reg | IMU660RB_SPI_R, &dat);
-                     IMU660RB_CS(1);
-                     return dat;
-                  }
+                 static uint8 imu660rb_read_register(uint8 reg)
+                 {
+                   uint8 dat;
+                   IMU660RB_CS(0);
+                   imu660rb_simspi_r_reg_byte(reg | IMU660RB_SPI_R, &dat);
+                   IMU660RB_CS(1);
+                   return dat;
+                 }
                
-                  //------------------------------------------------------------------------------------------------------
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  // º¯Êý¼ò½é     IMU660RB ¶ÁÊý¾Ý
-                  // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
-                  // ²ÎÊýËµÃ÷     dat            Êý¾Ý»º³åÇø
-                  // ²ÎÊýËµÃ÷     len             Êý¾Ý³¤¶È
-                  // ·µ»Ø²ÎÊý     void
-                  // Ê¹ÓÃÊ¾Àý     imu660rb_read_registers(IMU660RB_ACC_ADDRESS, dat, 6);
-                  // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
-                  //------------------------------------------------------------------------------------------------------
+                 // º¯Êý¼ò½é     IMU660RB ¶ÁÊý¾Ý
+                 // ²ÎÊýËµÃ÷     reg             ¼Ä´æÆ÷µØÖ·
+                 // ²ÎÊýËµÃ÷     dat            Êý¾Ý»º³åÇø
+                 // ²ÎÊýËµÃ÷     len             Êý¾Ý³¤¶È
+                 // ·µ»Ø²ÎÊý     void
+                 // Ê¹ÓÃÊ¾Àý     imu660rb_read_registers(IMU660RB_ACC_ADDRESS, dat, 6);
+                 // ±¸×¢ÐÅÏ¢     ÄÚ²¿µ÷ÓÃ
+                 //------------------------------------------------------------------------------------------------------
              --------------
-                  static void imu660rb_read_registers(uint8 reg, uint8 *dat, uint32 len)
-                  {
-                     IMU660RB_CS(0);
-                     imu660rb_simspi_r_reg_bytes(reg | IMU660RB_SPI_R, dat, len);
-                     IMU660RB_CS(1);
-                  }
-                  
-                  
+                 static void imu660rb_read_registers(uint8 reg, uint8 *dat, uint32 len)
+                 {
+                   IMU660RB_CS(0);
+                   imu660rb_simspi_r_reg_bytes(reg | IMU660RB_SPI_R, dat, len);
+                   IMU660RB_CS(1);
+                 }
+                 
+                 
                
                #elif (IMU660RB_USE_INTERFACE==SOFT_IIC)
-                  
-                  static soft_iic_info_struct imu660rb_iic_struct;
+                 
+                 static soft_iic_info_struct imu660rb_iic_struct;
                
-                  #define imu660rb_write_register(reg, dat)        (soft_iic_write_8bit_register (&imu660rb_iic_struct, (r
+                 #define imu660rb_write_register(reg, dat)        (soft_iic_write_8bit_register (&imu660rb_iic_struct, (r
              -eg), (dat)))
-                  #define imu660rb_write_registers(reg, dat, len)  (soft_iic_write_8bit_registers(&imu660rb_iic_struct, (r
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 6   
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 6   
 
+                 #define imu660rb_write_registers(reg, dat, len)  (soft_iic_write_8bit_registers(&imu660rb_iic_struct, (r
              -eg), (dat), (len)))
-                  #define imu660rb_read_register(reg)               (soft_iic_read_8bit_register  (&imu660rb_iic_struct, (
+                 #define imu660rb_read_register(reg)               (soft_iic_read_8bit_register  (&imu660rb_iic_struct, (
              -reg)))
-                  #define imu660rb_read_registers(reg, dat, len)   (soft_iic_read_8bit_registers (&imu660rb_iic_struct, (r
+                 #define imu660rb_read_registers(reg, dat, len)   (soft_iic_read_8bit_registers (&imu660rb_iic_struct, (r
              -eg), (dat), (len)))
                
                #endif
@@ -373,8 +374,8 @@ stmt  level    source
   313   2      
   314   2          }while(0x6B != dat);                                                        // ¶ÁÈ¡Éè±¸IDÊÇ·ñµÈÓÚ0X24
              -£¬Èç¹û²»ÊÇ0X24ÔòÈÏÎªÃ»¼ì²âµ½Éè±¸
-  315   1         // printf("imu660rb_self_check = 0x%x\r\n", dat);
-  316   1         return return_state;
+  315   1        // printf("imu660rb_self_check = 0x%x\r\n", dat);
+  316   1        return return_state;
   317   1      }
   318          
   319          //-------------------------------------------------------------------------------------------------------
@@ -405,9 +406,9 @@ stmt  level    source
   339          // ·µ»Ø²ÎÊý     void
   340          // Ê¹ÓÃÊ¾Àý     imu660rb_get_gyro();                                            // Ö´ÐÐ¸Ãº¯Êýºó£¬Ö±½Ó²é¿´
              -¶ÔÓ¦µÄ±äÁ¿¼´¿É
-  341          // ±¸×¢ÐÅÏ¢     Ê¹ÓÃ SPI µÄ²É¼¯Ê±¼äÎª69us
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 7   
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 7   
 
+  341          // ±¸×¢ÐÅÏ¢     Ê¹ÓÃ SPI µÄ²É¼¯Ê±¼äÎª69us
   342          //             Ê¹ÓÃ IIC µÄ²É¼¯Ê±¼äÎª126us
   343          //-------------------------------------------------------------------------------------------------------
              -------------
@@ -473,9 +474,9 @@ stmt  level    source
   391   2              case 0x5C: gyro_data = (float)gyro_value / 14.3f;   break;              //  0x5C ÍÓÂÝÒÇÁ¿³ÌÎª:¡À2
              -000dps »ñÈ¡µ½µÄÍÓÂÝÒÇÊý¾Ý³ýÒÔ 14.3£¬    ¿ÉÒÔ×ª»¯Îª´øÎïÀíµ¥Î»µÄÊý¾Ý£¬µ¥Î»Îª£º¡ã/s
   392   2              case 0x51: gyro_data = (float)gyro_value / 7.1f;    break;              //  0x51 ÍÓÂÝÒÇÁ¿³ÌÎª:¡À4
-             -000dps »ñÈ¡µ½µÄÍÓÂÝÒÇÊý¾Ý³ýÒÔ 7.1£¬     ¿ÉÒÔ×ª»¯Îª´øÎïÀíµ¥Î»µÄÊý¾Ý£¬µ¥Î»Îª£º¡ã/s
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 8   
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 8   
 
+             -000dps »ñÈ¡µ½µÄÍÓÂÝÒÇÊý¾Ý³ýÒÔ 7.1£¬     ¿ÉÒÔ×ª»¯Îª´øÎïÀíµ¥Î»µÄÊý¾Ý£¬µ¥Î»Îª£º¡ã/s
   393   2              default: break;
   394   2          }
   395   1          return gyro_data;
@@ -496,28 +497,28 @@ stmt  level    source
   408   1          system_delay_ms(20);                                                        // µÈ´ýÉè±¸ÉÏµç³É¹¦
   409   1      
   410   1      #if (IMU660RB_USE_INTERFACE==HARDWARE_SPI)
-  411   1         
+  411   1        
   412   1          spi_init(IMU660RB_SPI, SPI_MODE0, IMU660RB_SPI_SPEED, IMU660RB_SPC_PIN, IMU660RB_SDI_PIN, IMU660RB_SD
              -O_PIN, SPI_CS_NULL);   // ÅäÖÃ IMU660RB µÄ SPI ¶Ë¿Ú
   413   1          gpio_init(IMU660RB_CS_PIN, GPO, GPIO_HIGH, GPO_PUSH_PULL);                  // ÅäÖÃ IMU660RB µÄ CS ¶Ë
              -¿Ú
   414   1      //    imu660rb_read_register(IMU660RB_CHIP_ID);                                   // ¶ÁÈ¡Ò»ÏÂÉè±¸ID ½«Éè±
              -¸ÉèÖÃÎªSPIÄ£Ê½
-  415   1         
+  415   1        
   416   1      #elif (IMU660RB_USE_INTERFACE==SOFT_SPI)
-                  
+                 
                // Ä¬ÈÏÊ¹ÓÃË«ÏòIO£¬²»ÐèÒª³õÊ¼»¯¡£
-               // soft_spi_init(IMU660RB_SPI, SPI_MODE0, 0, IMU963RA_SPC_PIN, IMU963RA_SDI_PIN, IMU963RA_SDO_PIN, IMU963
+               //  soft_spi_init(IMU660RB_SPI, SPI_MODE0, 0, IMU963RA_SPC_PIN, IMU963RA_SDI_PIN, IMU963RA_SDO_PIN, IMU963
              -RA_CS_PIN);
-                  
+                 
                #elif (IMU660RB_USE_INTERFACE==SOFT_IIC)
-                  
-                  soft_iic_init(&imu660rb_iic_struct, IMU660RB_DEV_ADDR, IMU660RB_SOFT_IIC_DELAY, IMU660RB_SCL_PIN, IMU660
+                 
+                 soft_iic_init(&imu660rb_iic_struct, IMU660RB_DEV_ADDR, IMU660RB_SOFT_IIC_DELAY, IMU660RB_SCL_PIN, IMU660
              -RB_SDA_PIN);        // ÅäÖÃ IMU660RB µÄ IIC ¶Ë¿Ú
-                  
+                 
                #endif
-  426   1         
-  427   1         
+  426   1        
+  427   1        
   428   1          do{
   429   2              if(imu660rb_self_check())                                               // IMU660RB ×Ô¼ì
   430   2              {
@@ -541,9 +542,9 @@ stmt  level    source
   444   2              // ÉèÖÃÎª:0x3C ¼ÓËÙ¶ÈÁ¿³ÌÎª:¡À8G      »ñÈ¡µ½µÄ¼ÓËÙ¶È¼ÆÊý¾Ý ³ýÒÔ4098£¬ ¿ÉÒÔ×ª»¯Îª´øÎïÀíµ¥Î»µÄÊý¾Ý£
              -¬µ¥Î»£ºg(m/s^2)
   445   2              // ÉèÖÃÎª:0x34 ¼ÓËÙ¶ÈÁ¿³ÌÎª:¡À16G     »ñÈ¡µ½µÄ¼ÓËÙ¶È¼ÆÊý¾Ý ³ýÒÔ2049£¬ ¿ÉÒÔ×ª»¯Îª´øÎïÀíµ¥Î»µÄÊý¾Ý£
-             -¬µ¥Î»£ºg(m/s^2)
-C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 09/05/26  22:18:15  PAGE 9   
+C251 COMPILER V5.60.0,  zf_device_imu660rb                                                 21/05/26  14:44:17  PAGE 9   
 
+             -¬µ¥Î»£ºg(m/s^2)
   446   2      
   447   2              imu660rb_write_register(IMU660RB_CTRL2_G, IMU660RB_GYR_SAMPLE);         // ÉèÖÃÍÓÂÝÒÇ¼ÆÁ¿³Ì ¡À200
              -0dps ÒÔ¼°Êý¾ÝÊä³öËÙÂÊ 208hz

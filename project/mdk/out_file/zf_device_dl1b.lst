@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_device_dl1b                                                     09/05/26  22:18:14  PAGE 1   
+C251 COMPILER V5.60.0,  zf_device_dl1b                                                     21/05/26  14:44:17  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_device_dl1b
@@ -6,19 +6,19 @@ OBJECT MODULE PLACED IN .\out_file\zf_device_dl1b.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_device\zf_device_dl1b.c LARGE ROM(HUGE) WARNINGLEVE
                     -L(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..
                     -\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_components\seekf
-                    -ree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross2) DEBUG PRIN
-                    -T(.\out_file\zf_device_dl1b.lst) TABS(3) OBJECT(.\out_file\zf_device_dl1b.obj) 
+                    -ree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\code\Contact_
+                    -master;..\code\PID) DEBUG PRINT(.\out_file\zf_device_dl1b.lst) TABS(2) OBJECT(.\out_file\zf_device_dl1b.obj) 
 
 stmt  level    source
 
     1          /********************************************************************************************************
              -*************
-    2          * STC32G144K Opensource Library 即（STC32G144K 开源库）是一个基于官方 SDK 接口的第三方开源库
+    2          * STC32G Opensourec Library 即（STC32G 开源库）是一个基于官方 SDK 接口的第三方开源库
     3          * Copyright (c) 2025 SEEKFREE 逐飞科技
     4          *
     5          * 本文件是STC32G144K开源库的一部分
     6          *
-    7          * STC32G144K 开源库 是免费软件
+    7          * STC32G 开源库 是免费软件
     8          * 您可以根据自由软件基金会发布的 GPL（GNU General Public License，即 GNU通用公共许可证）的条款
     9          * 即 GPL 的第3版（即 GPL3.0）或（您选择的）任何后来的版本，重新发布和/或修改它
    10          *
@@ -30,8 +30,8 @@ stmt  level    source
    16          * 如果没有，请参阅<https://www.gnu.org/licenses/>
    17          *
    18          * 额外注明：
-   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可声明为译文版本
-   20          * 许可声明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
+   19          * 本开源库使用 GPL3.0 开源许可证协议 以上许可申明为译文版本
+   20          * 许可申明英文版在 libraries/doc 文件夹下的 GPL3_permission_statement.txt 文件中
    21          * 许可证副本在 libraries 文件夹下 即该文件夹下的 LICENSE 文件
    22          * 欢迎各位使用并传播本程序 但修改内容时必须保留逐飞科技的版权声明（即本声明）
    23          *
@@ -66,7 +66,7 @@ stmt  level    source
    49          #include "zf_driver_delay.h"
    50          #include "zf_driver_exti.h"
    51          #include "zf_driver_soft_iic.h"
-C251 COMPILER V5.60.0,  zf_device_dl1b                                                     09/05/26  22:18:14  PAGE 2   
+C251 COMPILER V5.60.0,  zf_device_dl1b                                                     21/05/26  14:44:17  PAGE 2   
 
    52          
    53          #include "zf_device_dl1b.h"
@@ -81,11 +81,11 @@ stmt  level    source
    62          uint16 dl1b_distance_mm = 8192;
    63          
    64          #if (DL1B_USE_INTERFACE==SOFT_IIC) 
-   65             static soft_iic_info_struct dl1b_iic_struct;
-   66             #define dl1b_transfer_8bit_array(tdata, tlen, rdata, rlen)      (soft_iic_transfer_8bit_array(&dl1b_iic_
+   65            static soft_iic_info_struct dl1b_iic_struct;
+   66            #define dl1b_transfer_8bit_array(tdata, tlen, rdata, rlen)      (soft_iic_transfer_8bit_array(&dl1b_iic_
              -struct, (tdata), (tlen), (rdata), (rlen)))
    67          #elif (DL1B_USE_INTERFACE==HARDWARE_IIC)
-                  #define dl1b_transfer_8bit_array(tdata, tlen, rdata, rlen)      (iic_transfer_8bit_array(DL1B_IIC, DL1B_
+                 #define dl1b_transfer_8bit_array(tdata, tlen, rdata, rlen)      (iic_transfer_8bit_array(DL1B_IIC, DL1B_
              -DEV_ADDR, (tdata), (tlen), (rdata), (rlen)))
                #endif
    70          
@@ -134,7 +134,7 @@ stmt  level    source
   111   5                          dl1b_distance_mm = 8192;
   112   5                          dl1b_finsh_flag = 0;
   113   5                      }
-C251 COMPILER V5.60.0,  zf_device_dl1b                                                     09/05/26  22:18:14  PAGE 3   
+C251 COMPILER V5.60.0,  zf_device_dl1b                                                     21/05/26  14:44:17  PAGE 3   
 
   114   4                      else
   115   4                      {
@@ -193,16 +193,16 @@ stmt  level    source
                    iic_init(DL1B_IIC, DL1B_DEV_ADDR, DL1B_IIC_SPEED, DL1B_SCL_PIN, DL1B_SDA_PIN);
                #endif
   166   1          
-  167   1      #if   DL1B_XS_ENABLE
+  167   1      #if DL1B_XS_ENABLE
   168   1          gpio_init(DL1B_XS_PIN, GPO, GPIO_HIGH, GPO_PUSH_PULL);
   169   1      #endif
   170   1          
   171   1          do
   172   1          {
   173   2          
-  174   2      #if   DL1B_XS_ENABLE
+  174   2      #if DL1B_XS_ENABLE
   175   2              system_delay_ms(50);
-C251 COMPILER V5.60.0,  zf_device_dl1b                                                     09/05/26  22:18:14  PAGE 4   
+C251 COMPILER V5.60.0,  zf_device_dl1b                                                     21/05/26  14:44:17  PAGE 4   
 
   176   2              gpio_low(DL1B_XS_PIN);
   177   2              system_delay_ms(10);
@@ -271,7 +271,7 @@ Module Information          Static   Overlayable
   pdata size           =    ------     ------
   xdata size           =       158     ------
   xdata-const size     =    ------     ------
-C251 COMPILER V5.60.0,  zf_device_dl1b                                                     09/05/26  22:18:14  PAGE 5   
+C251 COMPILER V5.60.0,  zf_device_dl1b                                                     21/05/26  14:44:17  PAGE 5   
 
   edata size           =    ------     ------
   bit size             =    ------     ------

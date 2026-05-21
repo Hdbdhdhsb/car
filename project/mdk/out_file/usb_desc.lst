@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  usb_desc                                                           09/05/26  22:18:15  PAGE 1   
+C251 COMPILER V5.60.0,  usb_desc                                                           21/05/26  14:44:18  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE usb_desc
@@ -6,8 +6,8 @@ OBJECT MODULE PLACED IN .\out_file\usb_desc.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE ..\..\libraries\zf_components\stc32g_usb_lib\usb_desc.c LARGE ROM(HUGE
                     -) WARNINGLEVEL(3) OPTIMIZE(0,SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries
                     -\zf_device;..\..\libraries\zf_driver;..\user;..\code;..\..\libraries\zf_components\stc32g_usb_lib;..\..\libraries\zf_com
-                    -ponents\seekfree_assistant;..\code\Camera;..\code\Contact_master;..\code\PID;..\code\Camera\Circle2;..\code\Camera\Cross
-                    -2) DEBUG PRINT(.\out_file\usb_desc.lst) TABS(3) OBJECT(.\out_file\usb_desc.obj) 
+                    -ponents\seekfree_assistant;..\code\Camera;..\code\Camera\Circle;..\code\Camera\Cross;..\code\Camera\Circle_detection;..\
+                    -code\Contact_master;..\code\PID) DEBUG PRINT(.\out_file\usb_desc.lst) TABS(2) OBJECT(.\out_file\usb_desc.obj) 
 
 stmt  level    source
 
@@ -66,7 +66,7 @@ stmt  level    source
    53              0x00,                   //iInterface(0);
    54          
    55              0x05,                   //bLength(5);
-C251 COMPILER V5.60.0,  usb_desc                                                           09/05/26  22:18:15  PAGE 2   
+C251 COMPILER V5.60.0,  usb_desc                                                           21/05/26  14:44:18  PAGE 2   
 
    56              0x24,                   //bDescriptorType(CS_INTERFACE);
    57              0x00,                   //bDescriptorSubtype(Header Functional Descriptor);
@@ -134,7 +134,7 @@ stmt  level    source
   119              'T',0,
   120              'C',0,
   121          };
-C251 COMPILER V5.60.0,  usb_desc                                                           09/05/26  22:18:15  PAGE 3   
+C251 COMPILER V5.60.0,  usb_desc                                                           21/05/26  14:44:18  PAGE 3   
 
   122          
   123          char code PRODUCTDESC[30] =
