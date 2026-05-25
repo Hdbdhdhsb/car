@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               21/05/26  15:00:33  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               23/05/26  14:09:21  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -21,198 +21,160 @@ stmt  level    source
     8          extern float track_error;
     9          uint32 g_sysTick_ms = 0;
    10          
-   11          #define INCLUDE_BOUNDARY_TYPE   3   /*����ͷ������������*/
-   12          #define BOUNDARY_NUM            (MT9V03X_H * 3 / 2)
-   13          
-   14          uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
-   15          uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
-   16          
-   17          uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
-   18          uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
-   19          
-   20          #define LED1                    (P33 )
-   21          #define WIFI_SSID_TEST          "SEEKFREE_2.4G"
-   22          #define WIFI_PASSWORD_TEST      "SEEKFREEV2" 
-   23          int32 j;
-   24          int32 i = MT9V03X_H - 1;
-   25          void main(void)
+   11          #define BOUNDARY_NUM            MT9V03X_H
+   12          
+   13          uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
+   14          uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
+   15          
+   16          uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
+   17          uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
+   18          
+   19          #define LED1                    (P33 )
+   20          #define WIFI_SSID_TEST          "y"
+   21          #define WIFI_PASSWORD_TEST      "ksh12345" 
+   22          int32 j;
+   23          int32 i = MT9V03X_H - 1;
+   24          
+   25          static void update_camera_boundary_overlay(void)
    26          {
-   27   1          static uint32 current_tick = 0;
-   28   1          static uint32 last_10ms_tick = 0;
-   29   1          static uint32 last_200ms_tick = 0;
-   30   1      
-   31   1          clock_init(SYSTEM_CLOCK_96M);         /* ʱ�����ü�ϵͳ��ʼ��<��ر���?> */
-   32   1          debug_init();    
-   33   1          while(wifi_spi_init(WIFI_SSID_TEST, WIFI_PASSWORD_TEST))
-   34   1          {
-   35   2              printf("\r\n connect wifi failed. \r\n");
-   36   2              system_delay_ms(100);                                                   // 初�?�化失败 等待
-             - 100ms
-   37   2          }
-   38   1      
-   39   1          printf("\r\n module version:%s",wifi_spi_version);                          // 模块固件版本
-   40   1          printf("\r\n module mac    :%s",wifi_spi_mac_addr);                         // 模块 MAC 信息
-   41   1          printf("\r\n module ip     :%s",wifi_spi_ip_addr_port);                     // 模块 IP 地址
+   27   1          uint8 row;
+   28   1      
+   29   1          for(row = 0; row < MT9V03X_H; row++)
+   30   1          {
+   31   2              xy_x1_boundary[row] = (uint8)limit_a_b((int16)leftline[row], 0, MT9V03X_W - 1);
+   32   2              xy_x2_boundary[row] = (uint8)limit_a_b((int16)midline[row], 0, MT9V03X_W - 1);
+   33   2              xy_x3_boundary[row] = (uint8)limit_a_b((int16)rightline[row], 0, MT9V03X_W - 1);
+   34   2          }
+   35   1      }
+   36          
+   37          void main(void)
+   38          {
+   39   1          static uint32 current_tick = 0;
+   40   1          static uint32 last_10ms_tick = 0;
+   41   1          static uint32 last_200ms_tick = 0;
    42   1      
-   43   1          // zf_device_wifi_spi.h 文件内的宏定义可以更改模块连�?(建立) WIFI 之后，是否自
-             -动连�? TCP 服务器、创�? UDP 连接、创�? TCP 服务器等操作
-   44   1          if(1 != WIFI_SPI_AUTO_CONNECT)                                              // 如果没有开�?�?�
-             -��连�? 就需要手动连接目�? IP
-   45   1          {
-   46   2              while(wifi_spi_socket_connect(                                          // 向指定目�? IP 的
-             -�??口建�? TCP 连接
-   47   2                  "TCP",                                                              // 指定使用TCP方式�
-             -���??
-   48   2                  WIFI_SPI_TARGET_IP,                                                 // 指定远�??的IP地�
-             -�，填写上位机的IP地址
-   49   2                  WIFI_SPI_TARGET_PORT,                                               // 指定远�??的�??口�
-C251 COMPILER V5.60.0,  main                                                               21/05/26  15:00:33  PAGE 2   
+   43   1          clock_init(SYSTEM_CLOCK_96M);         /* ʱ�����ü�ϵͳ��ʼ��<��ر���?> */
+   44   1          debug_init();    
+   45   1          while(wifi_spi_init(WIFI_SSID_TEST, WIFI_PASSWORD_TEST))
+   46   1          {
+   47   2              printf("\r\n connect wifi failed. \r\n");
+   48   2              system_delay_ms(100);                                                   // 初�?�化失败 �
+             -�待 100ms
+   49   2          }
+   50   1      
+   51   1          printf("\r\n module version:%s",wifi_spi_version);                          // 模块固件版本
+   52   1          printf("\r\n module mac    :%s",wifi_spi_mac_addr);                         // 模块 MAC 信息
+   53   1          printf("\r\n module ip     :%s",wifi_spi_ip_addr_port);                     // 模块 IP 地址
+   54   1      
+C251 COMPILER V5.60.0,  main                                                               23/05/26  14:09:21  PAGE 2   
 
-             -��，填写上位机的�??口号，通常上位机默认是8080
-   50   2                  WIFI_SPI_LOCAL_PORT))                                               // 指定�?机的�?口�
-             -��
-   51   2              {
-   52   3                  // 如果一直建立失�? 考虑一下是不是没有接硬件�?�位
-   53   3                  printf("\r\n Connect TCP Servers error, try again.");
-   54   3                  system_delay_ms(100);                                               // 建立连接失败 等
+   55   1          // zf_device_wifi_spi.h 文件内的宏定义可以更改模块连�?(建立) WIFI 之后，是否�
+             -�动连�? TCP 服务器、创�? UDP 连接、创�? TCP 服务器等操作
+   56   1          if(1 != WIFI_SPI_AUTO_CONNECT)                                              // 如果没有开�?�
+             -?动连�? 就需要手动连接目�? IP
+   57   1          {
+   58   2              while(wifi_spi_socket_connect(                                          // 向指定目�? IP �
+             -��??口建�? TCP 连接
+   59   2                  "TCP",                                                              // 指定使用TCP方式�
+             -���??
+   60   2                  WIFI_SPI_TARGET_IP,                                                 // 指定远�??的IP地
+             -址，填写上位机的IP地址
+   61   2                  WIFI_SPI_TARGET_PORT,                                               // 指定远�??的�??
+             -口号，填写上位机的�??口号，通常上位机默认是8080
+   62   2                  WIFI_SPI_LOCAL_PORT))                                               // 指定�?机的�?�
+             -�号
+   63   2              {
+   64   3                  // 如果一直建立失�? 考虑一下是不是没有接硬件�?�位
+   65   3                  printf("\r\n Connect TCP Servers error, try again.");
+   66   3                  system_delay_ms(100);                                               // 建立连接失败 等
              -待 100ms
-   55   3              }
-   56   2          }
-   57   1      
-   58   1          // 推荐先初始化摄像头，后初始化逐�?�助�?
-   59   1          while(mt9v03x_init())
-   60   1          {
-   61   2              system_delay_ms(100); 
-   62   2          printf("\r\n mt9v03x_init error, try again.");
-   63   2          }
-   64   1      
-   65   1          // 使用高�? WIFI SPI模块时无法使用屏幕（因为引脚有共�?�?
-   66   1          // 逐�?�助手初始化 数据传输使用高速WIFI SPI
-   67   1          seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_WIFI_SPI);
-   68   1      
-   69   1          pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                         
-   70   1          gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL); 
-   71   1          uart_init(UART_2, 115200, UART2_TX, UART2_RX);
-   72   1          /* ��ʼ��״̬�� */
-   73   1          state_machine_init();
-   74   1      
-   75   1          while(g_sysTick_ms <=1500);                         /*������Է��밴����⣬Ȼ�
-             -���Ŀǰ�������ϰ������������յģ�����ʱ����*/
+   67   3              }
+   68   2          }
+   69   1      
+   70   1          // 推荐先初始化摄像头，后初始化逐�?�助�?
+   71   1          while(mt9v03x_init())
+   72   1          {
+   73   2              system_delay_ms(100); 
+   74   2          printf("\r\n mt9v03x_init error, try again.");
+   75   2          }
    76   1      
-   77   1          enable_control(CTRL_PIN);
-   78   1          //send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
-   79   1          //send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);                      
-   80   1          
-   81   1      
-   82   1      #if(3 == INCLUDE_BOUNDARY_TYPE)
-   83   1          j=0;
-   84   1      #endif
-   85   1      
-   86   1          /* ��ʼ������ͷ */
-   87   1          while(1)
-   88   1          {
-   89   2              if(mt9v03x_init())
-   90   2                  gpio_toggle_level(LED1);                                            /* ��ת LED ���
-             -�������? ���� LED ���� ��ʼ����������ƻ����ĺ���? */
-   91   2              else
-   92   2                  break;
-   93   2              system_delay_ms(500);                                                  /* ���Ʊ�ʾ�쳣 
+   77   1          // 使用高�? WIFI SPI模块时无法使用屏幕（因为引脚有共�?�?
+   78   1          // 逐�?�助手初始化 数据传输使用高速WIFI SPI
+   79   1          seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_WIFI_SPI);
+   80   1      
+   81   1          pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                         
+   82   1          gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL); 
+   83   1          uart_init(UART_2, 115200, UART2_TX, UART2_RX);
+   84   1          /* ��ʼ��״̬�� */
+   85   1          state_machine_init();
+   86   1      
+   87   1          while(g_sysTick_ms <=1500);                         /*������Է��밴����⣬Ȼ�
+             -���Ŀǰ�������ϰ������������յģ�����ʱ����*/
+   88   1      
+   89   1          enable_control(CTRL_PIN);
+   90   1          //send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
+   91   1          //send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);                      
+   92   1          
+   93   1      
+   94   1          /* ��ʼ������ͷ */
+   95   1          while(1)
+   96   1          {
+   97   2              if(mt9v03x_init())
+   98   2                  gpio_toggle_level(LED1);                                            /* ��ת LED ���
+             -�������? ���� LED ���� ��ʼ����������ƻ����ĺ���? */
+   99   2              else
+  100   2                  break;
+  101   2              system_delay_ms(500);                                                  /* ���Ʊ�ʾ�쳣 
              -*/
-   94   2          }
-   95   1      
-   96   1      
-   97   1      #if(3 == INCLUDE_BOUNDARY_TYPE)
-   98   1          j = 0;
-   99   1         
-  100   1          for(i = MT9V03X_H - 1; i >= MT9V03X_H / 2; i--)
-  101   1          {
-  102   2              xy_x1_boundary[j] = 34;
-  103   2              xy_y1_boundary[j] = (uint8)i;
-  104   2      
-  105   2              xy_x2_boundary[j] = 47;
-  106   2              xy_y2_boundary[j] = (uint8)i;
-  107   2      
-  108   2              xy_x3_boundary[j] = 60;
-  109   2              xy_y3_boundary[j] = (uint8)i;
-C251 COMPILER V5.60.0,  main                                                               21/05/26  15:00:33  PAGE 3   
-
-  110   2              j++;
-  111   2          }
-  112   1      
-  113   1          for(i = MT9V03X_H / 2 - 1; i >= 0; i--)
-  114   1          {
-  115   2              xy_x1_boundary[j] = 34 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 34) / (MT9V03X_H / 2);
-  116   2              xy_y1_boundary[j] = (uint8)i;
-  117   2      
-  118   2              xy_x2_boundary[j] = 47 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 47) / (MT9V03X_H / 2);
-  119   2              xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
-  120   2      
-  121   2              xy_x3_boundary[j] = 60 + (MT9V03X_H / 2 - (uint8)i) * (MT9V03X_W / 2 - 60) / (MT9V03X_H / 2);
-  122   2              xy_y3_boundary[j] = 30 + (uint8)i / 2;
-  123   2              j++;
-  124   2          }
-  125   1      
-  126   1          for(i = 0; i < MT9V03X_H / 2; i++)
-  127   1          {
-  128   2              xy_x1_boundary[j] = MT9V03X_W / 2 + (uint8)i * (138 - MT9V03X_W / 2) / (MT9V03X_H / 2);
-  129   2              xy_y1_boundary[j] = (uint8)i;
-  130   2      
-  131   2              xy_x2_boundary[j] = MT9V03X_W / 2 + i * (133 - MT9V03X_W / 2) / (MT9V03X_H / 2);
-  132   2              xy_y2_boundary[j] = 15 + (uint8)i * 3 / 4;
-  133   2      
-  134   2              xy_x3_boundary[j] = MT9V03X_W / 2 + i * (128 - MT9V03X_W / 2) / (MT9V03X_H / 2);
-  135   2              xy_y3_boundary[j] = 30 + (uint8)i / 2;
-  136   2              j++;
-  137   2          }
-  138   1          seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, mt9v03x_image[0], MT9V03X_W,
+  102   2          }
+  103   1          seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, mt9v03x_image[0], MT9V03X_W,
              - MT9V03X_H);
-  139   1          seekfree_assistant_camera_boundary_config(XY_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, 
-             -xy_x3_boundary, xy_y1_boundary, xy_y2_boundary, xy_y3_boundary);
-  140   1      
-  141   1      #endif
-  142   1          while(1)
-  143   1          {
-  144   2              
-  145   2               current_tick = g_sysTick_ms;
-  146   2      
-  147   2              if (current_tick - last_10ms_tick >= 10) {
-  148   3                  last_10ms_tick = current_tick;
-  149   3                  
-  150   3              }
-  151   2      
-  152   2              if((current_tick - last_200ms_tick) >= 200){
-  153   3                  last_200ms_tick = current_tick; 
-  154   3                  gpio_toggle_level(IO_P33); 
-  155   3              }
-  156   2      
-  157   2              if(mt9v03x_finish_flag)
-  158   2              {
-  159   3                  mt9v03x_finish_flag = 0;
-  160   3                  seekfree_assistant_camera_send();
-  161   3                  image_process();
-  162   3                  send_error_data(track_error, 0.0f, UART_2);
-  163   3              }
-  164   2      
-  165   2          }
-  166   1      }
-  167          
-  168          void sys_tick_handler (void){
-  169   1          g_sysTick_ms += 1;                                                                 /* ϵͳ����
-             -� */      
-  170   1      }
-  171          
+  104   1          seekfree_assistant_camera_boundary_config(X_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, x
+             -y_x3_boundary, NULL, NULL, NULL);
+  105   1          while(1)
+  106   1          {
+  107   2              
+C251 COMPILER V5.60.0,  main                                                               23/05/26  14:09:21  PAGE 3   
 
-C251 COMPILER V5.60.0,  main                                                               21/05/26  15:00:33  PAGE 4   
+  108   2               current_tick = g_sysTick_ms;
+  109   2      
+  110   2              if (current_tick - last_10ms_tick >= 10) {
+  111   3                  last_10ms_tick = current_tick;
+  112   3                  
+  113   3              }
+  114   2      
+  115   2              if((current_tick - last_200ms_tick) >= 200){
+  116   3                  last_200ms_tick = current_tick; 
+  117   3                  gpio_toggle_level(IO_P33); 
+  118   3              }
+  119   2      
+  120   2              if(mt9v03x_finish_flag)
+  121   2              {
+  122   3                  mt9v03x_finish_flag = 0;
+  123   3                  image_process();
+  124   3                  update_camera_boundary_overlay();
+  125   3                  seekfree_assistant_camera_send();
+  126   3                  send_error_data(track_error, 0.0f, UART_2);
+  127   3              }
+  128   2      
+  129   2          }
+  130   1      }
+  131          
+  132          void sys_tick_handler (void){
+  133   1          g_sysTick_ms += 1;                                                                 /* ϵͳ����
+             -� */      
+  134   1      }
+  135          
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      1990     ------
+  ecode size           =      1097     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =      2028     ------
+  xdata size           =      1669     ------
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------
@@ -222,7 +184,7 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =       259     ------
+  hconst size          =       245     ------
 End of Module Information.
 
 
