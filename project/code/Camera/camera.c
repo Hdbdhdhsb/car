@@ -425,36 +425,36 @@ void get_right(uint16 total_R) {
     }
 }
 /* 形态学滤波*/
-#define THRESHOLD_MAX 255*5
-#define THRESHOLD_MIN 255*2
-#define FILTER_ROI_TOP  (MT9V03X_H / 3)  /* 滤波起始行 */
-void image_filter(uint8(*bin_image)[MT9V03X_W]) {
-    uint16 i, j;
-    uint32 num = 0;
-    uint16 top = FILTER_ROI_TOP > 1 ? FILTER_ROI_TOP : 1;
-    uint8 *p_prev;
-    uint8 *p_curr;
-    uint8 *p_next;
+// #define THRESHOLD_MAX 255*5
+// #define THRESHOLD_MIN 255*2
+// #define FILTER_ROI_TOP  (MT9V03X_H / 3)  /* 滤波起始行 */
+// void image_filter(uint8(*bin_image)[MT9V03X_W]) {
+//     uint16 i, j;
+//     uint32 num = 0;
+//     uint16 top = FILTER_ROI_TOP > 1 ? FILTER_ROI_TOP : 1;
+//     uint8 *p_prev;
+//     uint8 *p_curr;
+//     uint8 *p_next;
     
-    for(i = top; i < MT9V03X_H - 1; i++) {
-        p_prev = bin_image[i-1]; 
-        p_curr = bin_image[i];   
-        p_next = bin_image[i+1];  
-        for(j = 1; j < (MT9V03X_W - 1); j++) {
-            // 统计八个方向的像素值（指针偏移）
-            num = *(p_prev+j-1) + *(p_prev+j) + *(p_prev+j+1) +
-                  *(p_curr+j-1) + *(p_curr+j+1) +
-                  *(p_next+j-1) + *(p_next+j) + *(p_next+j+1);
+//     for(i = top; i < MT9V03X_H - 1; i++) {
+//         p_prev = bin_image[i-1]; 
+//         p_curr = bin_image[i];   
+//         p_next = bin_image[i+1];  
+//         for(j = 1; j < (MT9V03X_W - 1); j++) {
+//             // 统计八个方向的像素值（指针偏移）
+//             num = *(p_prev+j-1) + *(p_prev+j) + *(p_prev+j+1) +
+//                   *(p_curr+j-1) + *(p_curr+j+1) +
+//                   *(p_next+j-1) + *(p_next+j) + *(p_next+j+1);
             
-            if(num >= THRESHOLD_MAX && *(p_curr+j) == BLACK_PIXEL) {
-                *(p_curr+j) = WHITE_PIXEL;
-            }
-            if(num <= THRESHOLD_MIN && *(p_curr+j) == WHITE_PIXEL) {
-                *(p_curr+j) = BLACK_PIXEL;
-            }
-        }
-    }
-}
+//             if(num >= THRESHOLD_MAX && *(p_curr+j) == BLACK_PIXEL) {
+//                 *(p_curr+j) = WHITE_PIXEL;
+//             }
+//             if(num <= THRESHOLD_MIN && *(p_curr+j) == WHITE_PIXEL) {
+//                 *(p_curr+j) = BLACK_PIXEL;
+//             }
+//         }
+//     }
+// }
 
 /* 绘制图像边框 */
 void image_draw_rectan(uint8(*image)[MT9V03X_W]) {
@@ -574,8 +574,21 @@ void detect_track_type(void) {
 /* 提取本帧边界（供所有后续模块使用）*/
 uint8 extract_borders(void) {
     uint8 hightest = 0;
-    
-    if(!get_start_point(MT9V03X_H - 2)) {
+    uint8 start_row = MT9V03X_H - 2;
+    uint8 min_row = MT9V03X_H / 3;
+    uint8 found = 0;
+
+    for(start_row = MT9V03X_H - 2; start_row >= min_row; start_row--) {
+        if(get_start_point(start_row)) {
+            found = 1;
+            break;
+        }
+        if(start_row == 0) {
+            break;
+        }
+    }
+
+    if(!found) {
         return 0;
     }
     
@@ -625,7 +638,7 @@ void image_process() {
     uint8 border_ok;
     
     turn_to_bin();                  
-    image_filter(bin_image);       
+    //image_filter(bin_image);       
     image_draw_rectan(bin_image);   
 
     data_stastics_l = 0;

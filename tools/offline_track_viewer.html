@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STC Track Offline Viewer</title>
+  <style>
+    :root {
+      --bg: #f4efe4;
+      --panel: #fff9ed;
+      --ink: #182126;
+      --muted: #6a6c64;
+      --accent: #cf5b2e;
+      --line-l: #e63946;
+      --line-m: #f4a261;
+      --line-r: #2a9d8f;
+      --border: #d7cfbc;
+      --shadow: rgba(24, 33, 38, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(207, 91, 46, 0.14), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(42, 157, 143, 0.14), transparent 30%),
+        linear-gradient(135deg, #f6f1e8 0%, #efe7d6 100%);
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      padding: 24px 28px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: linear-gradient(145deg, rgba(255, 249, 237, 0.95), rgba(248, 241, 225, 0.9));
+      box-shadow: 0 20px 60px var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+      margin-top: 20px;
+      grid-template-columns: 340px minmax(0, 1fr);
+    }
+
+    .card {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: rgba(255, 249, 237, 0.92);
+      box-shadow: 0 16px 40px var(--shadow);
+    }
+
+    .panel-title {
+      margin: 0 0 16px;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .field input[type="file"],
+    .field input[type="range"],
+    .field select {
+      width: 100%;
+    }
+
+    .field .range-line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .field .value {
+      min-width: 36px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .stats {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(24, 33, 38, 0.04);
+      font-size: 14px;
+    }
+
+    .stat .key {
+      color: var(--muted);
+    }
+
+    .stat .val {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .canvas-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .canvas-wrap {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(24, 33, 38, 0.035);
+      border: 1px solid rgba(24, 33, 38, 0.08);
+    }
+
+    .canvas-wrap h2 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: 0.01em;
+      color: var(--muted);
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+      background: #111;
+      image-rendering: pixelated;
+    }
+
+    .hint {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 8px;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+
+    .legend .l::before { background: var(--line-l); }
+    .legend .m::before { background: var(--line-m); }
+    .legend .r::before { background: var(--line-r); }
+
+    @media (max-width: 960px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .canvas-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>赛道线离线调试工具</h1>
+      <p>上传一张图片后，工具会先缩放到当前工程的 <code>MT9V03X_W=120</code>、<code>MT9V03X_H=60</code>，再按你项目当前的核心提边流程做二值化、边框处理、起点搜索、八邻域提边、补线和中线计算。</p>
+    </section>
+
+    <section class="grid">
+      <aside class="card">
+        <h2 class="panel-title">控制面板</h2>
+        <div class="controls">
+          <div class="field">
+            <label for="fileInput">上传图片</label>
+            <input id="fileInput" type="file" accept="image/*">
+          </div>
+
+          <div class="field">
+            <label for="thresholdInput">二值化阈值</label>
+            <div class="range-line">
+              <input id="thresholdInput" type="range" min="0" max="255" value="100">
+              <span id="thresholdValue" class="value">100</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="scaleSelect">预览放大倍数</label>
+            <select id="scaleSelect">
+              <option value="4">4x</option>
+              <option value="6" selected>6x</option>
+              <option value="8">8x</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><span class="key">图像尺寸</span><span class="val">120 x 60</span></div>
+          <div class="stat"><span class="key">起点状态</span><span id="statStart" class="val">idle</span></div>
+          <div class="stat"><span class="key">左边点数</span><span id="statLeft" class="val">0</span></div>
+          <div class="stat"><span class="key">右边点数</span><span id="statRight" class="val">0</span></div>
+          <div class="stat"><span class="key">边界提取</span><span id="statBorder" class="val">idle</span></div>
+          <div class="stat"><span class="key">Cross repair</span><span id="statCross" class="val">off</span></div>
+          <div class="stat"><span class="key">底部中线</span><span id="statMid" class="val">-</span></div>
+        </div>
+
+        <div class="legend">
+          <span class="l">左线</span>
+          <span class="m">中线</span>
+          <span class="r">右线</span>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><span class="key">cross l_break</span><span id="dbgLBreak" class="val">-</span></div>
+          <div class="stat"><span class="key">cross r_break</span><span id="dbgRBreak" class="val">-</span></div>
+          <div class="stat"><span class="key">cross l_dir</span><span id="dbgLDir" class="val">-</span></div>
+          <div class="stat"><span class="key">cross r_dir</span><span id="dbgRDir" class="val">-</span></div>
+          <div class="stat"><span class="key">cross wide_cnt</span><span id="dbgWide" class="val">-</span></div>
+          <div class="stat"><span class="key">cross score</span><span id="dbgScore" class="val">-</span></div>
+        </div>
+
+        <p class="hint">说明：这里复现的是当前 <code>camera.c</code> 的赛道线提取主流程，不包含逐飞助手通信，也不把十字、环岛、斑马线状态机作为离线工具的主要输出。</p>
+      </aside>
+
+      <main class="card">
+        <h2 class="panel-title">处理结果</h2>
+        <div class="canvas-grid">
+          <div class="canvas-wrap">
+            <h2>原图缩放到 120 x 60</h2>
+            <canvas id="sourceCanvas" width="120" height="60"></canvas>
+          </div>
+          <div class="canvas-wrap">
+            <h2>二值图</h2>
+            <canvas id="binaryCanvas" width="120" height="60"></canvas>
+          </div>
+          <div class="canvas-wrap">
+            <h2>赛道线叠加图</h2>
+            <canvas id="overlayCanvas" width="120" height="60"></canvas>
+          </div>
+          <div class="canvas-wrap">
+            <h2>仅线条结果</h2>
+            <canvas id="lineCanvas" width="120" height="60"></canvas>
+          </div>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var WIDTH = 120;
+      var HEIGHT = 60;
+      var WHITE_PIXEL = 255;
+      var BLACK_PIXEL = 0;
+      var BORDER_MIN = 1;
+      var BORDER_MAX = WIDTH - 2;
+      var USE_NUM = HEIGHT * 3;
+      var BORDER_GAP_MAX = 5;
+      var CROSS2_BREAK_THRESH = 8;
+      var CROSS2_DIR_UP = 4;
+      var CROSS2_DIR_BREAK_UP = 6;
+      var CROSS2_WIDE_THRESH = 100;
+      var CROSS2_WIDE_CNT_MIN = 8;
+      var CROSS2_LOST_THRESH = 10;
+      var CROSS2_SCAN_TOP = 5;
+      var CROSS2_SCAN_BOT = HEIGHT - 5;
+      var CROSS2_FIT_LEN = 10;
+
+      var fileInput = document.getElementById("fileInput");
+      var thresholdInput = document.getElementById("thresholdInput");
+      var thresholdValue = document.getElementById("thresholdValue");
+      var scaleSelect = document.getElementById("scaleSelect");
+
+      var sourceCanvas = document.getElementById("sourceCanvas");
+      var binaryCanvas = document.getElementById("binaryCanvas");
+      var overlayCanvas = document.getElementById("overlayCanvas");
+      var lineCanvas = document.getElementById("lineCanvas");
+
+      var statStart = document.getElementById("statStart");
+      var statLeft = document.getElementById("statLeft");
+      var statRight = document.getElementById("statRight");
+      var statBorder = document.getElementById("statBorder");
+      var statCross = document.getElementById("statCross");
+      var statMid = document.getElementById("statMid");
+      var dbgLBreak = document.getElementById("dbgLBreak");
+      var dbgRBreak = document.getElementById("dbgRBreak");
+      var dbgLDir = document.getElementById("dbgLDir");
+      var dbgRDir = document.getElementById("dbgRDir");
+      var dbgWide = document.getElementById("dbgWide");
+      var dbgScore = document.getElementById("dbgScore");
+
+      var sourceCtx = sourceCanvas.getContext("2d");
+      var binaryCtx = binaryCanvas.getContext("2d");
+      var overlayCtx = overlayCanvas.getContext("2d");
+      var lineCtx = lineCanvas.getContext("2d");
+
+      var hiddenCanvas = document.createElement("canvas");
+      hiddenCanvas.width = WIDTH;
+      hiddenCanvas.height = HEIGHT;
+      var hiddenCtx = hiddenCanvas.getContext("2d");
+
+      var currentGray = null;
+
+      function create2D(height, width, fill) {
+        var arr = new Array(height);
+        var y;
+        var x;
+
+        for (y = 0; y < height; y++) {
+          arr[y] = new Array(width);
+          for (x = 0; x < width; x++) {
+            arr[y][x] = fill;
+          }
+        }
+        return arr;
+      }
+
+      function createPoints(count) {
+        var arr = new Array(count);
+        var i;
+
+        for (i = 0; i < count; i++) {
+          arr[i] = [0, 0];
+        }
+        return arr;
+      }
+
+      function limitAB(x, a, b) {
+        if (x < a) {
+          return a;
+        }
+        if (x > b) {
+          return b;
+        }
+        return x;
+      }
+
+      function myAbs(value) {
+        return value >= 0 ? value : -value;
+      }
+
+      function updateCanvasScale() {
+        var scale = parseInt(scaleSelect.value, 10);
+        var canvases = [sourceCanvas, binaryCanvas, overlayCanvas, lineCanvas];
+        var i;
+
+        for (i = 0; i < canvases.length; i++) {
+          canvases[i].style.maxWidth = String(WIDTH * scale) + "px";
+        }
+      }
+
+      function drawGrayCanvas(ctx, grayImage) {
+        var imageData = ctx.createImageData(WIDTH, HEIGHT);
+        var data = imageData.data;
+        var x;
+        var y;
+        var idx;
+        var v;
+
+        for (y = 0; y < HEIGHT; y++) {
+          for (x = 0; x < WIDTH; x++) {
+            idx = (y * WIDTH + x) * 4;
+            v = grayImage[y][x];
+            data[idx] = v;
+            data[idx + 1] = v;
+            data[idx + 2] = v;
+            data[idx + 3] = 255;
+          }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+      }
+
+      function drawBinaryCanvas(ctx, binImage) {
+        drawGrayCanvas(ctx, binImage);
+      }
+
+      function drawLineResult(ctx, leftline, midline, rightline, validMask, borderOk, blackBackground) {
+        var y;
+        var lx;
+        var mx;
+        var rx;
+
+        if (blackBackground) {
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(0, 0, WIDTH, HEIGHT);
+        }
+
+        if (!borderOk) {
+          return;
+        }
+
+        for (y = 0; y < HEIGHT; y++) {
+          if (validMask && !validMask[y]) {
+            continue;
+          }
+          lx = limitAB(leftline[y], 0, WIDTH - 1);
+          mx = limitAB(midline[y], 0, WIDTH - 1);
+          rx = limitAB(rightline[y], 0, WIDTH - 1);
+
+          ctx.fillStyle = "#e63946";
+          ctx.fillRect(lx, y, 1, 1);
+          ctx.fillStyle = "#f4a261";
+          ctx.fillRect(mx, y, 1, 1);
+          ctx.fillStyle = "#2a9d8f";
+          ctx.fillRect(rx, y, 1, 1);
+        }
+      }
+
+      function drawOverlay(grayImage, leftline, midline, rightline, validMask, borderOk) {
+        drawGrayCanvas(overlayCtx, grayImage);
+        drawLineResult(overlayCtx, leftline, midline, rightline, validMask, borderOk, false);
+        drawLineResult(lineCtx, leftline, midline, rightline, validMask, borderOk, true);
+      }
+
+      function getStartPoint(binImage, startRow) {
+        var i;
+        var row = binImage[startRow];
+        var left = [0, 0];
+        var right = [0, 0];
+        var lFound = 0;
+        var rFound = 0;
+
+        for (i = Math.floor(WIDTH / 2); i > BORDER_MIN; i--) {
+          left[0] = i;
+          left[1] = startRow;
+          if (row[i] === WHITE_PIXEL && row[i - 1] === BLACK_PIXEL && row[i - 2] === BLACK_PIXEL) {
+            lFound = 1;
+            break;
+          }
+        }
+
+        for (i = Math.floor(WIDTH / 2); i < BORDER_MAX; i++) {
+          right[0] = i;
+          right[1] = startRow;
+          if (row[i] === WHITE_PIXEL && row[i + 1] === BLACK_PIXEL && row[i + 2] === BLACK_PIXEL) {
+            rFound = 1;
+            break;
+          }
+        }
+
+        return {
+          ok: lFound && rFound,
+          left: left,
+          right: right
+        };
+      }
+
+      function searchLR(binImage, startInfo) {
+        var pointsL = createPoints(USE_NUM);
+        var pointsR = createPoints(USE_NUM);
+        var dirL = new Array(USE_NUM);
+        var dirR = new Array(USE_NUM);
+        var seedsL = [[0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1]];
+        var seedsR = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]];
+        var searchFieldsL = new Array(8);
+        var searchFieldsR = new Array(8);
+        var centerL = [startInfo.left[0], startInfo.left[1]];
+        var centerR = [startInfo.right[0], startInfo.right[1]];
+        var lCount = 0;
+        var rCount = 0;
+        var breakFlag = USE_NUM;
+        var highest = 0;
+        var i;
+        var nextI;
+        var xCur;
+        var yCur;
+        var xNext;
+        var yNext;
+        var indexL;
+        var indexR;
+        var bestXL = 0;
+        var bestYL = 0;
+        var bestXR = 0;
+        var bestYR = 0;
+
+        while (breakFlag > 0) {
+          breakFlag--;
+
+          for (i = 0; i < 8; i++) {
+            searchFieldsL[i] = [centerL[0] + seedsL[i][0], centerL[1] + seedsL[i][1]];
+          }
+
+          pointsL[lCount][0] = centerL[0];
+          pointsL[lCount][1] = centerL[1];
+          lCount++;
+
+          for (i = 0; i < 8; i++) {
+            searchFieldsR[i] = [centerR[0] + seedsR[i][0], centerR[1] + seedsR[i][1]];
+          }
+
+          pointsR[rCount][0] = centerR[0];
+          pointsR[rCount][1] = centerR[1];
+
+          indexL = 0;
+          for (i = 0; i < 8; i++) {
+            nextI = (i + 1) & 7;
+            xCur = searchFieldsL[i][0];
+            yCur = searchFieldsL[i][1];
+            xNext = searchFieldsL[nextI][0];
+            yNext = searchFieldsL[nextI][1];
+
+            if (xCur < 0 || xCur >= WIDTH || yCur < 0 || yCur >= HEIGHT ||
+                xNext < 0 || xNext >= WIDTH || yNext < 0 || yNext >= HEIGHT) {
+              continue;
+            }
+
+            if (binImage[yCur][xCur] === BLACK_PIXEL && binImage[yNext][xNext] === WHITE_PIXEL) {
+              if (indexL === 0 || bestYL > yCur) {
+                bestXL = xCur;
+                bestYL = yCur;
+              }
+              indexL++;
+              dirL[lCount - 1] = i;
+            }
+          }
+
+          if (indexL > 0) {
+            centerL[0] = bestXL;
+            centerL[1] = bestYL;
+          }
+
+          if (rCount >= 2 && lCount >= 3 &&
+              ((pointsR[rCount][0] === pointsR[rCount - 1][0] &&
+                pointsR[rCount][0] === pointsR[rCount - 2][0] &&
+                pointsR[rCount][1] === pointsR[rCount - 1][1] &&
+                pointsR[rCount][1] === pointsR[rCount - 2][1]) ||
+               (pointsL[lCount - 1][0] === pointsL[lCount - 2][0] &&
+                pointsL[lCount - 1][0] === pointsL[lCount - 3][0] &&
+                pointsL[lCount - 1][1] === pointsL[lCount - 2][1] &&
+                pointsL[lCount - 1][1] === pointsL[lCount - 3][1]))) {
+            break;
+          }
+
+          if (myAbs(pointsR[rCount][0] - pointsL[lCount - 1][0]) < 2 &&
+              myAbs(pointsR[rCount][1] - pointsL[lCount - 1][1]) < 2) {
+            highest = (pointsR[rCount][1] + pointsL[lCount - 1][1]) >> 1;
+            break;
+          }
+
+          if (pointsR[rCount][1] < pointsL[lCount - 1][1]) {
+            continue;
+          }
+
+          if (dirL[lCount - 1] === 7 && pointsR[rCount][1] > pointsL[lCount - 1][1]) {
+            centerL[0] = pointsL[lCount - 1][0];
+            centerL[1] = pointsL[lCount - 1][1];
+            lCount--;
+          }
+
+          rCount++;
+          indexR = 0;
+
+          for (i = 0; i < 8; i++) {
+            nextI = (i + 1) & 7;
+            xCur = searchFieldsR[i][0];
+            yCur = searchFieldsR[i][1];
+            xNext = searchFieldsR[nextI][0];
+            yNext = searchFieldsR[nextI][1];
+
+            if (xCur < 0 || xCur >= WIDTH || yCur < 0 || yCur >= HEIGHT ||
+                xNext < 0 || xNext >= WIDTH || yNext < 0 || yNext >= HEIGHT) {
+              continue;
+            }
+
+            if (binImage[yCur][xCur] === BLACK_PIXEL && binImage[yNext][xNext] === WHITE_PIXEL) {
+              if (indexR === 0 || bestYR > yCur) {
+                bestXR = xCur;
+                bestYR = yCur;
+              }
+              indexR++;
+              dirR[rCount - 1] = i;
+            }
+          }
+
+          if (indexR > 0) {
+            centerR[0] = bestXR;
+            centerR[1] = bestYR;
+          }
+        }
+
+        return {
+          pointsL: pointsL,
+          pointsR: pointsR,
+          dirL: dirL,
+          dirR: dirR,
+          leftCount: lCount,
+          rightCount: rCount,
+          highest: highest
+        };
+      }
+
+      function fillBorder(points, total, defaultValue, offset) {
+        var border = new Array(HEIGHT);
+        var valid = new Array(HEIGHT);
+        var index = new Array(HEIGHT);
+        var i;
+        var j;
+        var row;
+        var lastValid = 0;
+        var gapStart;
+        var nextValid;
+        var found;
+        var k;
+        var gapLen;
+        var span;
+        var step;
+        var delta;
+        var base;
+        var val;
+
+        for (i = 0; i < HEIGHT; i++) {
+          border[i] = defaultValue;
+          valid[i] = 0;
+          index[i] = 0;
+        }
+
+        for (j = 0; j < total; j++) {
+          row = points[j][1];
+          if (row >= HEIGHT) {
+            continue;
+          }
+          if (valid[row] === 0) {
+            border[row] = points[j][0] + offset;
+            index[row] = j;
+            valid[row] = 1;
+          }
+        }
+
+        for (i = HEIGHT - 1; i > 0; i--) {
+          if (valid[i]) {
+            lastValid = i;
+            break;
+          }
+        }
+
+        for (i = lastValid; i > 0; ) {
+          if (valid[i]) {
+            lastValid = i;
+            i--;
+            continue;
+          }
+
+          gapStart = i;
+          nextValid = 0;
+          found = 0;
+
+          for (k = i; k > 0; k--) {
+            if (valid[k]) {
+              nextValid = k;
+              found = 1;
+              break;
+            }
+          }
+
+          if (!found) {
+            break;
+          }
+
+          gapLen = gapStart - nextValid;
+          if (gapLen <= BORDER_GAP_MAX && lastValid > gapStart) {
+            span = lastValid - nextValid;
+            delta = border[lastValid] - border[nextValid];
+            base = border[nextValid];
+
+            for (k = nextValid + 1; k < lastValid; k++) {
+              if (!valid[k]) {
+                step = k - nextValid;
+                if (delta >= 0) {
+                  val = base + Math.floor((delta * step + (span >> 1)) / span);
+                } else {
+                  val = base + Math.ceil((delta * step - (span >> 1)) / span);
+                }
+
+                if (val < BORDER_MIN) {
+                  val = BORDER_MIN;
+                }
+                if (val > BORDER_MAX) {
+                  val = BORDER_MAX;
+                }
+                border[k] = val;
+                valid[k] = 2;
+              }
+            }
+          }
+
+          i = nextValid;
+        }
+
+        return {
+          border: border,
+          valid: valid,
+          index: index
+        };
+      }
+
+      function calcMidline(leftBorder, rightBorder, leftValid, rightValid) {
+        var midline = new Array(HEIGHT);
+        var leftline = new Array(HEIGHT);
+        var rightline = new Array(HEIGHT);
+        var validMask = new Array(HEIGHT);
+        var lastGoodMid = Math.floor(WIDTH / 2);
+        var i;
+
+        for (i = 0; i < HEIGHT; i++) {
+          validMask[i] = leftValid[i] && rightValid[i] ? 1 : 0;
+          if (leftValid[i] && rightValid[i]) {
+            midline[i] = Math.floor((leftBorder[i] + rightBorder[i]) / 2);
+            lastGoodMid = midline[i];
+          } else {
+            midline[i] = lastGoodMid;
+          }
+
+          leftline[i] = leftBorder[i];
+          rightline[i] = rightBorder[i];
+        }
+
+        for (i = 1; i < HEIGHT - 1; i++) {
+          if (midline[i] > 0 && midline[i - 1] > 0 && midline[i + 1] > 0) {
+            midline[i] = Math.floor((midline[i - 1] + midline[i] + midline[i + 1]) / 3);
+          }
+        }
+
+        return {
+          leftline: leftline,
+          midline: midline,
+          rightline: rightline,
+          validMask: validMask
+        };
+      }
+
+      function createCrossFeature() {
+        return {
+          l_break_row: 0,
+          r_break_row: 0,
+          l_break_delta: 0,
+          r_break_delta: 0,
+          l_dir_break_row: 0,
+          r_dir_break_row: 0,
+          width_sum: 0,
+          width_max: 0,
+          width_min: 255,
+          width_bottom: 0,
+          width_mid: 0,
+          wide_cnt: 0,
+          l_lost_cnt: 0,
+          r_lost_cnt: 0,
+          both_lost_cnt: 0,
+          corner_bl: 0,
+          corner_br: 0,
+          l_slope: 0,
+          l_intercept: 0,
+          r_slope: 0,
+          r_intercept: 0
+        };
+      }
+
+      function crossExtractBreak(l, r, feat) {
+        var row;
+        var delta;
+
+        for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--) {
+          delta = l[row] - l[row - 1];
+          if (delta > CROSS2_BREAK_THRESH) {
+            feat.l_break_row = row;
+            feat.l_break_delta = delta;
+            break;
+          }
+        }
+
+        for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--) {
+          delta = r[row - 1] - r[row];
+          if (delta > CROSS2_BREAK_THRESH) {
+            feat.r_break_row = row;
+            feat.r_break_delta = delta;
+            break;
+          }
+        }
+      }
+
+      function crossExtractDirBreak(searchResult, feat) {
+        var i;
+        var dirL = searchResult.dirL;
+        var dirR = searchResult.dirR;
+        var pointsL = searchResult.pointsL;
+        var pointsR = searchResult.pointsR;
+        var lCount = searchResult.leftCount;
+        var rCount = searchResult.rightCount;
+
+        if (lCount > 10) {
+          for (i = 1; i + 7 < lCount; i++) {
+            if (dirL[i - 1] === CROSS2_DIR_UP && dirL[i] === CROSS2_DIR_UP &&
+                dirL[i + 3] === CROSS2_DIR_BREAK_UP &&
+                dirL[i + 5] === CROSS2_DIR_BREAK_UP &&
+                dirL[i + 7] === CROSS2_DIR_BREAK_UP) {
+              feat.l_dir_break_row = pointsL[i][1];
+              break;
+            }
+          }
+        }
+
+        if (rCount > 10) {
+          for (i = 1; i + 7 < rCount; i++) {
+            if (dirR[i - 1] === CROSS2_DIR_UP && dirR[i] === CROSS2_DIR_UP &&
+                dirR[i + 3] === CROSS2_DIR_BREAK_UP &&
+                dirR[i + 5] === CROSS2_DIR_BREAK_UP &&
+                dirR[i + 7] === CROSS2_DIR_BREAK_UP) {
+              feat.r_dir_break_row = pointsR[i][1];
+              break;
+            }
+          }
+        }
+      }
+
+      function crossExtractWidth(l, r, feat) {
+        var row;
+        var w;
+
+        feat.width_bottom = r[CROSS2_SCAN_BOT] > l[CROSS2_SCAN_BOT] ? (r[CROSS2_SCAN_BOT] - l[CROSS2_SCAN_BOT]) : 0;
+
+        for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++) {
+          w = r[row] > l[row] ? (r[row] - l[row]) : 0;
+          feat.width_sum += w;
+          if (w > feat.width_max) {
+            feat.width_max = w;
+          }
+          if (w < feat.width_min) {
+            feat.width_min = w;
+          }
+          if (w >= CROSS2_WIDE_THRESH) {
+            feat.wide_cnt++;
+          }
+          if (row === Math.floor(HEIGHT / 2)) {
+            feat.width_mid = w;
+          }
+        }
+      }
+
+      function crossExtractLost(l, r, feat) {
+        var row;
+        var lLost;
+        var rLost;
+
+        for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++) {
+          lLost = l[row] <= BORDER_MIN + 1;
+          rLost = r[row] >= BORDER_MAX - 1;
+
+          if (lLost) {
+            feat.l_lost_cnt++;
+          }
+          if (rLost) {
+            feat.r_lost_cnt++;
+          }
+          if (lLost && rLost) {
+            feat.both_lost_cnt++;
+          }
+        }
+      }
+
+      function crossExtractCorner(binImage, feat) {
+        feat.corner_bl = binImage[HEIGHT - 2][3];
+        feat.corner_br = binImage[HEIGHT - 2][WIDTH - 4];
+      }
+
+      function crossCalcSlope(border, breakRow) {
+        var startRow = breakRow - CROSS2_FIT_LEN;
+        var endRow = breakRow - 2;
+        var sumX = 0;
+        var sumY = 0;
+        var sumXY = 0;
+        var sumX2 = 0;
+        var n = 0;
+        var i;
+        var denom;
+        var slope;
+        var intercept;
+
+        if (startRow < CROSS2_SCAN_TOP) {
+          startRow = CROSS2_SCAN_TOP;
+        }
+        if (endRow <= startRow) {
+          return {
+            slope: 0,
+            intercept: border[breakRow]
+          };
+        }
+
+        for (i = startRow; i <= endRow; i++) {
+          sumX += i;
+          sumY += border[i];
+          sumXY += i * border[i];
+          sumX2 += i * i;
+          n += 1;
+        }
+
+        denom = n * sumX2 - sumX * sumX;
+        if (Math.abs(denom) > 0.001) {
+          slope = (n * sumXY - sumX * sumY) / denom;
+          intercept = (sumY - slope * sumX) / n;
+        } else {
+          slope = 0;
+          intercept = border[breakRow];
+        }
+
+        return {
+          slope: slope,
+          intercept: intercept
+        };
+      }
+
+      function crossExtractFeature(l, r, binImage, searchResult) {
+        var feat = createCrossFeature();
+        var fit;
+
+        crossExtractBreak(l, r, feat);
+        crossExtractDirBreak(searchResult, feat);
+        crossExtractWidth(l, r, feat);
+        crossExtractLost(l, r, feat);
+        crossExtractCorner(binImage, feat);
+
+        if (feat.l_break_row > CROSS2_FIT_LEN + CROSS2_SCAN_TOP) {
+          fit = crossCalcSlope(l, feat.l_break_row);
+          feat.l_slope = fit.slope;
+          feat.l_intercept = fit.intercept;
+        }
+
+        if (feat.r_break_row > CROSS2_FIT_LEN + CROSS2_SCAN_TOP) {
+          fit = crossCalcSlope(r, feat.r_break_row);
+          feat.r_slope = fit.slope;
+          feat.r_intercept = fit.intercept;
+        }
+
+        return feat;
+      }
+
+      function crossCheckEntry(feat) {
+        var bothBreak = feat.l_break_row > 0 && feat.r_break_row > 0;
+        var bothDir = feat.l_dir_break_row > 0 && feat.r_dir_break_row > 0;
+        var widthWide = feat.wide_cnt >= CROSS2_WIDE_CNT_MIN;
+        var bottomOk = feat.corner_bl === WHITE_PIXEL && feat.corner_br === WHITE_PIXEL;
+        var singleSide = ((feat.l_break_row > 0) ^ (feat.r_break_row > 0)) ? 1 : 0;
+        var score = 0;
+
+        if (singleSide) {
+          return 0;
+        }
+
+        if (bothBreak) {
+          score++;
+        }
+        if (bothDir) {
+          score++;
+        }
+        if (widthWide && bottomOk) {
+          score++;
+        }
+
+        return score >= 2 ? 1 : 0;
+      }
+
+      function crossCheckDebug(feat) {
+        var bothBreak = feat.l_break_row > 0 && feat.r_break_row > 0;
+        var bothDir = feat.l_dir_break_row > 0 && feat.r_dir_break_row > 0;
+        var widthWide = feat.wide_cnt >= CROSS2_WIDE_CNT_MIN;
+        var bottomOk = feat.corner_bl === WHITE_PIXEL && feat.corner_br === WHITE_PIXEL;
+        var singleSide = ((feat.l_break_row > 0) ^ (feat.r_break_row > 0)) ? 1 : 0;
+        var score = 0;
+        var triggered;
+
+        if (!singleSide) {
+          if (bothBreak) {
+            score++;
+          }
+          if (bothDir) {
+            score++;
+          }
+          if (widthWide && bottomOk) {
+            score++;
+          }
+        }
+
+        triggered = singleSide ? 0 : (score >= 2 ? 1 : 0);
+
+        return {
+          bothBreak: bothBreak ? 1 : 0,
+          bothDir: bothDir ? 1 : 0,
+          widthWide: widthWide ? 1 : 0,
+          bottomOk: bottomOk ? 1 : 0,
+          singleSide: singleSide ? 1 : 0,
+          score: score,
+          triggered: triggered
+        };
+      }
+
+      function updateCrossDebug(feat, dbg) {
+        dbgLBreak.textContent = String(feat.l_break_row);
+        dbgRBreak.textContent = String(feat.r_break_row);
+        dbgLDir.textContent = String(feat.l_dir_break_row);
+        dbgRDir.textContent = String(feat.r_dir_break_row);
+        dbgWide.textContent = String(feat.wide_cnt);
+        dbgScore.textContent = String(dbg.score) + " (ss=" + String(dbg.singleSide) + ")";
+      }
+
+      function resetCrossDebug() {
+        dbgLBreak.textContent = "-";
+        dbgRBreak.textContent = "-";
+        dbgLDir.textContent = "-";
+        dbgRDir.textContent = "-";
+        dbgWide.textContent = "-";
+        dbgScore.textContent = "-";
+      }
+
+      function crossRepairBoth(l, r, feat) {
+        var row;
+        var lBp = feat.l_break_row ? feat.l_break_row : feat.l_dir_break_row;
+        var rBp = feat.r_break_row ? feat.r_break_row : feat.r_dir_break_row;
+        var estW;
+        var val;
+
+        if (lBp > CROSS2_FIT_LEN + CROSS2_SCAN_TOP) {
+          for (row = lBp; row <= CROSS2_SCAN_BOT; row++) {
+            val = Math.round(feat.l_slope * row + feat.l_intercept);
+            l[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+          }
+        } else if (feat.l_lost_cnt > CROSS2_LOST_THRESH) {
+          estW = feat.width_bottom;
+          if (estW < 20) {
+            estW = 20;
+          }
+          for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++) {
+            if (l[row] <= BORDER_MIN + 1) {
+              val = r[row] - estW;
+              l[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+            }
+          }
+        }
+
+        if (rBp > CROSS2_FIT_LEN + CROSS2_SCAN_TOP) {
+          for (row = rBp; row <= CROSS2_SCAN_BOT; row++) {
+            val = Math.round(feat.r_slope * row + feat.r_intercept);
+            r[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+          }
+        } else if (feat.r_lost_cnt > CROSS2_LOST_THRESH) {
+          estW = feat.width_bottom;
+          if (estW < 20) {
+            estW = 20;
+          }
+          for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++) {
+            if (r[row] >= BORDER_MAX - 1) {
+              val = l[row] + estW;
+              r[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+            }
+          }
+        }
+      }
+
+      function markCrossRepairedRows(l, r, leftValid, rightValid) {
+        var row;
+        for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++) {
+          if (!leftValid[row] && l[row] > BORDER_MIN + 1) {
+            leftValid[row] = 2;
+          }
+          if (!rightValid[row] && r[row] < BORDER_MAX - 1) {
+            rightValid[row] = 2;
+          }
+        }
+      }
+
+      function imageDrawRectan(binImage) {
+        var i;
+
+        for (i = 0; i < HEIGHT; i++) {
+          binImage[i][0] = BLACK_PIXEL;
+          binImage[i][1] = BLACK_PIXEL;
+          binImage[i][WIDTH - 1] = BLACK_PIXEL;
+          binImage[i][WIDTH - 2] = BLACK_PIXEL;
+        }
+
+        for (i = 0; i < WIDTH; i++) {
+          binImage[0][i] = BLACK_PIXEL;
+          binImage[1][i] = BLACK_PIXEL;
+        }
+      }
+
+      function buildBinary(grayImage, threshold) {
+        var binImage = create2D(HEIGHT, WIDTH, 0);
+        var x;
+        var y;
+
+        for (y = 0; y < HEIGHT; y++) {
+          for (x = 0; x < WIDTH; x++) {
+            binImage[y][x] = grayImage[y][x] > threshold ? WHITE_PIXEL : BLACK_PIXEL;
+          }
+        }
+
+        imageDrawRectan(binImage);
+        return binImage;
+      }
+
+      function processGray(grayImage) {
+        var threshold = parseInt(thresholdInput.value, 10);
+        var binImage = buildBinary(grayImage, threshold);
+        var startInfo = getStartPoint(binImage, HEIGHT - 2);
+        var searchResult;
+        var leftResult;
+        var rightResult;
+        var midResult;
+        var crossFeat;
+        var crossTriggered;
+        var crossDbg;
+
+        drawGrayCanvas(sourceCtx, grayImage);
+        drawBinaryCanvas(binaryCtx, binImage);
+
+        if (startInfo.ok) {
+          searchResult = searchLR(binImage, startInfo);
+          leftResult = fillBorder(searchResult.pointsL, searchResult.leftCount, BORDER_MIN, 1);
+          rightResult = fillBorder(searchResult.pointsR, searchResult.rightCount, BORDER_MAX, -1);
+          midResult = calcMidline(leftResult.border, rightResult.border, leftResult.valid, rightResult.valid);
+          crossFeat = crossExtractFeature(leftResult.border, rightResult.border, binImage, searchResult);
+          crossDbg = crossCheckDebug(crossFeat);
+          crossTriggered = crossDbg.triggered;
+          updateCrossDebug(crossFeat, crossDbg);
+
+          if (crossTriggered) {
+            crossRepairBoth(leftResult.border, rightResult.border, crossFeat);
+            markCrossRepairedRows(leftResult.border, rightResult.border, leftResult.valid, rightResult.valid);
+            midResult = calcMidline(leftResult.border, rightResult.border, leftResult.valid, rightResult.valid);
+            statCross.textContent = "on";
+          } else {
+            statCross.textContent = "off";
+          }
+
+          statStart.textContent = "left/right start found";
+          statLeft.textContent = String(searchResult.leftCount);
+          statRight.textContent = String(searchResult.rightCount);
+          statBorder.textContent = "ok";
+          statMid.textContent = String(midResult.midline[HEIGHT - 5]);
+          drawOverlay(grayImage, midResult.leftline, midResult.midline, midResult.rightline, midResult.validMask, true);
+        } else {
+          statStart.textContent = "start point not found";
+          statLeft.textContent = "0";
+          statRight.textContent = "0";
+          statBorder.textContent = "fail";
+          statCross.textContent = "off";
+          statMid.textContent = "-";
+          resetCrossDebug();
+          drawOverlay(grayImage, [], [], [], null, false);
+        }
+      }
+
+      function loadImageFromFile(file) {
+        var img = new Image();
+        var reader = new FileReader();
+
+        reader.onload = function (event) {
+          img.onload = function () {
+            var imageData;
+            var data;
+            var grayImage = create2D(HEIGHT, WIDTH, 0);
+            var x;
+            var y;
+            var idx;
+            var r;
+            var g;
+            var b;
+
+            hiddenCtx.clearRect(0, 0, WIDTH, HEIGHT);
+            hiddenCtx.drawImage(img, 0, 0, WIDTH, HEIGHT);
+            imageData = hiddenCtx.getImageData(0, 0, WIDTH, HEIGHT);
+            data = imageData.data;
+
+            for (y = 0; y < HEIGHT; y++) {
+              for (x = 0; x < WIDTH; x++) {
+                idx = (y * WIDTH + x) * 4;
+                r = data[idx];
+                g = data[idx + 1];
+                b = data[idx + 2];
+                grayImage[y][x] = Math.floor((r * 299 + g * 587 + b * 114) / 1000);
+              }
+            }
+
+            currentGray = grayImage;
+            processGray(grayImage);
+          };
+
+          img.src = event.target.result;
+        };
+
+        reader.readAsDataURL(file);
+      }
+
+      thresholdInput.addEventListener("input", function () {
+        thresholdValue.textContent = thresholdInput.value;
+        if (currentGray) {
+          processGray(currentGray);
+        }
+      });
+
+      scaleSelect.addEventListener("change", updateCanvasScale);
+
+      fileInput.addEventListener("change", function () {
+        if (fileInput.files && fileInput.files[0]) {
+          loadImageFromFile(fileInput.files[0]);
+        }
+      });
+
+      thresholdValue.textContent = thresholdInput.value;
+      updateCanvasScale();
+
+      sourceCtx.fillStyle = "#101010";
+      sourceCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      binaryCtx.fillStyle = "#101010";
+      binaryCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      overlayCtx.fillStyle = "#101010";
+      overlayCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      lineCtx.fillStyle = "#000000";
+      lineCtx.fillRect(0, 0, WIDTH, HEIGHT);
+    })();
+  </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 1   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE circle2
@@ -66,7 +66,7 @@ stmt  level    source
    53   1      }
    54          
    55          /*******************************************************************************
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 2   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 2   
 
    56           * circle2_extract_feature - 一次性提取本帧所有圆环相关特征
    57           ******************************************************************************/
@@ -134,7 +134,7 @@ stmt  level    source
   119   4                  else if (feat.r_break_row && !feat.l_break_row)
   120   4                      cir2_dir = CIR2_RIGHT;
   121   4                  else if (feat.l_break_delta > feat.r_break_delta)
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 3   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 3   
 
   122   4                      cir2_dir = CIR2_LEFT;
   123   4                  else
@@ -202,7 +202,7 @@ stmt  level    source
   185   2          case CIR2_EXIT:
   186   2          {
   187   3              uint8 recovered = 0;
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 4   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 4   
 
   188   3              /* 出口阶段继续补线 */
   189   3              if (cir2_dir == CIR2_LEFT)
@@ -270,7 +270,7 @@ stmt  level    source
   251   2              if (delta > CIR2_BREAK_THRESH)
   252   2              {
   253   3                  /* l[row] > l[row-1]：上面一行的左边界突然靠左（值变小）
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 5   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 5   
 
   254   3                   * 说明左侧出现断口 */
   255   3                  f->l_break_row   = row;
@@ -338,7 +338,7 @@ stmt  level    source
   317   3                  break;
   318   3              }
   319   2          }
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 6   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 6   
 
   320   1      }
   321          
@@ -406,7 +406,7 @@ stmt  level    source
   382          /*--------------------------------------------------------------------------
   383           * _check_entry - IDLE→ENTRY 条件
   384           *
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 7   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 7   
 
   385           * 左圆环入口特征:
   386           *   1. 左侧出现断口 (l_break_row > 0)，且断口跳变量较大
@@ -474,7 +474,7 @@ stmt  level    source
   448   1      }
   449          
   450          /*--------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 8   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 8   
 
   451           * _check_exit - INSIDE→EXIT 条件
   452           *
@@ -542,7 +542,7 @@ stmt  level    source
   514   2              uint16 est_width = f->width_bottom;
   515   2              if (est_width < CIR2_WIDTH_NARROW) est_width = CIR2_WIDTH_NARROW;
   516   2      
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 9   
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 9   
 
   517   2              for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
   518   2              {
@@ -610,7 +610,7 @@ stmt  level    source
   580   1          uint8 row;
   581   1          uint8 anchor_top = 0;
   582   1          uint8 anchor_bot = 0;
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 10  
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 10  
 
   583   1          float k;
   584   1          float b;
@@ -678,7 +678,7 @@ stmt  level    source
   646           *--------------------------------------------------------------------------*/
   647          static void _recalc_midline(uint16 *l, uint16 *r)
   648          {
-C251 COMPILER V5.60.0,  circle2                                                            21/05/26  14:44:21  PAGE 11  
+C251 COMPILER V5.60.0,  circle2                                                            25/05/26  23:20:02  PAGE 11  
 
   649   1          uint8 row;
   650   1          int last_good = MT9V03X_W / 2;

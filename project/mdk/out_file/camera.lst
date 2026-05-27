@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 1   
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE camera
@@ -66,689 +66,693 @@ stmt  level    source
    52          int cross_jud = 0;                 /* 十字状态判断*/
    53          int cross_jud_time = 0;            /* 十字状态计时*/
    54          
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 2   
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 2   
 
    55          
-   56          int my_abs(int value) {
-   57   1          return value >= 0 ? value : -value;
-   58   1      }
-   59          
-   60          
-   61          
-   62          int16 limit_a_b(int16 x, int a, int b) {
-   63   1          if(x < a) x = a;
-   64   1          if(x > b) x = b;
-   65   1          return x;
-   66   1      }
-   67          
-   68          int16 limit1(int16 x, int16 y) {
-   69   1          if(x > y) return y;
-   70   1          else if(x < -y) return -y;
-   71   1          else return x;
-   72   1      }
-   73          
-   74          /* 使用图像下方采样行作为控制误差，减去屏幕中心得到横向偏差 */
-   75          static void update_track_error(void) {
-   76   1          uint8 sample_row = (MT9V03X_H > 5) ? (MT9V03X_H - 5) : (MT9V03X_H - 1);
-   77   1          int16 screen_center = MT9V03X_W / 2;
-   78   1          track_error = (float)((int16)midline[sample_row] - screen_center);
-   79   1      }
-   80          
-   81          
-   82          /* 图像二值化 */
-   83          void turn_to_bin(void) {
-   84   1          uint8 i, j;
-   85   1          
-   86   1          for(i = 0; i < MT9V03X_H; i++) {
-   87   2              for(j = 0; j < MT9V03X_W; j++) {
-   88   3                  bin_image[i][j] = (mt9v03x_image[i][j] > threshold) ? WHITE_PIXEL : BLACK_PIXEL;
-   89   3              }
-   90   2          }
-   91   1      }
-   92          
-   93          uint8 start_point_l[2] = {0}; /* 左线起点的x,y坐标 */
-   94          uint8 start_point_r[2] = {0}; /* 右线起点的x,y坐标 */
-   95          uint8 get_start_point(uint8 start_row) {
-   96   1          uint8 i = 0, l_found = 0, r_found = 0;
-   97   1          uint8 *p_row;
-   98   1          
-   99   1          start_point_l[0] = 0; 
-  100   1          start_point_l[1] = 0; 
-  101   1          start_point_r[0] = 0; 
-  102   1          start_point_r[1] = 0; 
-  103   1      
-  104   1          p_row = bin_image[start_row];
-  105   1          
-  106   1          /* 从中间往左边找起点(往左扫到白黑黑视为边线) */
-  107   1          for(i = MT9V03X_W / 2; i > BORDER_MIN; i--) {
-  108   2              start_point_l[0] = i; 
-  109   2              start_point_l[1] = start_row; 
-  110   2              if(*(p_row + i) == WHITE_PIXEL && *(p_row + i - 1) == BLACK_PIXEL && *(p_row + i - 2) == BLACK_PI
+   56          
+   57          /* 使用图像下方采样行作为控制误差，减去屏幕中心得到横向偏差 */
+   58          static void update_track_error(void) {
+   59   1          uint8 sample_row = (MT9V03X_H > 5) ? (MT9V03X_H - 5) : (MT9V03X_H - 1);
+   60   1          int16 screen_center = MT9V03X_W / 2;
+   61   1          track_error = (float)((int16)midline[sample_row] - screen_center);
+   62   1      }
+   63          
+   64          
+   65          /* 图像二值化 */
+   66          void turn_to_bin(void) {
+   67   1          uint8 i, j;
+   68   1          
+   69   1          for(i = 0; i < MT9V03X_H; i++) {
+   70   2              for(j = 0; j < MT9V03X_W; j++) {
+   71   3                  bin_image[i][j] = (mt9v03x_image[i][j] > threshold) ? WHITE_PIXEL : BLACK_PIXEL;
+   72   3              }
+   73   2          }
+   74   1      }
+   75          
+   76          uint8 start_point_l[2] = {0}; /* 左线起点的x,y坐标 */
+   77          uint8 start_point_r[2] = {0}; /* 右线起点的x,y坐标 */
+   78          uint8 get_start_point(uint8 start_row) {
+   79   1          uint8 i = 0, l_found = 0, r_found = 0;
+   80   1          uint8 *p_row;
+   81   1          
+   82   1          start_point_l[0] = 0; 
+   83   1          start_point_l[1] = 0; 
+   84   1          start_point_r[0] = 0; 
+   85   1          start_point_r[1] = 0; 
+   86   1      
+   87   1          p_row = bin_image[start_row];
+   88   1          
+   89   1          /* 从中间往左边找起点(往左扫到白黑黑视为边线) */
+   90   1          for(i = MT9V03X_W / 2; i > BORDER_MIN; i--) {
+   91   2              start_point_l[0] = i; 
+   92   2              start_point_l[1] = start_row; 
+   93   2              if(*(p_row + i) == WHITE_PIXEL && *(p_row + i - 1) == BLACK_PIXEL && *(p_row + i - 2) == BLACK_PI
              -XEL) {
-  111   3                  l_found = 1;
-  112   3                  break;
-  113   3              }
-  114   2          }
-  115   1      
-  116   1          /* 从中间往右边找起点（往右扫到白黑黑视为边线）*/
-  117   1          for(i = MT9V03X_W / 2; i < BORDER_MAX; i++) {
-  118   2              start_point_r[0] = i;
-  119   2              start_point_r[1] = start_row; 
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 3   
-
-  120   2              if(*(p_row + i) == WHITE_PIXEL && *(p_row + i + 1) == BLACK_PIXEL && *(p_row + i + 2) == BLACK_PI
+   94   3                  l_found = 1;
+   95   3                  break;
+   96   3              }
+   97   2          }
+   98   1      
+   99   1          /* 从中间往右边找起点（往右扫到白黑黑视为边线）*/
+  100   1          for(i = MT9V03X_W / 2; i < BORDER_MAX; i++) {
+  101   2              start_point_r[0] = i;
+  102   2              start_point_r[1] = start_row; 
+  103   2              if(*(p_row + i) == WHITE_PIXEL && *(p_row + i + 1) == BLACK_PIXEL && *(p_row + i + 2) == BLACK_PI
              -XEL) {
-  121   3                  r_found = 1;
-  122   3                  break;
-  123   3              }
-  124   2          }
-  125   1      
-  126   1          return (l_found && r_found) ? 1 : 0;
-  127   1      }
-  128          
-  129          /* 八邻域搜索主函数 */
-  130          void search_l_r(uint16 break_flag, uint8(*image)[MT9V03X_W], uint16 *l_stastic, uint16 *r_stastic, 
-  131                         uint8 l_start_x, uint8 l_start_y, uint8 r_start_x, uint8 r_start_y, uint8*hightest) {
-  132   1          uint8 i;
-  133   1          uint8 next_i;
-  134   1          uint8 best_x_l, best_y_l, best_x_r, best_y_r;
-  135   1          int16 x_cur, y_cur, x_next, y_next;
-  136   1          uint8 *p_row_cur;
-  137   1          uint8 *p_row_next;
-  138   1          
-  139   1          /* 左边变量 */
-  140   1          int16 search_filds_l[8][2] = {0};
-  141   1          uint8 index_l = 0;
-  142   1          uint8 center_point_l[2] = {0};
-  143   1          uint16 l_data_statics = *l_stastic;
-  144   1          
-  145   1          /* 左边搜索方向 */
-  146   1          static int8 seeds_l[8][2] = {
-  147   1              {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, 
-  148   1              {0, -1}, {1, -1}, {1, 0}, {1, 1}
-  149   1          };
-  150   1          
-  151   1          /* 右边变量 */
-  152   1          int16 search_filds_r[8][2] = {0};
-  153   1          uint8 center_point_r[2] = {0};
-  154   1          uint8 index_r = 0;
-  155   1          uint16 r_data_statics = *r_stastic;
-  156   1          
-  157   1          /* 右边搜索方向 */
-  158   1          static int8 seeds_r[8][2] = {
-  159   1              {0, 1}, {1, 1}, {1, 0}, {1, -1}, 
-  160   1              {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}
-  161   1          };
-  162   1          
-  163   1          /* 初始化中心点 */
-  164   1          center_point_l[0] = l_start_x;
-  165   1          center_point_l[1] = l_start_y;
-  166   1          center_point_r[0] = r_start_x;
-  167   1          center_point_r[1] = r_start_y;
-  168   1          
-  169   1          /* 开始八邻域搜索 */
-  170   1          while(break_flag--) {
-  171   2              /* 左边处理 */
-  172   2              for(i = 0; i < 8; i++) {
-  173   3                  search_filds_l[i][0] = center_point_l[0] + seeds_l[i][0];
-  174   3                  search_filds_l[i][1] = center_point_l[1] + seeds_l[i][1];
-  175   3              }
-  176   2              
-  177   2              points_l[l_data_statics][0] = center_point_l[0];
-  178   2              points_l[l_data_statics][1] = center_point_l[1];
-  179   2              l_data_statics++;
-  180   2              
-  181   2              /* 右边处理 */
-  182   2              for(i = 0; i < 8; i++) {
-  183   3                  search_filds_r[i][0] = center_point_r[0] + seeds_r[i][0];
-  184   3                  search_filds_r[i][1] = center_point_r[1] + seeds_r[i][1];
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 4   
+  104   3                  r_found = 1;
+  105   3                  break;
+  106   3              }
+  107   2          }
+  108   1      
+  109   1          return (l_found && r_found) ? 1 : 0;
+  110   1      }
+  111          
+  112          /* 八邻域搜索主函数 */
+  113          void search_l_r(uint16 break_flag, uint8(*image)[MT9V03X_W], uint16 *l_stastic, uint16 *r_stastic, 
+  114                         uint8 l_start_x, uint8 l_start_y, uint8 r_start_x, uint8 r_start_y, uint8*hightest) {
+  115   1          uint8 i;
+  116   1          uint8 next_i;
+  117   1          uint8 best_x_l, best_y_l, best_x_r, best_y_r;
+  118   1          int16 x_cur, y_cur, x_next, y_next;
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 3   
 
-  185   3              }
-  186   2              
-  187   2              points_r[r_data_statics][0] = center_point_r[0];
-  188   2              points_r[r_data_statics][1] = center_point_r[1];
-  189   2              
-  190   2              index_l = 0;
-  191   2              
-  192   2              /* 左边边界判断（指向偏移访问图像） */
-  193   2              for(i = 0; i < 8; i++) {
-  194   3                  next_i = (uint8)((i + 1) & 7);
-  195   3                  x_cur  = search_filds_l[i][0];
-  196   3                  y_cur  = search_filds_l[i][1];
-  197   3                  x_next = search_filds_l[next_i][0];
-  198   3                  y_next = search_filds_l[next_i][1];
-  199   3      
-  200   3                  if(x_cur < 0 || x_cur >= MT9V03X_W || y_cur < 0 || y_cur >= MT9V03X_H ||
-  201   3                     x_next < 0 || x_next >= MT9V03X_W || y_next < 0 || y_next >= MT9V03X_H) {
-  202   4                      continue;
-  203   4                  }
-  204   3      
-  205   3                  p_row_cur  = image[y_cur];
-  206   3                  p_row_next = image[y_next];
-  207   3                  if(p_row_cur[x_cur] == BLACK_PIXEL && p_row_next[x_next] == WHITE_PIXEL) {
-  208   4                      if(index_l == 0 || best_y_l > (uint8)y_cur) {
-  209   5                          best_x_l = (uint8)x_cur;
-  210   5                          best_y_l = (uint8)y_cur;
-  211   5                      }
-  212   4                      index_l++;
-  213   4                      dir_l[l_data_statics-1] = i;
-  214   4                  }
-  215   3              }
-  216   2              
-  217   2              if(index_l) {
-  218   3                  center_point_l[0] = best_x_l;
-  219   3                  center_point_l[1] = best_y_l;
-  220   3              }
-  221   2              
-  222   2              /* 终止*/
-  223   2              if((r_data_statics >= 2 && l_data_statics >= 3) &&
-  224   2                 ((points_r[r_data_statics][0] == points_r[r_data_statics-1][0] && 
-  225   2                   points_r[r_data_statics][0] == points_r[r_data_statics-2][0] &&
-  226   2                   points_r[r_data_statics][1] == points_r[r_data_statics-1][1] && 
-  227   2                   points_r[r_data_statics][1] == points_r[r_data_statics-2][1]) ||
-  228   2                  (points_l[l_data_statics-1][0] == points_l[l_data_statics-2][0] && 
-  229   2                   points_l[l_data_statics-1][0] == points_l[l_data_statics-3][0] &&
-  230   2                   points_l[l_data_statics-1][1] == points_l[l_data_statics-2][1] && 
-  231   2                   points_l[l_data_statics-1][1] == points_l[l_data_statics-3][1]))) {
-  232   3                  break;
-  233   3              }
-  234   2              
-  235   2              if(my_abs(points_r[r_data_statics][0] - points_l[l_data_statics-1][0]) < 2 &&
-  236   2                 my_abs(points_r[r_data_statics][1] - points_l[l_data_statics-1][1]) < 2) {
-  237   3                  *hightest = (points_r[r_data_statics][1] + points_l[l_data_statics-1][1]) >> 1;
-  238   3                  break;
-  239   3              }
-  240   2              
-  241   2              if(points_r[r_data_statics][1] < points_l[l_data_statics-1][1]) {
-  242   3                  continue; /* 如果左边比右边高，左边等待右边 */
-  243   3              }
-  244   2              
-  245   2              if(dir_l[l_data_statics-1] == 7 && 
-  246   2                 (points_r[r_data_statics][1] > points_l[l_data_statics-1][1])) {
-  247   3                  /* 左边开始向下走了，等待右边 */
-  248   3                  center_point_l[0] = points_l[l_data_statics-1][0];
-  249   3                  center_point_l[1] = points_l[l_data_statics-1][1];
-  250   3                  l_data_statics--;
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 5   
+  119   1          uint8 *p_row_cur;
+  120   1          uint8 *p_row_next;
+  121   1          
+  122   1          /* 左边变量 */
+  123   1          int16 search_filds_l[8][2] = {0};
+  124   1          uint8 index_l = 0;
+  125   1          uint8 center_point_l[2] = {0};
+  126   1          uint16 l_data_statics = *l_stastic;
+  127   1          
+  128   1          /* 左边搜索方向 */
+  129   1          static int8 seeds_l[8][2] = {
+  130   1              {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, 
+  131   1              {0, -1}, {1, -1}, {1, 0}, {1, 1}
+  132   1          };
+  133   1          
+  134   1          /* 右边变量 */
+  135   1          int16 search_filds_r[8][2] = {0};
+  136   1          uint8 center_point_r[2] = {0};
+  137   1          uint8 index_r = 0;
+  138   1          uint16 r_data_statics = *r_stastic;
+  139   1          
+  140   1          /* 右边搜索方向 */
+  141   1          static int8 seeds_r[8][2] = {
+  142   1              {0, 1}, {1, 1}, {1, 0}, {1, -1}, 
+  143   1              {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}
+  144   1          };
+  145   1          
+  146   1          /* 初始化中心点 */
+  147   1          center_point_l[0] = l_start_x;
+  148   1          center_point_l[1] = l_start_y;
+  149   1          center_point_r[0] = r_start_x;
+  150   1          center_point_r[1] = r_start_y;
+  151   1          
+  152   1          /* 开始八邻域搜索 */
+  153   1          while(break_flag--) {
+  154   2              /* 左边处理 */
+  155   2              for(i = 0; i < 8; i++) {
+  156   3                  search_filds_l[i][0] = center_point_l[0] + seeds_l[i][0];
+  157   3                  search_filds_l[i][1] = center_point_l[1] + seeds_l[i][1];
+  158   3              }
+  159   2              
+  160   2              points_l[l_data_statics][0] = center_point_l[0];
+  161   2              points_l[l_data_statics][1] = center_point_l[1];
+  162   2              l_data_statics++;
+  163   2              
+  164   2              /* 右边处理 */
+  165   2              for(i = 0; i < 8; i++) {
+  166   3                  search_filds_r[i][0] = center_point_r[0] + seeds_r[i][0];
+  167   3                  search_filds_r[i][1] = center_point_r[1] + seeds_r[i][1];
+  168   3              }
+  169   2              
+  170   2              points_r[r_data_statics][0] = center_point_r[0];
+  171   2              points_r[r_data_statics][1] = center_point_r[1];
+  172   2              
+  173   2              index_l = 0;
+  174   2              
+  175   2              /* 左边边界判断（指向偏移访问图像） */
+  176   2              for(i = 0; i < 8; i++) {
+  177   3                  next_i = (uint8)((i + 1) & 7);
+  178   3                  x_cur  = search_filds_l[i][0];
+  179   3                  y_cur  = search_filds_l[i][1];
+  180   3                  x_next = search_filds_l[next_i][0];
+  181   3                  y_next = search_filds_l[next_i][1];
+  182   3      
+  183   3                  if(x_cur < 0 || x_cur >= MT9V03X_W || y_cur < 0 || y_cur >= MT9V03X_H ||
+  184   3                     x_next < 0 || x_next >= MT9V03X_W || y_next < 0 || y_next >= MT9V03X_H) {
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 4   
 
-  251   3              }
-  252   2              
-  253   2              r_data_statics++;
-  254   2              
-  255   2              index_r = 0;
-  256   2              
-  257   2              /* 右边边界判断（指向偏移访问图像） */
-  258   2              for(i = 0; i < 8; i++) {
-  259   3                  next_i = (uint8)((i + 1) & 7);
-  260   3                  x_cur  = search_filds_r[i][0];
-  261   3                  y_cur  = search_filds_r[i][1];
-  262   3                  x_next = search_filds_r[next_i][0];
-  263   3                  y_next = search_filds_r[next_i][1];
-  264   3      
-  265   3                  if(x_cur < 0 || x_cur >= MT9V03X_W || y_cur < 0 || y_cur >= MT9V03X_H ||
-  266   3                     x_next < 0 || x_next >= MT9V03X_W || y_next < 0 || y_next >= MT9V03X_H) {
-  267   4                      continue;
-  268   4                  }
-  269   3      
-  270   3                  p_row_cur  = image[y_cur];
-  271   3                  p_row_next = image[y_next];
-  272   3                  if(p_row_cur[x_cur] == BLACK_PIXEL && p_row_next[x_next] == WHITE_PIXEL) {
-  273   4                      if(index_r == 0 || best_y_r > (uint8)y_cur) {
-  274   5                          best_x_r = (uint8)x_cur;
-  275   5                          best_y_r = (uint8)y_cur;
-  276   5                      }
-  277   4                      index_r++;
-  278   4                      dir_r[r_data_statics-1] = i;
-  279   4                  }
-  280   3              }
-  281   2              
-  282   2              if(index_r) {
-  283   3                  center_point_r[0] = best_x_r;
-  284   3                  center_point_r[1] = best_y_r;
-  285   3              }
-  286   2          }
-  287   1          
-  288   1          *l_stastic = l_data_statics;
-  289   1          *r_stastic = r_data_statics;
-  290   1      }
-  291          
-  292          /* 获取左边界线(赛道线) —— 允许跳行 + 有效标记 + 短缺口插值 */
-  293          #define BORDER_GAP_MAX  5   /* 允许跳过的最大多行数 */
-  294          void get_left(uint16 total_L) {
-  295   1          uint8 i = 0;
-  296   1          uint16 j = 0;
-  297   1          uint8 row = 0;
-  298   1          uint8 last_valid = 0;
-  299   1          uint8 gap_start = 0;
-  300   1          uint8 next_valid = 0;
-  301   1          uint8 found = 0;
-  302   1          uint8 k = 0;
-  303   1          uint8 gap_len = 0;
-  304   1          uint8 span = 0;
-  305   1          uint8 step = 0;
-  306   1          int16 delta = 0;
-  307   1          int16 base = 0;
-  308   1          int16 val = 0;
-  309   1          
-  310   1          for(i = 0; i < MT9V03X_H; i++) {
-  311   2              l_border[i] = BORDER_MIN;
-  312   2              l_index [i] = 0;
-  313   2              l_border_valid[i] = 0;
-  314   2          }
-  315   1          
-  316   1          /* 遍历所有八邻域点，按行号直接写入 */
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 6   
+  185   4                      continue;
+  186   4                  }
+  187   3      
+  188   3                  p_row_cur  = image[y_cur];
+  189   3                  p_row_next = image[y_next];
+  190   3                  if(p_row_cur[x_cur] == BLACK_PIXEL && p_row_next[x_next] == WHITE_PIXEL) {
+  191   4                      if(index_l == 0 || best_y_l > (uint8)y_cur) {
+  192   5                          best_x_l = (uint8)x_cur;
+  193   5                          best_y_l = (uint8)y_cur;
+  194   5                      }
+  195   4                      index_l++;
+  196   4                      dir_l[l_data_statics-1] = i;
+  197   4                  }
+  198   3              }
+  199   2              
+  200   2              if(index_l) {
+  201   3                  center_point_l[0] = best_x_l;
+  202   3                  center_point_l[1] = best_y_l;
+  203   3              }
+  204   2              
+  205   2              /* 终止*/
+  206   2              if((r_data_statics >= 2 && l_data_statics >= 3) &&
+  207   2                 ((points_r[r_data_statics][0] == points_r[r_data_statics-1][0] && 
+  208   2                   points_r[r_data_statics][0] == points_r[r_data_statics-2][0] &&
+  209   2                   points_r[r_data_statics][1] == points_r[r_data_statics-1][1] && 
+  210   2                   points_r[r_data_statics][1] == points_r[r_data_statics-2][1]) ||
+  211   2                  (points_l[l_data_statics-1][0] == points_l[l_data_statics-2][0] && 
+  212   2                   points_l[l_data_statics-1][0] == points_l[l_data_statics-3][0] &&
+  213   2                   points_l[l_data_statics-1][1] == points_l[l_data_statics-2][1] && 
+  214   2                   points_l[l_data_statics-1][1] == points_l[l_data_statics-3][1]))) {
+  215   3                  break;
+  216   3              }
+  217   2              
+  218   2              if(my_abs(points_r[r_data_statics][0] - points_l[l_data_statics-1][0]) < 2 &&
+*** WARNING C140 IN LINE 218 OF ..\code\Camera\camera.c: 'my_abs' undefined; assuming 'extern int my_abs()'
+  219   2                 my_abs(points_r[r_data_statics][1] - points_l[l_data_statics-1][1]) < 2) {
+*** WARNING C95 IN LINE 218 OF ..\code\Camera\camera.c: 'my_abs': too many actual parameters
+*** WARNING C95 IN LINE 218 OF ..\code\Camera\camera.c: 'my_abs': too many actual parameters
+  220   3                  *hightest = (points_r[r_data_statics][1] + points_l[l_data_statics-1][1]) >> 1;
+  221   3                  break;
+  222   3              }
+  223   2              
+  224   2              if(points_r[r_data_statics][1] < points_l[l_data_statics-1][1]) {
+  225   3                  continue; /* 如果左边比右边高，左边等待右边 */
+  226   3              }
+  227   2              
+  228   2              if(dir_l[l_data_statics-1] == 7 && 
+  229   2                 (points_r[r_data_statics][1] > points_l[l_data_statics-1][1])) {
+  230   3                  /* 左边开始向下走了，等待右边 */
+  231   3                  center_point_l[0] = points_l[l_data_statics-1][0];
+  232   3                  center_point_l[1] = points_l[l_data_statics-1][1];
+  233   3                  l_data_statics--;
+  234   3              }
+  235   2              
+  236   2              r_data_statics++;
+  237   2              
+  238   2              index_r = 0;
+  239   2              
+  240   2              /* 右边边界判断（指向偏移访问图像） */
+  241   2              for(i = 0; i < 8; i++) {
+  242   3                  next_i = (uint8)((i + 1) & 7);
+  243   3                  x_cur  = search_filds_r[i][0];
+  244   3                  y_cur  = search_filds_r[i][1];
+  245   3                  x_next = search_filds_r[next_i][0];
+  246   3                  y_next = search_filds_r[next_i][1];
+  247   3      
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 5   
 
-  317   1          for(j = 0; j < total_L; j++) {
-  318   2              row = (uint8)points_l[j][1];
-  319   2              if(row >= MT9V03X_H) continue;
-  320   2              /* 每行只取第一个命中的点（八邻域由底部向上扫，先到的更靠外侧） */
-  321   2              if(l_border_valid[row] == 0) {
-  322   3                  l_border[row] = points_l[j][0] + 1;
-  323   3                  l_index [row] = j;
-  324   3                  l_border_valid[row] = 1;  /* 1 = 实测点 */
-  325   3              }
-  326   2          }
-  327   1          
-  328   1          /* 短缺口线性插值补线
-  329   1             从底部往上扫，找到连续的无效段，如果段长 <= BORDER_GAP_MAX 且两端有效就�
+  248   3                  if(x_cur < 0 || x_cur >= MT9V03X_W || y_cur < 0 || y_cur >= MT9V03X_H ||
+  249   3                     x_next < 0 || x_next >= MT9V03X_W || y_next < 0 || y_next >= MT9V03X_H) {
+  250   4                      continue;
+  251   4                  }
+  252   3      
+  253   3                  p_row_cur  = image[y_cur];
+  254   3                  p_row_next = image[y_next];
+  255   3                  if(p_row_cur[x_cur] == BLACK_PIXEL && p_row_next[x_next] == WHITE_PIXEL) {
+  256   4                      if(index_r == 0 || best_y_r > (uint8)y_cur) {
+  257   5                          best_x_r = (uint8)x_cur;
+  258   5                          best_y_r = (uint8)y_cur;
+  259   5                      }
+  260   4                      index_r++;
+  261   4                      dir_r[r_data_statics-1] = i;
+  262   4                  }
+  263   3              }
+  264   2              
+  265   2              if(index_r) {
+  266   3                  center_point_r[0] = best_x_r;
+  267   3                  center_point_r[1] = best_y_r;
+  268   3              }
+  269   2          }
+  270   1          
+  271   1          *l_stastic = l_data_statics;
+  272   1          *r_stastic = r_data_statics;
+  273   1      }
+  274          
+  275          /* 获取左边界线(赛道线) —— 允许跳行 + 有效标记 + 短缺口插值 */
+  276          #define BORDER_GAP_MAX  5   /* 允许跳过的最大多行数 */
+  277          void get_left(uint16 total_L) {
+  278   1          uint8 i = 0;
+  279   1          uint16 j = 0;
+  280   1          uint8 row = 0;
+  281   1          uint8 last_valid = 0;
+  282   1          uint8 gap_start = 0;
+  283   1          uint8 next_valid = 0;
+  284   1          uint8 found = 0;
+  285   1          uint8 k = 0;
+  286   1          uint8 gap_len = 0;
+  287   1          uint8 span = 0;
+  288   1          uint8 step = 0;
+  289   1          int16 delta = 0;
+  290   1          int16 base = 0;
+  291   1          int16 val = 0;
+  292   1          
+  293   1          for(i = 0; i < MT9V03X_H; i++) {
+  294   2              l_border[i] = BORDER_MIN;
+  295   2              l_index [i] = 0;
+  296   2              l_border_valid[i] = 0;
+  297   2          }
+  298   1          
+  299   1          /* 遍历所有八邻域点，按行号直接写入 */
+  300   1          for(j = 0; j < total_L; j++) {
+  301   2              row = (uint8)points_l[j][1];
+  302   2              if(row >= MT9V03X_H) continue;
+  303   2              /* 每行只取第一个命中的点（八邻域由底部向上扫，先到的更靠外侧） */
+  304   2              if(l_border_valid[row] == 0) {
+  305   3                  l_border[row] = points_l[j][0] + 1;
+  306   3                  l_index [row] = j;
+  307   3                  l_border_valid[row] = 1;  /* 1 = 实测点 */
+  308   3              }
+  309   2          }
+  310   1          
+  311   1          /* 短缺口线性插值补线
+  312   1             从底部往上扫，找到连续的无效段，如果段长 <= BORDER_GAP_MAX 且两端有效就�
              -��值 */
-  330   1          /* 先找到底部第一个有效行 */
-  331   1          for(i = MT9V03X_H - 1; i > 0; i--) {
-  332   2              if(l_border_valid[i]) { last_valid = i; break; }
-  333   2          }
-  334   1          
-  335   1          for(i = last_valid; i > 0; ) {
-  336   2              /* 找下一个无效行 */
-  337   2              if(l_border_valid[i]) { last_valid = i; i--; continue; }
-  338   2              /* i 是无效行，往上找下一个有效行 */
-  339   2              gap_start = i;  /* 无效段的底行 */
-  340   2              next_valid = 0;
-  341   2              found = 0;
-  342   2              for(k = i; k > 0; k--) {
-  343   3                  if(l_border_valid[k]) { next_valid = k; found = 1; break; }
-  344   3              }
-  345   2              if(!found) break;  
-  346   2              
-  347   2              gap_len = gap_start - next_valid;  /* 缺口行数（不含两端有效行） */
-  348   2              if(gap_len <= BORDER_GAP_MAX && last_valid > gap_start) {
-  349   3                  /* 两端锚点: last_valid (下方有效), next_valid (上方有效) */
-  350   3                  span  = last_valid - next_valid;
-  351   3                  delta = (int16)l_border[last_valid] - (int16)l_border[next_valid];
-  352   3                  base  = (int16)l_border[next_valid];
-  353   3                  for(k = next_valid + 1; k < last_valid; k++) {
-  354   4                      if(!l_border_valid[k]) {
-  355   5                          step = k - next_valid;
-  356   5                          if(delta >= 0) {
-  357   6                              val = (int16)(base + (int16)((delta * step + (span >> 1)) / span));
-  358   6                          } else {
-  359   6                              val = (int16)(base + (int16)((delta * step - (span >> 1)) / span));
-  360   6                          }
-  361   5                          if(val < BORDER_MIN) val = BORDER_MIN;
-  362   5                          if(val > BORDER_MAX) val = BORDER_MAX;
-  363   5                          l_border[k] = (uint16)val;
-  364   5                          l_border_valid[k] = 2;  /* 2 = 插值点 */
-  365   5                      }
-  366   4                  }
-  367   3              }
-  368   2              i = next_valid;
-  369   2          }
-  370   1      }
-  371          
-  372          /* 获取右边界线 —— 允许跳行 + 标记是否有效 + 短缺口插值 */
-  373          void get_right(uint16 total_R) {
-  374   1          uint8 i = 0;
-  375   1          uint16 j = 0;
-  376   1          uint8 row = 0;
-  377   1          uint8 last_valid = 0;
-  378   1          uint8 gap_start = 0;
-  379   1          uint8 next_valid = 0;
-  380   1          uint8 found = 0;
-  381   1          uint8 k = 0;
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 7   
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 6   
 
-  382   1          uint8 gap_len = 0;
-  383   1          uint8 span = 0;
-  384   1          uint8 step = 0;
-  385   1          int16 delta = 0;
-  386   1          int16 base = 0;
-  387   1          int16 val = 0;
+  313   1          /* 先找到底部第一个有效行 */
+  314   1          for(i = MT9V03X_H - 1; i > 0; i--) {
+  315   2              if(l_border_valid[i]) { last_valid = i; break; }
+  316   2          }
+  317   1          
+  318   1          for(i = last_valid; i > 0; ) {
+  319   2              /* 找下一个无效行 */
+  320   2              if(l_border_valid[i]) { last_valid = i; i--; continue; }
+  321   2              /* i 是无效行，往上找下一个有效行 */
+  322   2              gap_start = i;  /* 无效段的底行 */
+  323   2              next_valid = 0;
+  324   2              found = 0;
+  325   2              for(k = i; k > 0; k--) {
+  326   3                  if(l_border_valid[k]) { next_valid = k; found = 1; break; }
+  327   3              }
+  328   2              if(!found) break;  
+  329   2              
+  330   2              gap_len = gap_start - next_valid;  /* 缺口行数（不含两端有效行） */
+  331   2              if(gap_len <= BORDER_GAP_MAX && last_valid > gap_start) {
+  332   3                  /* 两端锚点: last_valid (下方有效), next_valid (上方有效) */
+  333   3                  span  = last_valid - next_valid;
+  334   3                  delta = (int16)l_border[last_valid] - (int16)l_border[next_valid];
+  335   3                  base  = (int16)l_border[next_valid];
+  336   3                  for(k = next_valid + 1; k < last_valid; k++) {
+  337   4                      if(!l_border_valid[k]) {
+  338   5                          step = k - next_valid;
+  339   5                          if(delta >= 0) {
+  340   6                              val = (int16)(base + (int16)((delta * step + (span >> 1)) / span));
+  341   6                          } else {
+  342   6                              val = (int16)(base + (int16)((delta * step - (span >> 1)) / span));
+  343   6                          }
+  344   5                          if(val < BORDER_MIN) val = BORDER_MIN;
+  345   5                          if(val > BORDER_MAX) val = BORDER_MAX;
+  346   5                          l_border[k] = (uint16)val;
+  347   5                          l_border_valid[k] = 2;  /* 2 = 插值点 */
+  348   5                      }
+  349   4                  }
+  350   3              }
+  351   2              i = next_valid;
+  352   2          }
+  353   1      }
+  354          
+  355          /* 获取右边界线 —— 允许跳行 + 标记是否有效 + 短缺口插值 */
+  356          void get_right(uint16 total_R) {
+  357   1          uint8 i = 0;
+  358   1          uint16 j = 0;
+  359   1          uint8 row = 0;
+  360   1          uint8 last_valid = 0;
+  361   1          uint8 gap_start = 0;
+  362   1          uint8 next_valid = 0;
+  363   1          uint8 found = 0;
+  364   1          uint8 k = 0;
+  365   1          uint8 gap_len = 0;
+  366   1          uint8 span = 0;
+  367   1          uint8 step = 0;
+  368   1          int16 delta = 0;
+  369   1          int16 base = 0;
+  370   1          int16 val = 0;
+  371   1          
+  372   1          for(i = 0; i < MT9V03X_H; i++) {
+  373   2              r_border[i] = BORDER_MAX;
+  374   2              r_index[i] = 0;
+  375   2              r_border_valid[i] = 0;
+  376   2          }
+  377   1          
+  378   1          /* 2. 遍历所有八邻域点，按行号直接写入 */
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 7   
+
+  379   1          for(j = 0; j < total_R; j++) {
+  380   2              row = (uint8)points_r[j][1];
+  381   2              if(row >= MT9V03X_H) continue;
+  382   2              if(r_border_valid[row] == 0) {
+  383   3                  r_border[row] = points_r[j][0] - 1;
+  384   3                  r_index[row] = j;
+  385   3                  r_border_valid[row] = 1;
+  386   3              }
+  387   2          }
   388   1          
-  389   1          for(i = 0; i < MT9V03X_H; i++) {
-  390   2              r_border[i] = BORDER_MAX;
-  391   2              r_index[i] = 0;
-  392   2              r_border_valid[i] = 0;
-  393   2          }
-  394   1          
-  395   1          /* 2. 遍历所有八邻域点，按行号直接写入 */
-  396   1          for(j = 0; j < total_R; j++) {
-  397   2              row = (uint8)points_r[j][1];
-  398   2              if(row >= MT9V03X_H) continue;
-  399   2              if(r_border_valid[row] == 0) {
-  400   3                  r_border[row] = points_r[j][0] - 1;
-  401   3                  r_index[row] = j;
-  402   3                  r_border_valid[row] = 1;
-  403   3              }
-  404   2          }
-  405   1          
-  406   1          /* 3. 短缺口线性插值 */
-  407   1          for(i = MT9V03X_H - 1; i > 0; i--) {
-  408   2              if(r_border_valid[i]) { last_valid = i; break; }
-  409   2          }
-  410   1          
-  411   1          for(i = last_valid; i > 0; ) {
-  412   2              if(r_border_valid[i]) { last_valid = i; i--; continue; }
-  413   2              gap_start = i;
-  414   2              next_valid = 0;
-  415   2              found = 0;
-  416   2              for(k = i; k > 0; k--) {
-  417   3                  if(r_border_valid[k]) { next_valid = k; found = 1; break; }
-  418   3              }
-  419   2              if(!found) break;
-  420   2              
-  421   2              gap_len = gap_start - next_valid;
-  422   2              if(gap_len <= BORDER_GAP_MAX && last_valid > gap_start) {
-  423   3                  span  = last_valid - next_valid;
-  424   3                  delta = (int16)r_border[last_valid] - (int16)r_border[next_valid];
-  425   3                  base  = (int16)r_border[next_valid];
-  426   3                  for(k = next_valid + 1; k < last_valid; k++) {
-  427   4                      if(!r_border_valid[k]) {
-  428   5                          step = k - next_valid;
-  429   5                          if(delta >= 0) {
-  430   6                              val = (int16)(base + (int16)((delta * step + (span >> 1)) / span));
-  431   6                          } else {
-  432   6                              val = (int16)(base + (int16)((delta * step - (span >> 1)) / span));
-  433   6                          }
-  434   5                          if(val < BORDER_MIN) val = BORDER_MIN;
-  435   5                          if(val > BORDER_MAX) val = BORDER_MAX;
-  436   5                          r_border[k] = (uint16)val;
-  437   5                          r_border_valid[k] = 2;
-  438   5                      }
-  439   4                  }
-  440   3              }
-  441   2              i = next_valid;
-  442   2          }
-  443   1      }
-  444          /* 形态学滤波*/
-  445          #define THRESHOLD_MAX 255*5
-  446          #define THRESHOLD_MIN 255*2
-  447          #define FILTER_ROI_TOP  (MT9V03X_H / 3)  /* 滤波起始行 */
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 8   
+  389   1          /* 3. 短缺口线性插值 */
+  390   1          for(i = MT9V03X_H - 1; i > 0; i--) {
+  391   2              if(r_border_valid[i]) { last_valid = i; break; }
+  392   2          }
+  393   1          
+  394   1          for(i = last_valid; i > 0; ) {
+  395   2              if(r_border_valid[i]) { last_valid = i; i--; continue; }
+  396   2              gap_start = i;
+  397   2              next_valid = 0;
+  398   2              found = 0;
+  399   2              for(k = i; k > 0; k--) {
+  400   3                  if(r_border_valid[k]) { next_valid = k; found = 1; break; }
+  401   3              }
+  402   2              if(!found) break;
+  403   2              
+  404   2              gap_len = gap_start - next_valid;
+  405   2              if(gap_len <= BORDER_GAP_MAX && last_valid > gap_start) {
+  406   3                  span  = last_valid - next_valid;
+  407   3                  delta = (int16)r_border[last_valid] - (int16)r_border[next_valid];
+  408   3                  base  = (int16)r_border[next_valid];
+  409   3                  for(k = next_valid + 1; k < last_valid; k++) {
+  410   4                      if(!r_border_valid[k]) {
+  411   5                          step = k - next_valid;
+  412   5                          if(delta >= 0) {
+  413   6                              val = (int16)(base + (int16)((delta * step + (span >> 1)) / span));
+  414   6                          } else {
+  415   6                              val = (int16)(base + (int16)((delta * step - (span >> 1)) / span));
+  416   6                          }
+  417   5                          if(val < BORDER_MIN) val = BORDER_MIN;
+  418   5                          if(val > BORDER_MAX) val = BORDER_MAX;
+  419   5                          r_border[k] = (uint16)val;
+  420   5                          r_border_valid[k] = 2;
+  421   5                      }
+  422   4                  }
+  423   3              }
+  424   2              i = next_valid;
+  425   2          }
+  426   1      }
+  427          /* 形态学滤波*/
+  428          // #define THRESHOLD_MAX 255*5
+  429          // #define THRESHOLD_MIN 255*2
+  430          // #define FILTER_ROI_TOP  (MT9V03X_H / 3)  /* 滤波起始行 */
+  431          // void image_filter(uint8(*bin_image)[MT9V03X_W]) {
+  432          //     uint16 i, j;
+  433          //     uint32 num = 0;
+  434          //     uint16 top = FILTER_ROI_TOP > 1 ? FILTER_ROI_TOP : 1;
+  435          //     uint8 *p_prev;
+  436          //     uint8 *p_curr;
+  437          //     uint8 *p_next;
+  438              
+  439          //     for(i = top; i < MT9V03X_H - 1; i++) {
+  440          //         p_prev = bin_image[i-1]; 
+  441          //         p_curr = bin_image[i];   
+  442          //         p_next = bin_image[i+1];  
+  443          //         for(j = 1; j < (MT9V03X_W - 1); j++) {
+  444          //             // 统计八个方向的像素值（指针偏移）
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 8   
 
-  448          void image_filter(uint8(*bin_image)[MT9V03X_W]) {
-  449   1          uint16 i, j;
-  450   1          uint32 num = 0;
-  451   1          uint16 top = FILTER_ROI_TOP > 1 ? FILTER_ROI_TOP : 1;
-  452   1          uint8 *p_prev;
-  453   1          uint8 *p_curr;
-  454   1          uint8 *p_next;
-  455   1          
-  456   1          for(i = top; i < MT9V03X_H - 1; i++) {
-  457   2              p_prev = bin_image[i-1]; 
-  458   2              p_curr = bin_image[i];   
-  459   2              p_next = bin_image[i+1];  
-  460   2              for(j = 1; j < (MT9V03X_W - 1); j++) {
-  461   3                  // 统计八个方向的像素值（指针偏移）
-  462   3                  num = *(p_prev+j-1) + *(p_prev+j) + *(p_prev+j+1) +
-  463   3                        *(p_curr+j-1) + *(p_curr+j+1) +
-  464   3                        *(p_next+j-1) + *(p_next+j) + *(p_next+j+1);
-  465   3                  
-  466   3                  if(num >= THRESHOLD_MAX && *(p_curr+j) == BLACK_PIXEL) {
-  467   4                      *(p_curr+j) = WHITE_PIXEL;
-  468   4                  }
-  469   3                  if(num <= THRESHOLD_MIN && *(p_curr+j) == WHITE_PIXEL) {
-  470   4                      *(p_curr+j) = BLACK_PIXEL;
-  471   4                  }
-  472   3              }
+  445          //             num = *(p_prev+j-1) + *(p_prev+j) + *(p_prev+j+1) +
+  446          //                   *(p_curr+j-1) + *(p_curr+j+1) +
+  447          //                   *(p_next+j-1) + *(p_next+j) + *(p_next+j+1);
+  448                      
+  449          //             if(num >= THRESHOLD_MAX && *(p_curr+j) == BLACK_PIXEL) {
+  450          //                 *(p_curr+j) = WHITE_PIXEL;
+  451          //             }
+  452          //             if(num <= THRESHOLD_MIN && *(p_curr+j) == WHITE_PIXEL) {
+  453          //                 *(p_curr+j) = BLACK_PIXEL;
+  454          //             }
+  455          //         }
+  456          //     }
+  457          // }
+  458          
+  459          /* 绘制图像边框 */
+  460          void image_draw_rectan(uint8(*image)[MT9V03X_W]) {
+  461   1          uint8 i = 0;
+  462   1          
+  463   1          for(i = 0; i < MT9V03X_H; i++) {
+  464   2              image[i][0] = BLACK_PIXEL;
+  465   2              image[i][1] = BLACK_PIXEL;
+  466   2              image[i][MT9V03X_W-1] = BLACK_PIXEL;
+  467   2              image[i][MT9V03X_W-2] = BLACK_PIXEL;
+  468   2          }
+  469   1          
+  470   1          for(i = 0; i < MT9V03X_W; i++) {
+  471   2              image[0][i] = BLACK_PIXEL;
+  472   2              image[1][i] = BLACK_PIXEL;
   473   2          }
   474   1      }
   475          
-  476          /* 绘制图像边框 */
-  477          void image_draw_rectan(uint8(*image)[MT9V03X_W]) {
-  478   1          uint8 i = 0;
-  479   1          
-  480   1          for(i = 0; i < MT9V03X_H; i++) {
-  481   2              image[i][0] = BLACK_PIXEL;
-  482   2              image[i][1] = BLACK_PIXEL;
-  483   2              image[i][MT9V03X_W-1] = BLACK_PIXEL;
-  484   2              image[i][MT9V03X_W-2] = BLACK_PIXEL;
-  485   2          }
-  486   1          
-  487   1          for(i = 0; i < MT9V03X_W; i++) {
-  488   2              image[0][i] = BLACK_PIXEL;
-  489   2              image[1][i] = BLACK_PIXEL;
-  490   2          }
-  491   1      }
-  492          
-  493          
-  494          
-  495          /**
-  496           * @brief 斑马线检测函数
-  497           * @param row 要检测的行号
-  498           */
-  499          void detect_zebra_line(uint8 row) {
-  500   1          uint8 *p_row0;
-  501   1          uint8 *p_row1;
-  502   1          uint16 i;
-  503   1          uint32 current_time;
-  504   1          uint32 last_time;
-  505   1      
-  506   1          change_point = 0;
-  507   1          
-  508   1          if(row < 2 || row >= MT9V03X_H) return;
-  509   1          
-  510   1          /* 检查左右边界是否有效 */
-  511   1          if(l_border[row] >= r_border[row] || 
-  512   1             l_border[row] < BORDER_MIN || 
-  513   1             r_border[row] > BORDER_MAX) {
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 9   
+  476          
+  477          
+  478          /**
+  479           * @brief 斑马线检测函数
+  480           * @param row 要检测的行号
+  481           */
+  482          void detect_zebra_line(uint8 row) {
+  483   1          uint8 *p_row0;
+  484   1          uint8 *p_row1;
+  485   1          uint16 i;
+  486   1          uint32 current_time;
+  487   1          uint32 last_time;
+  488   1      
+  489   1          change_point = 0;
+  490   1          
+  491   1          if(row < 2 || row >= MT9V03X_H) return;
+  492   1          
+  493   1          /* 检查左右边界是否有效 */
+  494   1          if(l_border[row] >= r_border[row] || 
+  495   1             l_border[row] < BORDER_MIN || 
+  496   1             r_border[row] > BORDER_MAX) {
+  497   2              return;
+  498   2          }
+  499   1          
+  500   1          /* 扫描指定行及其上一行（指针偏移） */
+  501   1          p_row0 = bin_image[row];
+  502   1          p_row1 = bin_image[row - 1];
+  503   1          for(i = l_border[row]; i < r_border[row] - 3; i++) {
+  504   2              /* 检测黑白交替变化点 */
+  505   2              if((*(p_row0+i) == BLACK_PIXEL && *(p_row0+i+1) == WHITE_PIXEL) ||   /* 黑变白 */
+  506   2                 (*(p_row0+i) == WHITE_PIXEL && *(p_row0+i+1) == BLACK_PIXEL) ||   /* 白变黑 */
+  507   2                 (*(p_row1+i) == BLACK_PIXEL && *(p_row1+i+1) == WHITE_PIXEL) ||   /* 上一行黑变白 */
+  508   2                 (*(p_row1+i) == WHITE_PIXEL && *(p_row1+i+1) == BLACK_PIXEL)) {   /* 上一行白变黑 */
+  509   3                  change_point++;
+  510   3              }
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 9   
 
-  514   2              return;
-  515   2          }
-  516   1          
-  517   1          /* 扫描指定行及其上一行（指针偏移） */
-  518   1          p_row0 = bin_image[row];
-  519   1          p_row1 = bin_image[row - 1];
-  520   1          for(i = l_border[row]; i < r_border[row] - 3; i++) {
-  521   2              /* 检测黑白交替变化点 */
-  522   2              if((*(p_row0+i) == BLACK_PIXEL && *(p_row0+i+1) == WHITE_PIXEL) ||   /* 黑变白 */
-  523   2                 (*(p_row0+i) == WHITE_PIXEL && *(p_row0+i+1) == BLACK_PIXEL) ||   /* 白变黑 */
-  524   2                 (*(p_row1+i) == BLACK_PIXEL && *(p_row1+i+1) == WHITE_PIXEL) ||   /* 上一行黑变白 */
-  525   2                 (*(p_row1+i) == WHITE_PIXEL && *(p_row1+i+1) == BLACK_PIXEL)) {   /* 上一行白变黑 */
-  526   3                  change_point++;
-  527   3              }
-  528   2          }
-  529   1          
-  530   1          /* 如果变化点超过阈值，判定为斑马线 */
-  531   1          if(change_point > 15) {
-  532   2              current_time = g_sysTick_ms;
-  533   2              last_time = last_zebra_time_ms;
-  534   2              
-  535   2              /* 如果是第一次检测到斑马线，或者距离上次检测时间超过最小间隔 */
-  536   2              if(zebra_count == 0 || (current_time - last_time) > ZEBRA_MIN_INTERVAL) {
-  537   3                  zebra_count++;
-  538   3                  last_zebra_time_ms = current_time; /* 更新最后检测时间 */
-  539   3                  
-  540   3                  /* 第二次检测到斑马线时才停车 */
-  541   3                  if(zebra_count == 2) {
-  542   4                      zebra_detected = 1;
-  543   4                      current_track_type = ZEBRA_TRACK;
-  544   4                  }
-  545   3              }
-  546   2          } else {
-  547   2              zebra_detected = 0;
-  548   2          }
-  549   1      }
-  550          
-  551          /* 状态机初始化 */
-  552          void state_machine_init(void) {
-  553   1          open_speed=1800;   /*电机开环 */
-  554   1          current_track_type = NORMAL_TRACK;
-  555   1          current_state = SEARCH_MODE;
-  556   1          lost_counter = 0;
-  557   1          cross_detected = 0;
-  558   1          zebra_detected = 0;
-  559   1          zebra_count = 0;        
-  560   1          last_zebra_time_ms = 0; /* 清零时间 */
-  561   1          circle_detection_init();
-  562   1      
-  563   1      }
-  564          
-  565          /* 检测赛道类型 */
-  566          void detect_track_type(void) {
-  567   1      
-  568   1          /*检测是否为环岛元素 */
-  569   1          if(circle2_process(l_border, r_border, bin_image)) return;
+  511   2          }
+  512   1          
+  513   1          /* 如果变化点超过阈值，判定为斑马线 */
+  514   1          if(change_point > 15) {
+  515   2              current_time = g_sysTick_ms;
+  516   2              last_time = last_zebra_time_ms;
+  517   2              
+  518   2              /* 如果是第一次检测到斑马线，或者距离上次检测时间超过最小间隔 */
+  519   2              if(zebra_count == 0 || (current_time - last_time) > ZEBRA_MIN_INTERVAL) {
+  520   3                  zebra_count++;
+  521   3                  last_zebra_time_ms = current_time; /* 更新最后检测时间 */
+  522   3                  
+  523   3                  /* 第二次检测到斑马线时才停车 */
+  524   3                  if(zebra_count == 2) {
+  525   4                      zebra_detected = 1;
+  526   4                      current_track_type = ZEBRA_TRACK;
+  527   4                  }
+  528   3              }
+  529   2          } else {
+  530   2              zebra_detected = 0;
+  531   2          }
+  532   1      }
+  533          
+  534          /* 状态机初始化 */
+  535          void state_machine_init(void) {
+  536   1          open_speed=1800;   /*电机开环 */
+  537   1          current_track_type = NORMAL_TRACK;
+  538   1          current_state = SEARCH_MODE;
+  539   1          lost_counter = 0;
+  540   1          cross_detected = 0;
+  541   1          zebra_detected = 0;
+  542   1          zebra_count = 0;        
+  543   1          last_zebra_time_ms = 0; /* 清零时间 */
+  544   1          circle_detection_init();
+  545   1      
+  546   1      }
+  547          
+  548          /* 检测赛道类型 */
+  549          void detect_track_type(void) {
+  550   1      
+  551   1          /*检测是否为环岛元素 */
+  552   1          if(circle2_process(l_border, r_border, bin_image)) return;
+  553   1      
+  554   1          /*检测是否为十字元素 */
+  555   1          if (cross2_process(l_border, r_border, bin_image)) return;
+  556   1          
+  557   1      
+  558   1          /* 3. 检查是否斑马线 */
+  559   1          if(!zebra_detected) {
+  560   2              /* 检测图像中下部三行 */
+  561   2              detect_zebra_line(MT9V03X_H - 3);
+  562   2              if(!zebra_detected) detect_zebra_line(MT9V03X_H - 5);
+  563   2              if(!zebra_detected) detect_zebra_line(MT9V03X_H - 7);
+  564   2              
+  565   2              if(zebra_detected) {
+  566   3                  current_track_type = ZEBRA_TRACK;
+  567   3                  return;
+  568   3              }
+  569   2          }
   570   1      
-  571   1          /*检测是否为十字元素 */
-  572   1          if (cross2_process(l_border, r_border, bin_image)) return;
-  573   1          
-  574   1      
-  575   1          /* 3. 检查是否斑马线 */
-  576   1          if(!zebra_detected) {
-  577   2              /* 检测图像中下部三行 */
-  578   2              detect_zebra_line(MT9V03X_H - 3);
-  579   2              if(!zebra_detected) detect_zebra_line(MT9V03X_H - 5);
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 10  
+  571   1      }
+  572          
+  573          
+  574          /* 提取本帧边界（供所有后续模块使用）*/
+  575          uint8 extract_borders(void) {
+  576   1          uint8 hightest = 0;
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 10  
 
-  580   2              if(!zebra_detected) detect_zebra_line(MT9V03X_H - 7);
-  581   2              
-  582   2              if(zebra_detected) {
-  583   3                  current_track_type = ZEBRA_TRACK;
-  584   3                  return;
-  585   3              }
-  586   2          }
-  587   1      
-  588   1      }
-  589          
+  577   1          
+  578   1          if(!get_start_point(MT9V03X_H - 2)) {
+  579   2              return 0;
+  580   2          }
+  581   1          
+  582   1          search_l_r((uint16)USE_NUM, bin_image, &data_stastics_l, &data_stastics_r, 
+  583   1                    start_point_l[0], start_point_l[1], start_point_r[0], start_point_r[1], &hightest);
+  584   1          
+  585   1          get_left(data_stastics_l);
+  586   1          get_right(data_stastics_r);
+  587   1          
+  588   1          return 1;
+  589   1      }
   590          
-  591          /* 提取本帧边界（供所有后续模块使用）*/
-  592          uint8 extract_borders(void) {
-  593   1          uint8 hightest = 0;
-  594   1          
-  595   1          if(!get_start_point(MT9V03X_H - 2)) {
-  596   2              return 0;
-  597   2          }
-  598   1          
-  599   1          search_l_r((uint16)USE_NUM, bin_image, &data_stastics_l, &data_stastics_r, 
-  600   1                    start_point_l[0], start_point_l[1], start_point_r[0], start_point_r[1], &hightest);
-  601   1          
-  602   1          get_left(data_stastics_l);
-  603   1          get_right(data_stastics_r);
-  604   1          
-  605   1          return 1;
-  606   1      }
-  607          
-  608          /* 根据 l_border / r_border + valid 标记计算中线 */
-  609          void calc_midline(void) {
-  610   1          int last_good_mid = MT9V03X_W / 2;
-  611   1          uint8 i;
-  612   1          
-  613   1          for(i = 0; i < MT9V03X_H; i++) {
-  614   2              if(l_border_valid[i] && r_border_valid[i]) {
-  615   3                  midline[i] = (l_border[i] + r_border[i]) / 2;
-  616   3                  last_good_mid = midline[i];
-  617   3              } else {
-  618   3                  midline[i] = last_good_mid;
-  619   3              }
-  620   2              leftline[i] = l_border[i];
-  621   2              rightline[i] = r_border[i];
-  622   2          }
-  623   1          
-  624   1          /* 三点均值平滑 */
-  625   1          for(i = 1; i < MT9V03X_H - 1; i++) {
-  626   2              if(midline[i] > 0 && midline[i-1] > 0 && midline[i+1] > 0) {
-  627   3                  midline[i] = (midline[i-1] + midline[i] + midline[i+1]) / 3;
-  628   3              }
-  629   2          }
-  630   1      }
-  631          
-  632          /* 普通赛道处理 */
-  633          void normal_track_process(void) {
-  634   1          /* 提边提到主循环中完成，直接算中线 */
-  635   1          calc_midline();
-  636   1          lost_counter = 0;
-  637   1          current_state = TRACKING_MODE;
-  638   1      }
-  639          
-  640          /* 主图像处理函数 */
-  641          void image_process() {
-  642   1          uint8 border_ok;
-  643   1          
-  644   1          turn_to_bin();                  
-  645   1          image_filter(bin_image);       
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 11  
+  591          /* 根据 l_border / r_border + valid 标记计算中线 */
+  592          void calc_midline(void) {
+  593   1          int last_good_mid = MT9V03X_W / 2;
+  594   1          uint8 i;
+  595   1          
+  596   1          for(i = 0; i < MT9V03X_H; i++) {
+  597   2              if(l_border_valid[i] && r_border_valid[i]) {
+  598   3                  midline[i] = (l_border[i] + r_border[i]) / 2;
+  599   3                  last_good_mid = midline[i];
+  600   3              } else {
+  601   3                  midline[i] = last_good_mid;
+  602   3              }
+  603   2              leftline[i] = l_border[i];
+  604   2              rightline[i] = r_border[i];
+  605   2          }
+  606   1          
+  607   1          /* 三点均值平滑 */
+  608   1          for(i = 1; i < MT9V03X_H - 1; i++) {
+  609   2              if(midline[i] > 0 && midline[i-1] > 0 && midline[i+1] > 0) {
+  610   3                  midline[i] = (midline[i-1] + midline[i] + midline[i+1]) / 3;
+  611   3              }
+  612   2          }
+  613   1      }
+  614          
+  615          /* 普通赛道处理 */
+  616          void normal_track_process(void) {
+  617   1          /* 提边提到主循环中完成，直接算中线 */
+  618   1          calc_midline();
+  619   1          lost_counter = 0;
+  620   1          current_state = TRACKING_MODE;
+  621   1      }
+  622          
+  623          /* 主图像处理函数 */
+  624          void image_process() {
+  625   1          uint8 border_ok;
+  626   1          
+  627   1          turn_to_bin();                  
+  628   1          //image_filter(bin_image);       
+  629   1          image_draw_rectan(bin_image);   
+  630   1      
+  631   1          data_stastics_l = 0;
+  632   1          data_stastics_r = 0;
+  633   1          
+  634   1          /* ===== 第一步：统一提边（所有状态共享本帧边界）===== */
+  635   1          border_ok = extract_borders();
+  636   1          if(!border_ok) {
+  637   2              lost_counter++;
+  638   2              if(lost_counter > 5) {
+  639   3                  current_state = SEARCH_MODE;
+  640   3              }
+  641   2          }
+  642   1          
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 11  
 
-  646   1          image_draw_rectan(bin_image);   
-  647   1      
-  648   1          data_stastics_l = 0;
-  649   1          data_stastics_r = 0;
-  650   1          
-  651   1          /* ===== 第一步：统一提边（所有状态共享本帧边界）===== */
-  652   1          border_ok = extract_borders();
-  653   1          if(!border_ok) {
-  654   2              lost_counter++;
-  655   2              if(lost_counter > 5) {
-  656   3                  current_state = SEARCH_MODE;
-  657   3              }
-  658   2          }
-  659   1          
-  660   1          /* ===== 第二步：状态机处理（基于本帧边界）===== */
-  661   1          if(border_ok) {
-  662   2          circle_detection_process(l_border, r_border, bin_image);
-  663   2          switch(current_state) {
-  664   3              case SEARCH_MODE:
-  665   3              case TRACKING_MODE:
-  666   3                  detect_track_type();
-  667   3                  
-  668   3                  if (current_track_type != NORMAL_TRACK) {
-  669   4                      current_state = SPECIAL_MODE;
-  670   4                  } else {
-  671   4                      normal_track_process();
-  672   4                  }
-  673   3                  break;
-  674   3                  
-  675   3              case SPECIAL_MODE:
-  676   3                  /* 特殊元素处理 */
-  677   3                  switch(current_track_type) {
-  678   4                      case CROSS_TRACK:
-  679   4                              cross2_process(l_border, r_border, bin_image);
-  680   4                          break;
-  681   4                      case CIRCLE_TRACK:
-  682   4                          circle2_process(l_border, r_border, bin_image);
-  683   4                          break;
-  684   4              
-  685   4                      case ZEBRA_TRACK:
-  686   4                              if(zebra_count == 2) 
-  687   4                              {
-  688   5                                  normal_track_process();
-  689   5                                  open_speed = 0;
-  690   5                              }
-  691   4                          break;
-  692   4                          
-  693   4                      default:
-  694   4                          normal_track_process();
-  695   4                          break;
-  696   4                  }
-  697   3                  break;
-  698   3          }
-  699   2          } 
-  700   1      
-  701   1          update_track_error();
-  702   1      }
+  643   1          /* ===== 第二步：状态机处理（基于本帧边界）===== */
+  644   1          if(border_ok) {
+  645   2          circle_detection_process(l_border, r_border, bin_image);
+  646   2          switch(current_state) {
+  647   3              case SEARCH_MODE:
+  648   3              case TRACKING_MODE:
+  649   3                  detect_track_type();
+  650   3                  
+  651   3                  if (current_track_type != NORMAL_TRACK) {
+  652   4                      current_state = SPECIAL_MODE;
+  653   4                  } else {
+  654   4                      normal_track_process();
+  655   4                  }
+  656   3                  break;
+  657   3                  
+  658   3              case SPECIAL_MODE:
+  659   3                  /* 特殊元素处理 */
+  660   3                  switch(current_track_type) {
+  661   4                      case CROSS_TRACK:
+  662   4                              cross2_process(l_border, r_border, bin_image);
+  663   4                          break;
+  664   4                      case CIRCLE_TRACK:
+  665   4                          circle2_process(l_border, r_border, bin_image);
+  666   4                          break;
+  667   4              
+  668   4                      case ZEBRA_TRACK:
+  669   4                              if(zebra_count == 2) 
+  670   4                              {
+  671   5                                  normal_track_process();
+  672   5                                  open_speed = 0;
+  673   5                              }
+  674   4                          break;
+  675   4                          
+  676   4                      default:
+  677   4                          normal_track_process();
+  678   4                          break;
+  679   4                  }
+  680   3                  break;
+  681   3          }
+  682   2          } 
+  683   1      
+  684   1          update_track_error();
+  685   1      }
+  686          /*======================================================*/
+  687          int my_abs(int value) {
+  688   1          return value >= 0 ? value : -value;
+  689   1      }
+  690          
+  691          
+  692          
+  693          int16 limit_a_b(int16 x, int a, int b) {
+  694   1          if(x < a) x = a;
+  695   1          if(x > b) x = b;
+  696   1          return x;
+  697   1      }
+  698          
+  699          int16 limit1(int16 x, int16 y) {
+  700   1          if(x > y) return y;
+  701   1          else if(x < -y) return -y;
+  702   1          else return x;
+  703   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      8754     ------
+  ecode size           =      8140     ------
+C251 COMPILER V5.60.0,  camera                                                             25/05/26  23:20:02  PAGE 12  
+
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =     29103     ------
-C251 COMPILER V5.60.0,  camera                                                             24/05/26  23:04:29  PAGE 12  
-
+  xdata size           =     10597     ------
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------
@@ -758,8 +762,8 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =     27868     ------
+  hconst size          =      9988     ------
 End of Module Information.
 
 
-C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
+C251 COMPILATION COMPLETE.  3 WARNING(S),  0 ERROR(S)

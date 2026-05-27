@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               23/05/26  14:09:21  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               25/05/26  23:20:03  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -66,7 +66,7 @@ stmt  level    source
    52   1          printf("\r\n module mac    :%s",wifi_spi_mac_addr);                         // 模块 MAC 信息
    53   1          printf("\r\n module ip     :%s",wifi_spi_ip_addr_port);                     // 模块 IP 地址
    54   1      
-C251 COMPILER V5.60.0,  main                                                               23/05/26  14:09:21  PAGE 2   
+C251 COMPILER V5.60.0,  main                                                               25/05/26  23:20:03  PAGE 2   
 
    55   1          // zf_device_wifi_spi.h 文件内的宏定义可以更改模块连�?(建立) WIFI 之后，是否�
              -�动连�? TCP 服务器、创�? UDP 连接、创�? TCP 服务器等操作
@@ -109,72 +109,69 @@ stmt  level    source
    85   1          state_machine_init();
    86   1      
    87   1          while(g_sysTick_ms <=1500);                         /*������Է��밴����⣬Ȼ�
-             -���Ŀǰ�������ϰ������������յģ�����ʱ����*/
-   88   1      
-   89   1          enable_control(CTRL_PIN);
-   90   1          //send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
-   91   1          //send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);                      
-   92   1          
-   93   1      
-   94   1          /* ��ʼ������ͷ */
-   95   1          while(1)
-   96   1          {
-   97   2              if(mt9v03x_init())
-   98   2                  gpio_toggle_level(LED1);                                            /* ��ת LED ���
+             -���Ŀǰ�������ϰ������������յģ�����ʱ����*/                 
+             -      
+   88   1          
+   89   1      
+   90   1          /* ��ʼ������ͷ */
+   91   1          while(1)
+   92   1          {
+   93   2              if(mt9v03x_init())
+   94   2                  gpio_toggle_level(LED1);                                            /* ��ת LED ���
              -�������? ���� LED ���� ��ʼ����������ƻ����ĺ���? */
-   99   2              else
-  100   2                  break;
-  101   2              system_delay_ms(500);                                                  /* ���Ʊ�ʾ�쳣 
+   95   2              else
+   96   2                  break;
+   97   2              system_delay_ms(500);                                                  /* ���Ʊ�ʾ�쳣 
              -*/
-  102   2          }
-  103   1          seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, mt9v03x_image[0], MT9V03X_W,
+   98   2          }
+   99   1          seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, mt9v03x_image[0], MT9V03X_W,
              - MT9V03X_H);
-  104   1          seekfree_assistant_camera_boundary_config(X_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, x
+  100   1          seekfree_assistant_camera_boundary_config(X_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, x
              -y_x3_boundary, NULL, NULL, NULL);
-  105   1          while(1)
-  106   1          {
-  107   2              
-C251 COMPILER V5.60.0,  main                                                               23/05/26  14:09:21  PAGE 3   
+  101   1          while(1)
+  102   1          {
+  103   2              
+  104   2               current_tick = g_sysTick_ms;
+  105   2      
+  106   2              if (current_tick - last_10ms_tick >= 10) {
+C251 COMPILER V5.60.0,  main                                                               25/05/26  23:20:03  PAGE 3   
 
-  108   2               current_tick = g_sysTick_ms;
-  109   2      
-  110   2              if (current_tick - last_10ms_tick >= 10) {
-  111   3                  last_10ms_tick = current_tick;
-  112   3                  
-  113   3              }
-  114   2      
-  115   2              if((current_tick - last_200ms_tick) >= 200){
-  116   3                  last_200ms_tick = current_tick; 
-  117   3                  gpio_toggle_level(IO_P33); 
-  118   3              }
-  119   2      
-  120   2              if(mt9v03x_finish_flag)
-  121   2              {
-  122   3                  mt9v03x_finish_flag = 0;
-  123   3                  image_process();
-  124   3                  update_camera_boundary_overlay();
-  125   3                  seekfree_assistant_camera_send();
-  126   3                  send_error_data(track_error, 0.0f, UART_2);
-  127   3              }
-  128   2      
-  129   2          }
+  107   3                  last_10ms_tick = current_tick;
+  108   3                  
+  109   3              }
+  110   2      
+  111   2              if((current_tick - last_200ms_tick) >= 200){
+  112   3                  last_200ms_tick = current_tick; 
+  113   3                  gpio_toggle_level(IO_P33); 
+  114   3              }
+  115   2      
+  116   2              if(mt9v03x_finish_flag)
+  117   2              {
+  118   3                  mt9v03x_finish_flag = 0;
+  119   3                  image_process();
+  120   3                  update_camera_boundary_overlay();
+  121   3                  seekfree_assistant_camera_send();
+  122   3                  send_error_data(track_error, 0.0f, UART_2);
+  123   3              }
+  124   2      
+  125   2          }
+  126   1      }
+  127          
+  128          void sys_tick_handler (void){
+  129   1          g_sysTick_ms += 1;                                                                 /* ϵͳ����
+             -� */      
   130   1      }
   131          
-  132          void sys_tick_handler (void){
-  133   1          g_sysTick_ms += 1;                                                                 /* ϵͳ����
-             -� */      
-  134   1      }
-  135          
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      1097     ------
+  ecode size           =      1089     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =      1669     ------
+  xdata size           =       925     ------
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  circle_detection                                                   21/05/26  14:44:21  PAGE 1   
+C251 COMPILER V5.60.0,  circle_detection                                                   25/05/26  23:20:03  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE circle_detection
@@ -66,7 +66,7 @@ stmt  level    source
    52   4                      black_segment_cnt++;
    53   4                      if(black_segment_cnt >= CIRCLE_MIN_BLACK_SEGMENTS) {
    54   5                          return 1;
-C251 COMPILER V5.60.0,  circle_detection                                                   21/05/26  14:44:21  PAGE 2   
+C251 COMPILER V5.60.0,  circle_detection                                                   25/05/26  23:20:03  PAGE 2   
 
    55   5                      }
    56   4                  }

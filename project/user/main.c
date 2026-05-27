@@ -84,11 +84,7 @@ void main(void)
     /* ��ʼ��״̬�� */
     state_machine_init();
 
-    while(g_sysTick_ms <=1500);                         /*������Է��밴����⣬Ȼ��Ŀǰ�������ϰ������������յģ�����ʱ����*/
-
-    enable_control(CTRL_PIN);
-    //send_pid_debug_data(PID_SPEED0, &pid_param, UART_2);
-    //send_pid_debug_data(PID_SPEED1, &pid_param, UART_2);                   		
+    while(g_sysTick_ms <=1500);                         /*������Է��밴����⣬Ȼ��Ŀǰ�������ϰ������������յģ�����ʱ����*/                   		
     
 
     /* ��ʼ������ͷ */
