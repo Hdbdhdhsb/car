@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 1   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE cross2
@@ -66,7 +66,7 @@ stmt  level    source
    51          /*******************************************************************************
    52           * cross2_extract_feature - 一次性提取本帧所有十字相关特征
    53           ******************************************************************************/
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 2   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 2   
 
    54          void cross2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
    55                                      Cross2Feature *feat)
@@ -134,7 +134,7 @@ stmt  level    source
   117   4                  current_track_type = CROSS_TRACK;
   118   4                  current_state      = SPECIAL_MODE;
   119   4      
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 3   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 3   
 
   120   4                  /* 立即补一次线 */
   121   4                  _cr_repair_both(l, r, &feat);
@@ -202,7 +202,7 @@ stmt  level    source
   183   2      
   184   2          default:
   185   2              cross2_init();
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 4   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 4   
 
   186   2              break;
   187   2          }
@@ -270,7 +270,7 @@ stmt  level    source
   248          {
   249   1          uint16 i;
   250   1          extern uint16 data_stastics_l;
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 5   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 5   
 
   251   1          extern uint16 data_stastics_r;
   252   1      
@@ -338,7 +338,7 @@ stmt  level    source
   314   1      }
   315          
   316          /*--------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 6   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 6   
 
   317           * _cr_extract_lost - 边线丢失统计
   318           *--------------------------------------------------------------------------*/
@@ -406,7 +406,7 @@ stmt  level    source
   380   2              n      += 1.0f;
   381   2          }
   382   1      
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 7   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 7   
 
   383   1          denom = n * sum_x2 - sum_x * sum_x;
   384   1          if (denom > 0.001f || denom < -0.001f)
@@ -474,7 +474,7 @@ stmt  level    source
   446   1          uint8 lost_ok = 0;
   447   1          /* 断口消失或变弱 */
   448   1          breaks_gone = (f->l_break_row == 0 && f->r_break_row == 0) ? 1 : 0;
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 8   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 8   
 
   449   1      
   450   1          /* 过宽行数减少 */
@@ -542,7 +542,7 @@ stmt  level    source
   512   2              for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++)
   513   2              {
   514   3                  if (l[row] <= BORDER_MIN + 1)
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 9   
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 9   
 
   515   3                  {
   516   4                      int16 val = (int16)r[row] - (int16)est_w;
@@ -611,7 +611,7 @@ Module Information          Static   Overlayable
   edata size           =    ------     ------
   bit size             =    ------     ------
   ebit size            =    ------     ------
-C251 COMPILER V5.60.0,  cross2                                                             25/05/26  23:20:03  PAGE 10  
+C251 COMPILER V5.60.0,  cross2                                                             30/05/26  16:36:31  PAGE 10  
 
   bitaddressable size  =    ------     ------
   ebitaddressable size =    ------     ------

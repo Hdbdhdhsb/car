@@ -20,8 +20,8 @@ uint8 bin_image[MT9V03X_H][MT9V03X_W] = {0};/*二值化后的图像*/
 /* 八邻域相关变量 */
 uint16 points_l[USE_NUM][2] = {0}; /* 左线点*/
 uint16 points_r[USE_NUM][2] = {0}; /* 右线点*/
-uint16 dir_r[USE_NUM] = {0};       /* 右边生长方向*/
-uint16 dir_l[USE_NUM] = {0};       /* 左边生长方向*/
+uint16 dir_r[USE_NUM] = {0};       /* 右赛道生长方向集合数组*/
+uint16 dir_l[USE_NUM] = {0};       /* 左赛道生长方向集合数组*/
 uint16 data_stastics_l = 0;        /* 左边找到点的个数*/
 uint16 data_stastics_r = 0;        /* 右边找到点的个数*/
 
@@ -273,7 +273,7 @@ void search_l_r(uint16 break_flag, uint8(*image)[MT9V03X_W], uint16 *l_stastic, 
 }
 
 /* 获取左边界线(赛道线) —— 允许跳行 + 有效标记 + 短缺口插值 */
-#define BORDER_GAP_MAX  5   /* 允许跳过的最大多行数 */
+#define BORDER_GAP_MAX  3   /* 允许跳过的最大多行数 */
 void get_left(uint16 total_L) {
     uint8 i = 0;
     uint16 j = 0;
@@ -289,7 +289,7 @@ void get_left(uint16 total_L) {
     int16 delta = 0;
     int16 base = 0;
     int16 val = 0;
-    
+    //赛道线默认值
     for(i = 0; i < MT9V03X_H; i++) {
         l_border[i] = BORDER_MIN;
         l_index [i] = 0;

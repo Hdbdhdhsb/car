@@ -22,6 +22,7 @@
 Circle2State  cir2_state   = CIR2_IDLE;
 Circle2Dir    cir2_dir     = CIR2_NONE;
 uint8         cir2_timeout = 0;
+uint8         cir2_entry_cnt = 0;
 
 /*======================== 内部辅助函数声明 ========================*/
 static void   _extract_break(uint16 *l, uint16 *r, Circle2Feature *f);
@@ -34,6 +35,8 @@ static uint8  _check_entry(Circle2Feature *f);
 static uint8  _check_inside(Circle2Feature *f);
 static uint8  _check_exit(Circle2Feature *f);
 
+static void   _calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept);
+static void   _repair_approach(uint16 *l, uint16 *r, Circle2Feature *f);
 static void   _repair_left(uint16 *l, uint16 *r, Circle2Feature *f);
 static void   _repair_right(uint16 *l, uint16 *r, Circle2Feature *f);
 static void   _recalc_midline(uint16 *l, uint16 *r);
@@ -50,6 +53,7 @@ void circle2_init(void)
     cir2_state   = CIR2_IDLE;
     cir2_dir     = CIR2_NONE;
     cir2_timeout = 0;
+    cir2_entry_cnt = 0;
 }
 
 /*******************************************************************************
@@ -98,9 +102,19 @@ void circle2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
 uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
 {
     Circle2Feature feat;
+    Circle2Dir cand_dir = CIR2_NONE;
 
     /* 1. 特征提取 */
     circle2_extract_feature(l, r, img, &feat);
+
+    if (feat.l_break_row && !feat.r_break_row)
+        cand_dir = CIR2_LEFT;
+    else if (feat.r_break_row && !feat.l_break_row)
+        cand_dir = CIR2_RIGHT;
+    else if (feat.l_break_delta > feat.r_break_delta)
+        cand_dir = CIR2_LEFT;
+    else if (feat.r_break_delta > 0)
+        cand_dir = CIR2_RIGHT;
 
     /* 2. 状态机 */
     switch (cir2_state)
@@ -110,24 +124,63 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     {
         if (_check_entry(&feat))
         {
-            cir2_state   = CIR2_ENTRY;
+            cir2_state   = CIR2_APPROACH;
             cir2_timeout = 0;
-
-            /* 判断左/右圆环 */
-            if (feat.l_break_row && !feat.r_break_row)
-                cir2_dir = CIR2_LEFT;
-            else if (feat.r_break_row && !feat.l_break_row)
-                cir2_dir = CIR2_RIGHT;
-            else if (feat.l_break_delta > feat.r_break_delta)
-                cir2_dir = CIR2_LEFT;
-            else
-                cir2_dir = CIR2_RIGHT;
-
-            /* 通知外层状态机 */
-            current_track_type = CIRCLE_TRACK;
-            current_state      = SPECIAL_MODE;
+            cir2_entry_cnt = 1;
+            cir2_dir = cand_dir;
         }
         break;
+    }
+
+    /*---------- APPROACH: 第一入口直行保护，等待第二入口 ----------*/
+    case CIR2_APPROACH:
+    {
+        /* 第一个入口仍在画面中：只做直行保护补线，不进入圆环 */
+        if (cir2_entry_cnt == 1)
+        {
+            if (_check_entry(&feat) && cand_dir == cir2_dir)
+            {
+                _repair_approach(l, r, &feat);
+                _recalc_midline(l, r);
+                cir2_timeout++;
+                if (cir2_timeout > CIR2_APPROACH_TIMEOUT)
+                {
+                    circle2_init();
+                    return 0;
+                }
+                return 1;
+            }
+
+            /* 第一个入口已经走完，开始等待第二入口 */
+            cir2_entry_cnt = 2;
+            cir2_timeout = 0;
+            return 1;
+        }
+
+        /* 第二次看到同方向入口，才真正按圆环处理 */
+        if (_check_entry(&feat) && cand_dir == cir2_dir)
+        {
+            cir2_state     = CIR2_ENTRY;
+            cir2_timeout   = 0;
+
+            current_track_type = CIRCLE_TRACK;
+            current_state      = SPECIAL_MODE;
+
+            if (cir2_dir == CIR2_LEFT)
+                _repair_left(l, r, &feat);
+            else
+                _repair_right(l, r, &feat);
+            _recalc_midline(l, r);
+            return 1;
+        }
+
+        cir2_timeout++;
+        if (cir2_timeout > CIR2_APPROACH_TIMEOUT)
+        {
+            circle2_init();
+            return 0;
+        }
+        return 1;
     }
 
     /*---------- ENTRY: 正在进入圆环 ----------*/
@@ -221,7 +274,10 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
         break;
     }
 
-    return (cir2_state != CIR2_IDLE) ? 1 : 0;
+    return (cir2_state == CIR2_APPROACH ||
+            cir2_state == CIR2_ENTRY ||
+            cir2_state == CIR2_INSIDE ||
+            cir2_state == CIR2_EXIT) ? 1 : 0;
 }
 
 /*******************************************************************************
@@ -248,10 +304,8 @@ static void _extract_break(uint16 *l, uint16 *r, Circle2Feature *f)
     for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--)
     {
         int16 delta = (int16)l[row] - (int16)l[row - 1];
-        if (delta > CIR2_BREAK_THRESH)
+        if (delta > CIR2_BREAK_THRESH&& row >= 30)
         {
-            /* l[row] > l[row-1]：上面一行的左边界突然靠左（值变小）
-             * 说明左侧出现断口 */
             f->l_break_row   = row;
             f->l_break_delta = delta;
             break;
@@ -262,7 +316,7 @@ static void _extract_break(uint16 *l, uint16 *r, Circle2Feature *f)
     for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--)
     {
         int16 delta = (int16)r[row - 1] - (int16)r[row];
-        if (delta > CIR2_BREAK_THRESH)
+        if (delta > CIR2_BREAK_THRESH && row >= 30)
         {
             f->r_break_row   = row;
             f->r_break_delta = delta;
@@ -375,6 +429,91 @@ static void _extract_corner(uint8 (*img)[MT9V03X_W], Circle2Feature *f)
     f->corner_tr = img[MT9V03X_H / 2][MT9V03X_W - 3];
 }
 
+static void _calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept)
+{
+    int16 i;
+    uint8 start_row = break_row + CIR2_FIT_LEN;
+    uint8 end_row   = break_row + 2;
+    float sum_x = 0;
+    float sum_y = 0;
+    float sum_xy = 0;
+    float sum_x2 = 0;
+    float n = 0;
+    float denom;
+
+    if (start_row > CIR2_SCAN_BOT)
+        start_row = CIR2_SCAN_BOT;
+    if (end_row > CIR2_SCAN_BOT || end_row >= start_row)
+    {
+        *slope = 0;
+        *intercept = (float)border[break_row];
+        return;
+    }
+
+    for (i = start_row; i >= end_row; i--)
+    {
+        float x = (float)i;
+        float y = (float)border[i];
+        sum_x  += x;
+        sum_y  += y;
+        sum_xy += x * y;
+        sum_x2 += x * x;
+        n      += 1.0f;
+    }
+
+    denom = n * sum_x2 - sum_x * sum_x;
+    if (denom > 0.001f || denom < -0.001f)
+    {
+        *slope     = (n * sum_xy - sum_x * sum_y) / denom;
+        *intercept = (sum_y - (*slope) * sum_x) / n;
+    }
+    else
+    {
+        *slope = 0;
+        *intercept = (float)border[break_row];
+    }
+}
+
+static void _repair_approach(uint16 *l, uint16 *r, Circle2Feature *f)
+{
+    int16 row;
+    uint8 break_row = 0;
+    uint16 *border = 0;
+    float k = 0;
+    float b = 0;
+    int16 stop_row;
+
+    if (cir2_dir == CIR2_LEFT)
+    {
+        break_row = f->l_break_row;
+        border = l;
+    }
+    else if (cir2_dir == CIR2_RIGHT)
+    {
+        break_row = f->r_break_row;
+        border = r;
+    }
+    else
+    {
+        return;
+    }
+
+    if (break_row <= CIR2_SCAN_TOP + 1)
+        return;
+
+    _calc_slope(border, break_row, &k, &b);
+
+    stop_row = (int16)break_row - CIR2_APPROACH_REPAIR_LEN;
+    if (stop_row < CIR2_SCAN_TOP)
+        stop_row = CIR2_SCAN_TOP;
+
+    for (row = (int16)break_row; row >= stop_row; row--)
+    {
+        int16 val = (int16)(k * row + b);
+        border[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+    }
+}
+
 /*============================================================================
  *                         内部: 状态判断函数
  *============================================================================*/
@@ -397,20 +536,16 @@ static uint8 _check_entry(Circle2Feature *f)
 
     /* 左圆环入口 */
     if (f->l_break_row > 0 &&
-        f->l_break_delta >= CIR2_BREAK_THRESH &&
         f->r_break_row == 0 &&
-        f->l_inflect_row > 0 &&
-        f->r_lost_cnt < CIR2_LOST_THRESH)
+        f->l_inflect_row > 0 )
     {
         left_entry = 1;
     }
 
     /* 右圆环入口 */
-    if (f->r_break_row > 0 &&
-        f->r_break_delta >= CIR2_BREAK_THRESH &&
+    if (f->r_break_row > 0  &&
         f->l_break_row == 0 &&
-        f->r_inflect_row > 0 &&
-        f->l_lost_cnt < CIR2_LOST_THRESH)
+        f->r_inflect_row > 0 )
     {
         right_entry = 1;
     }

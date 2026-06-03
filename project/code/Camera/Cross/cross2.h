@@ -70,10 +70,10 @@ extern Cross2State  cross2_state;       // 当前十字状态
 extern uint8        cross2_timeout;     // 超时计数器（帧数）
 
 /*======================== 配置参数 ========================*/
-#define CROSS2_BREAK_THRESH     8       // 边线跳变阈值
+#define CROSS2_BREAK_THRESH     15       // 边线跳变阈值
 #define CROSS2_DIR_UP           4       // 八邻域方向：向上
 #define CROSS2_DIR_DOWN         0       // 八邻域方向：向下
-#define CROSS2_DIR_BREAK_UP     6       // 链码断点模式中的"向上偏"方向
+#define CROSS2_DIR_BREAK_UP     2       // 链码断点模式中的"向上偏"方向
 #define CROSS2_WIDE_THRESH      100     // 赛道"过宽"阈值（像素）
 #define CROSS2_WIDE_CNT_MIN     8       // 过宽行数阈值（认定为十字）
 #define CROSS2_LOST_THRESH      10      // 丢线行数阈值
@@ -81,7 +81,9 @@ extern uint8        cross2_timeout;     // 超时计数器（帧数）
 #define CROSS2_SCAN_TOP         5       // 扫描起始行
 #define CROSS2_SCAN_BOT         (MT9V03X_H - 5)    // 扫描结束行
 #define CROSS2_FIT_LEN          10      // 拟合用的行数（断点上方取多少行做最小二乘）
-
+//1：双侧断口同时存在
+//2：双侧方向断点同时存在
+//3：过宽行数足够多且底角为白
 /*======================== 函数声明 ========================*/
 
 // 初始化/复位

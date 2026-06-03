@@ -166,6 +166,67 @@
       image-rendering: pixelated;
     }
 
+    .inspect-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      align-items: start;
+    }
+
+    .inspect-view {
+      display: grid;
+      gap: 10px;
+      justify-items: start;
+    }
+
+    .inspect-toolbar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .inspect-toolbar label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .inspect-toolbar select {
+      margin-left: 8px;
+    }
+
+    .inspect-scroll {
+      width: 100%;
+      max-width: 100%;
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(24, 33, 38, 0.08);
+      background: #0f0f0f;
+    }
+
+    .inspect-canvas {
+      width: auto;
+      max-width: none;
+      border: 1px solid rgba(24, 33, 38, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      cursor: crosshair;
+      border-radius: 0;
+    }
+
+    .inspect-meta {
+      display: grid;
+      gap: 10px;
+    }
+
+    .inspect-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
     .hint {
       margin-top: 14px;
       color: var(--muted);
@@ -239,14 +300,24 @@
               <option value="8">8x</option>
             </select>
           </div>
+
+          <div class="field">
+            <label for="circleStageSelect">圆环入口阶段</label>
+            <select id="circleStageSelect">
+              <option value="second" selected>第二入口补线</option>
+              <option value="first">第一入口补线</option>
+            </select>
+          </div>
         </div>
 
         <div class="stats">
           <div class="stat"><span class="key">图像尺寸</span><span class="val">120 x 60</span></div>
+          <div class="stat"><span class="key">当前帧判断</span><span id="statTrackType" class="val">idle</span></div>
           <div class="stat"><span class="key">起点状态</span><span id="statStart" class="val">idle</span></div>
           <div class="stat"><span class="key">左边点数</span><span id="statLeft" class="val">0</span></div>
           <div class="stat"><span class="key">右边点数</span><span id="statRight" class="val">0</span></div>
           <div class="stat"><span class="key">边界提取</span><span id="statBorder" class="val">idle</span></div>
+          <div class="stat"><span class="key">Circle repair</span><span id="statCircle" class="val">off</span></div>
           <div class="stat"><span class="key">Cross repair</span><span id="statCross" class="val">off</span></div>
           <div class="stat"><span class="key">底部中线</span><span id="statMid" class="val">-</span></div>
         </div>
@@ -258,6 +329,11 @@
         </div>
 
         <div class="stats">
+          <div class="stat"><span class="key">circle l_break</span><span id="dbgCircleLBreak" class="val">-</span></div>
+          <div class="stat"><span class="key">circle r_break</span><span id="dbgCircleRBreak" class="val">-</span></div>
+          <div class="stat"><span class="key">circle l_inflect</span><span id="dbgCircleLInflect" class="val">-</span></div>
+          <div class="stat"><span class="key">circle r_inflect</span><span id="dbgCircleRInflect" class="val">-</span></div>
+          <div class="stat"><span class="key">circle cond</span><span id="dbgCircleCond" class="val">-</span></div>
           <div class="stat"><span class="key">cross l_break</span><span id="dbgLBreak" class="val">-</span></div>
           <div class="stat"><span class="key">cross r_break</span><span id="dbgRBreak" class="val">-</span></div>
           <div class="stat"><span class="key">cross l_dir</span><span id="dbgLDir" class="val">-</span></div>
@@ -279,6 +355,80 @@
           <div class="canvas-wrap">
             <h2>二值图</h2>
             <canvas id="binaryCanvas" width="120" height="60"></canvas>
+          </div>
+          <div class="canvas-wrap">
+            <h2>二值像素检查器</h2>
+            <div class="inspect-grid">
+              <div class="inspect-view">
+                <div class="inspect-toolbar">
+                  <label>像素检查倍率 <strong>16x</strong></label>
+                </div>
+                <div class="inspect-scroll">
+                  <canvas id="binaryInspectCanvas" class="inspect-canvas" width="120" height="60"></canvas>
+                </div>
+                <p class="inspect-note">整幅二值图按 16x 显示，红色为左赛道线，绿色为右赛道线，橙色高亮为当前选中的像素。</p>
+              </div>
+              <div class="inspect-meta">
+                <div class="stat"><span class="key">选中坐标</span><span id="inspectCoord" class="val">-</span></div>
+                <div class="stat"><span class="key">灰度值</span><span id="inspectGray" class="val">-</span></div>
+                <div class="stat"><span class="key">二值化值</span><span id="inspectBinary" class="val">-</span></div>
+                <div class="stat"><span class="key">像素状态</span><span id="inspectState" class="val">idle</span></div>
+                <div class="stat"><span class="key">阈值</span><span id="inspectThreshold" class="val">100</span></div>
+                <div class="stat"><span class="key">左有效标记</span><span id="inspectLeftValid" class="val">-</span></div>
+                <div class="stat"><span class="key">右有效标记</span><span id="inspectRightValid" class="val">-</span></div>
+                <div class="stat"><span class="key">左边界值</span><span id="inspectLeftBorder" class="val">-</span></div>
+                <div class="stat"><span class="key">右边界值</span><span id="inspectRightBorder" class="val">-</span></div>
+                <div class="stat"><span class="key">左原始边界</span><span id="inspectLeftBorderRaw" class="val">-</span></div>
+                <div class="stat"><span class="key">右原始边界</span><span id="inspectRightBorderRaw" class="val">-</span></div>
+                <div class="stat"><span class="key">左break_row</span><span id="inspectLeftBreakRow" class="val">-</span></div>
+                <div class="stat"><span class="key">右break_row</span><span id="inspectRightBreakRow" class="val">-</span></div>
+                <div class="stat"><span class="key">左Circle改写</span><span id="inspectLeftCircleRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">右Circle改写</span><span id="inspectRightCircleRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">左Cross改写</span><span id="inspectLeftCrossRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">右Cross改写</span><span id="inspectRightCrossRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">左命中数</span><span id="inspectLeftHits" class="val">-</span></div>
+                <div class="stat"><span class="key">右命中数</span><span id="inspectRightHits" class="val">-</span></div>
+                <div class="stat"><span class="key">左选中索引</span><span id="inspectLeftIndex" class="val">-</span></div>
+                <div class="stat"><span class="key">右选中索引</span><span id="inspectRightIndex" class="val">-</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <h2>赛道线检查器</h2>
+            <div class="inspect-grid">
+              <div class="inspect-view">
+                <div class="inspect-toolbar">
+                  <label>赛道线检查倍率 <strong>16x</strong></label>
+                </div>
+                <div class="inspect-scroll">
+                  <canvas id="borderInspectCanvas" class="inspect-canvas" width="120" height="60"></canvas>
+                </div>
+                <p class="inspect-note">整幅赛道线图按 16x 显示，红色为左边界，橙色为中线，绿色为右边界，橙色框为当前选中的像素。</p>
+              </div>
+              <div class="inspect-meta">
+                <div class="stat"><span class="key">选中坐标</span><span id="borderInspectCoord" class="val">-</span></div>
+                <div class="stat"><span class="key">灰度值</span><span id="borderInspectGray" class="val">-</span></div>
+                <div class="stat"><span class="key">二值化值</span><span id="borderInspectBinary" class="val">-</span></div>
+                <div class="stat"><span class="key">像素状态</span><span id="borderInspectState" class="val">idle</span></div>
+                <div class="stat"><span class="key">阈值</span><span id="borderInspectThreshold" class="val">100</span></div>
+                <div class="stat"><span class="key">左有效标记</span><span id="borderInspectLeftValid" class="val">-</span></div>
+                <div class="stat"><span class="key">右有效标记</span><span id="borderInspectRightValid" class="val">-</span></div>
+                <div class="stat"><span class="key">左边界值</span><span id="borderInspectLeftBorder" class="val">-</span></div>
+                <div class="stat"><span class="key">右边界值</span><span id="borderInspectRightBorder" class="val">-</span></div>
+                <div class="stat"><span class="key">左原始边界</span><span id="borderInspectLeftBorderRaw" class="val">-</span></div>
+                <div class="stat"><span class="key">右原始边界</span><span id="borderInspectRightBorderRaw" class="val">-</span></div>
+                <div class="stat"><span class="key">左break_row</span><span id="borderInspectLeftBreakRow" class="val">-</span></div>
+                <div class="stat"><span class="key">右break_row</span><span id="borderInspectRightBreakRow" class="val">-</span></div>
+                <div class="stat"><span class="key">左Circle改写</span><span id="borderInspectLeftCircleRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">右Circle改写</span><span id="borderInspectRightCircleRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">左Cross改写</span><span id="borderInspectLeftCrossRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">右Cross改写</span><span id="borderInspectRightCrossRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">左命中数</span><span id="borderInspectLeftHits" class="val">-</span></div>
+                <div class="stat"><span class="key">右命中数</span><span id="borderInspectRightHits" class="val">-</span></div>
+                <div class="stat"><span class="key">左选中索引</span><span id="borderInspectLeftIndex" class="val">-</span></div>
+                <div class="stat"><span class="key">右选中索引</span><span id="borderInspectRightIndex" class="val">-</span></div>
+              </div>
+            </div>
           </div>
           <div class="canvas-wrap">
             <h2>赛道线叠加图</h2>
@@ -303,41 +453,104 @@
       var BORDER_MAX = WIDTH - 2;
       var USE_NUM = HEIGHT * 3;
       var BORDER_GAP_MAX = 5;
-      var CROSS2_BREAK_THRESH = 8;
+      var CIR2_BREAK_THRESH = 8;
+      var CIR2_INFLECT_RANGE = 5;
+      var CIR2_LOST_THRESH = 15;
+      var CIR2_SCAN_TOP = 5;
+      var CIR2_SCAN_BOT = HEIGHT - 5;
+      var CIR2_BREAK_MIN_ROW = 30;
+      var CIR2_FIT_LEN = 10;
+      var CIR2_APPROACH_REPAIR_LEN = 15;
+      var CROSS2_BREAK_THRESH = 15;
       var CROSS2_DIR_UP = 4;
-      var CROSS2_DIR_BREAK_UP = 6;
+      var CROSS2_DIR_BREAK_UP = 2;
       var CROSS2_WIDE_THRESH = 100;
       var CROSS2_WIDE_CNT_MIN = 8;
       var CROSS2_LOST_THRESH = 10;
       var CROSS2_SCAN_TOP = 5;
       var CROSS2_SCAN_BOT = HEIGHT - 5;
       var CROSS2_FIT_LEN = 10;
+      var CROSS2_BREAK_MIN_ROW = 30;
+      var CROSS2_REPAIR_LEN = 15;
 
       var fileInput = document.getElementById("fileInput");
       var thresholdInput = document.getElementById("thresholdInput");
       var thresholdValue = document.getElementById("thresholdValue");
       var scaleSelect = document.getElementById("scaleSelect");
-
+      var circleStageSelect = document.getElementById("circleStageSelect");
       var sourceCanvas = document.getElementById("sourceCanvas");
       var binaryCanvas = document.getElementById("binaryCanvas");
+      var binaryInspectCanvas = document.getElementById("binaryInspectCanvas");
+      var borderInspectCanvas = document.getElementById("borderInspectCanvas");
       var overlayCanvas = document.getElementById("overlayCanvas");
       var lineCanvas = document.getElementById("lineCanvas");
 
+      var statTrackType = document.getElementById("statTrackType");
       var statStart = document.getElementById("statStart");
       var statLeft = document.getElementById("statLeft");
       var statRight = document.getElementById("statRight");
       var statBorder = document.getElementById("statBorder");
+      var statCircle = document.getElementById("statCircle");
       var statCross = document.getElementById("statCross");
       var statMid = document.getElementById("statMid");
+      var dbgCircleLBreak = document.getElementById("dbgCircleLBreak");
+      var dbgCircleRBreak = document.getElementById("dbgCircleRBreak");
+      var dbgCircleLInflect = document.getElementById("dbgCircleLInflect");
+      var dbgCircleRInflect = document.getElementById("dbgCircleRInflect");
+      var dbgCircleCond = document.getElementById("dbgCircleCond");
       var dbgLBreak = document.getElementById("dbgLBreak");
       var dbgRBreak = document.getElementById("dbgRBreak");
       var dbgLDir = document.getElementById("dbgLDir");
       var dbgRDir = document.getElementById("dbgRDir");
       var dbgWide = document.getElementById("dbgWide");
       var dbgScore = document.getElementById("dbgScore");
+      var inspectCoord = document.getElementById("inspectCoord");
+      var inspectGray = document.getElementById("inspectGray");
+      var inspectBinary = document.getElementById("inspectBinary");
+      var inspectState = document.getElementById("inspectState");
+      var inspectThreshold = document.getElementById("inspectThreshold");
+      var inspectLeftValid = document.getElementById("inspectLeftValid");
+      var inspectRightValid = document.getElementById("inspectRightValid");
+      var inspectLeftBorder = document.getElementById("inspectLeftBorder");
+      var inspectRightBorder = document.getElementById("inspectRightBorder");
+      var inspectLeftBorderRaw = document.getElementById("inspectLeftBorderRaw");
+      var inspectRightBorderRaw = document.getElementById("inspectRightBorderRaw");
+      var inspectLeftBreakRow = document.getElementById("inspectLeftBreakRow");
+      var inspectRightBreakRow = document.getElementById("inspectRightBreakRow");
+      var inspectLeftCircleRewrite = document.getElementById("inspectLeftCircleRewrite");
+      var inspectRightCircleRewrite = document.getElementById("inspectRightCircleRewrite");
+      var inspectLeftCrossRewrite = document.getElementById("inspectLeftCrossRewrite");
+      var inspectRightCrossRewrite = document.getElementById("inspectRightCrossRewrite");
+      var inspectLeftHits = document.getElementById("inspectLeftHits");
+      var inspectRightHits = document.getElementById("inspectRightHits");
+      var inspectLeftIndex = document.getElementById("inspectLeftIndex");
+      var inspectRightIndex = document.getElementById("inspectRightIndex");
+      var borderInspectCoord = document.getElementById("borderInspectCoord");
+      var borderInspectGray = document.getElementById("borderInspectGray");
+      var borderInspectBinary = document.getElementById("borderInspectBinary");
+      var borderInspectState = document.getElementById("borderInspectState");
+      var borderInspectThreshold = document.getElementById("borderInspectThreshold");
+      var borderInspectLeftValid = document.getElementById("borderInspectLeftValid");
+      var borderInspectRightValid = document.getElementById("borderInspectRightValid");
+      var borderInspectLeftBorder = document.getElementById("borderInspectLeftBorder");
+      var borderInspectRightBorder = document.getElementById("borderInspectRightBorder");
+      var borderInspectLeftBorderRaw = document.getElementById("borderInspectLeftBorderRaw");
+      var borderInspectRightBorderRaw = document.getElementById("borderInspectRightBorderRaw");
+      var borderInspectLeftBreakRow = document.getElementById("borderInspectLeftBreakRow");
+      var borderInspectRightBreakRow = document.getElementById("borderInspectRightBreakRow");
+      var borderInspectLeftCircleRewrite = document.getElementById("borderInspectLeftCircleRewrite");
+      var borderInspectRightCircleRewrite = document.getElementById("borderInspectRightCircleRewrite");
+      var borderInspectLeftCrossRewrite = document.getElementById("borderInspectLeftCrossRewrite");
+      var borderInspectRightCrossRewrite = document.getElementById("borderInspectRightCrossRewrite");
+      var borderInspectLeftHits = document.getElementById("borderInspectLeftHits");
+      var borderInspectRightHits = document.getElementById("borderInspectRightHits");
+      var borderInspectLeftIndex = document.getElementById("borderInspectLeftIndex");
+      var borderInspectRightIndex = document.getElementById("borderInspectRightIndex");
 
       var sourceCtx = sourceCanvas.getContext("2d");
       var binaryCtx = binaryCanvas.getContext("2d");
+      var binaryInspectCtx = binaryInspectCanvas.getContext("2d");
+      var borderInspectCtx = borderInspectCanvas.getContext("2d");
       var overlayCtx = overlayCanvas.getContext("2d");
       var lineCtx = lineCanvas.getContext("2d");
 
@@ -347,6 +560,15 @@
       var hiddenCtx = hiddenCanvas.getContext("2d");
 
       var currentGray = null;
+      var currentBinary = null;
+      var currentInspectHits = null;
+      var currentInspectBorderMeta = null;
+      var inspectPixel = null;
+      var currentBorderInspectLines = null;
+      var borderInspectPixel = null;
+      var borderInspectLocked = false;
+      var inspectLocked = false;
+      var INSPECT_SCALE = 16;
 
       function create2D(height, width, fill) {
         var arr = new Array(height);
@@ -386,6 +608,24 @@
         return value >= 0 ? value : -value;
       }
 
+      function getCircleStage() {
+        return circleStageSelect.value === "first" ? "first" : "second";
+      }
+
+      function getCircleStageLabel(stage) {
+        return stage === "first" ? "第一入口" : "第二入口";
+      }
+
+      function getCircleSideLabel(side) {
+        if (side === "L") {
+          return "左环";
+        }
+        if (side === "R") {
+          return "右环";
+        }
+        return "-";
+      }
+
       function updateCanvasScale() {
         var scale = parseInt(scaleSelect.value, 10);
         var canvases = [sourceCanvas, binaryCanvas, overlayCanvas, lineCanvas];
@@ -393,6 +633,48 @@
 
         for (i = 0; i < canvases.length; i++) {
           canvases[i].style.maxWidth = String(WIDTH * scale) + "px";
+        }
+
+        resizeInspectCanvas();
+        if (currentBinary) {
+          drawInspectCanvas(currentBinary, currentGray, inspectPixel);
+          drawBorderInspectCanvas(currentBinary, currentGray, borderInspectPixel);
+        } else {
+          resetInspectPanel();
+        }
+      }
+
+      function resizeInspectCanvas() {
+        binaryInspectCanvas.width = WIDTH * INSPECT_SCALE;
+        binaryInspectCanvas.height = HEIGHT * INSPECT_SCALE;
+        borderInspectCanvas.width = WIDTH * INSPECT_SCALE;
+        borderInspectCanvas.height = HEIGHT * INSPECT_SCALE;
+      }
+
+      function drawInspectHitPoints(hits) {
+        var i;
+        var point;
+        var x;
+        var y;
+
+        if (!hits || !hits.ok) {
+          return;
+        }
+
+        binaryInspectCtx.fillStyle = "#e63946";
+        for (i = 0; i < hits.leftCount; i++) {
+          point = hits.pointsL[i];
+          x = limitAB(point[0], 0, WIDTH - 1) * INSPECT_SCALE;
+          y = limitAB(point[1], 0, HEIGHT - 1) * INSPECT_SCALE;
+          binaryInspectCtx.fillRect(x, y, INSPECT_SCALE, INSPECT_SCALE);
+        }
+
+        binaryInspectCtx.fillStyle = "#2a9d8f";
+        for (i = 0; i < hits.rightCount; i++) {
+          point = hits.pointsR[i];
+          x = limitAB(point[0], 0, WIDTH - 1) * INSPECT_SCALE;
+          y = limitAB(point[1], 0, HEIGHT - 1) * INSPECT_SCALE;
+          binaryInspectCtx.fillRect(x, y, INSPECT_SCALE, INSPECT_SCALE);
         }
       }
 
@@ -420,6 +702,331 @@
 
       function drawBinaryCanvas(ctx, binImage) {
         drawGrayCanvas(ctx, binImage);
+      }
+
+      function updateInspectInfo(point, grayValue, binaryValue) {
+        var rowMeta;
+
+        inspectThreshold.textContent = thresholdInput.value;
+        if (!point) {
+          inspectCoord.textContent = "-";
+          inspectGray.textContent = "-";
+          inspectBinary.textContent = "-";
+          inspectState.textContent = currentBinary ? "ready" : "idle";
+          inspectLeftValid.textContent = "-";
+          inspectRightValid.textContent = "-";
+          inspectLeftBorder.textContent = "-";
+          inspectRightBorder.textContent = "-";
+          inspectLeftBorderRaw.textContent = "-";
+          inspectRightBorderRaw.textContent = "-";
+          inspectLeftBreakRow.textContent = "-";
+          inspectRightBreakRow.textContent = "-";
+          inspectLeftCircleRewrite.textContent = "-";
+          inspectRightCircleRewrite.textContent = "-";
+          inspectLeftCrossRewrite.textContent = "-";
+          inspectRightCrossRewrite.textContent = "-";
+          inspectLeftHits.textContent = "-";
+          inspectRightHits.textContent = "-";
+          inspectLeftIndex.textContent = "-";
+          inspectRightIndex.textContent = "-";
+          return;
+        }
+
+        inspectCoord.textContent = "(" + point.x + ", " + point.y + ")";
+        inspectGray.textContent = String(grayValue);
+        inspectBinary.textContent = String(binaryValue);
+        inspectState.textContent = binaryValue === WHITE_PIXEL ? "white(255)" : "black(0)";
+        rowMeta = currentInspectBorderMeta ? currentInspectBorderMeta[point.y] : null;
+        if (rowMeta) {
+          inspectLeftValid.textContent = String(rowMeta.leftValid);
+          inspectRightValid.textContent = String(rowMeta.rightValid);
+          inspectLeftBorder.textContent = String(rowMeta.leftBorder);
+          inspectRightBorder.textContent = String(rowMeta.rightBorder);
+          inspectLeftBorderRaw.textContent = String(rowMeta.leftBorderRaw);
+          inspectRightBorderRaw.textContent = String(rowMeta.rightBorderRaw);
+          inspectLeftBreakRow.textContent = String(rowMeta.leftBreakRow);
+          inspectRightBreakRow.textContent = String(rowMeta.rightBreakRow);
+          inspectLeftCircleRewrite.textContent = rowMeta.leftCircleRewrite;
+          inspectRightCircleRewrite.textContent = rowMeta.rightCircleRewrite;
+          inspectLeftCrossRewrite.textContent = rowMeta.leftCrossRewrite;
+          inspectRightCrossRewrite.textContent = rowMeta.rightCrossRewrite;
+          inspectLeftHits.textContent = String(rowMeta.leftHits);
+          inspectRightHits.textContent = String(rowMeta.rightHits);
+          inspectLeftIndex.textContent = rowMeta.leftIndex >= 0 ? String(rowMeta.leftIndex) : "-";
+          inspectRightIndex.textContent = rowMeta.rightIndex >= 0 ? String(rowMeta.rightIndex) : "-";
+        } else {
+          inspectLeftValid.textContent = "-";
+          inspectRightValid.textContent = "-";
+          inspectLeftBorder.textContent = "-";
+          inspectRightBorder.textContent = "-";
+          inspectLeftBorderRaw.textContent = "-";
+          inspectRightBorderRaw.textContent = "-";
+          inspectLeftBreakRow.textContent = "-";
+          inspectRightBreakRow.textContent = "-";
+          inspectLeftCircleRewrite.textContent = "-";
+          inspectRightCircleRewrite.textContent = "-";
+          inspectLeftCrossRewrite.textContent = "-";
+          inspectRightCrossRewrite.textContent = "-";
+          inspectLeftHits.textContent = "-";
+          inspectRightHits.textContent = "-";
+          inspectLeftIndex.textContent = "-";
+          inspectRightIndex.textContent = "-";
+        }
+      }
+
+      function updateBorderInspectInfo(point, grayValue, binaryValue) {
+        var rowMeta;
+
+        borderInspectThreshold.textContent = thresholdInput.value;
+        if (!point) {
+          borderInspectCoord.textContent = "-";
+          borderInspectGray.textContent = "-";
+          borderInspectBinary.textContent = "-";
+          borderInspectState.textContent = currentBinary ? "ready" : "idle";
+          borderInspectLeftValid.textContent = "-";
+          borderInspectRightValid.textContent = "-";
+          borderInspectLeftBorder.textContent = "-";
+          borderInspectRightBorder.textContent = "-";
+          borderInspectLeftBorderRaw.textContent = "-";
+          borderInspectRightBorderRaw.textContent = "-";
+          borderInspectLeftBreakRow.textContent = "-";
+          borderInspectRightBreakRow.textContent = "-";
+          borderInspectLeftCircleRewrite.textContent = "-";
+          borderInspectRightCircleRewrite.textContent = "-";
+          borderInspectLeftCrossRewrite.textContent = "-";
+          borderInspectRightCrossRewrite.textContent = "-";
+          borderInspectLeftHits.textContent = "-";
+          borderInspectRightHits.textContent = "-";
+          borderInspectLeftIndex.textContent = "-";
+          borderInspectRightIndex.textContent = "-";
+          return;
+        }
+
+        borderInspectCoord.textContent = "(" + point.x + ", " + point.y + ")";
+        borderInspectGray.textContent = String(grayValue);
+        borderInspectBinary.textContent = String(binaryValue);
+        borderInspectState.textContent = binaryValue === WHITE_PIXEL ? "white(255)" : "black(0)";
+        rowMeta = currentInspectBorderMeta ? currentInspectBorderMeta[point.y] : null;
+        if (rowMeta) {
+          borderInspectLeftValid.textContent = String(rowMeta.leftValid);
+          borderInspectRightValid.textContent = String(rowMeta.rightValid);
+          borderInspectLeftBorder.textContent = String(rowMeta.leftBorder);
+          borderInspectRightBorder.textContent = String(rowMeta.rightBorder);
+          borderInspectLeftBorderRaw.textContent = String(rowMeta.leftBorderRaw);
+          borderInspectRightBorderRaw.textContent = String(rowMeta.rightBorderRaw);
+          borderInspectLeftBreakRow.textContent = String(rowMeta.leftBreakRow);
+          borderInspectRightBreakRow.textContent = String(rowMeta.rightBreakRow);
+          borderInspectLeftCircleRewrite.textContent = rowMeta.leftCircleRewrite;
+          borderInspectRightCircleRewrite.textContent = rowMeta.rightCircleRewrite;
+          borderInspectLeftCrossRewrite.textContent = rowMeta.leftCrossRewrite;
+          borderInspectRightCrossRewrite.textContent = rowMeta.rightCrossRewrite;
+          borderInspectLeftHits.textContent = String(rowMeta.leftHits);
+          borderInspectRightHits.textContent = String(rowMeta.rightHits);
+          borderInspectLeftIndex.textContent = rowMeta.leftIndex >= 0 ? String(rowMeta.leftIndex) : "-";
+          borderInspectRightIndex.textContent = rowMeta.rightIndex >= 0 ? String(rowMeta.rightIndex) : "-";
+        } else {
+          borderInspectLeftValid.textContent = "-";
+          borderInspectRightValid.textContent = "-";
+          borderInspectLeftBorder.textContent = "-";
+          borderInspectRightBorder.textContent = "-";
+          borderInspectLeftBorderRaw.textContent = "-";
+          borderInspectRightBorderRaw.textContent = "-";
+          borderInspectLeftBreakRow.textContent = "-";
+          borderInspectRightBreakRow.textContent = "-";
+          borderInspectLeftCircleRewrite.textContent = "-";
+          borderInspectRightCircleRewrite.textContent = "-";
+          borderInspectLeftCrossRewrite.textContent = "-";
+          borderInspectRightCrossRewrite.textContent = "-";
+          borderInspectLeftHits.textContent = "-";
+          borderInspectRightHits.textContent = "-";
+          borderInspectLeftIndex.textContent = "-";
+          borderInspectRightIndex.textContent = "-";
+        }
+      }
+
+      function drawInspectCanvas(binImage, grayImage, selectedPoint) {
+        var scale = INSPECT_SCALE;
+        var x;
+        var y;
+        var value;
+        var px;
+        var py;
+        var grayValue;
+
+        binaryInspectCtx.clearRect(0, 0, binaryInspectCanvas.width, binaryInspectCanvas.height);
+
+        for (y = 0; y < HEIGHT; y++) {
+          for (x = 0; x < WIDTH; x++) {
+            value = binImage[y][x];
+            binaryInspectCtx.fillStyle = value === WHITE_PIXEL ? "#f7f4ea" : "#101010";
+            binaryInspectCtx.fillRect(x * scale, y * scale, scale, scale);
+          }
+        }
+
+        drawInspectHitPoints(currentInspectHits);
+
+        binaryInspectCtx.strokeStyle = "rgba(120, 120, 120, 0.35)";
+        binaryInspectCtx.lineWidth = 1;
+        for (x = 0; x <= WIDTH; x++) {
+          px = x * scale + 0.5;
+          binaryInspectCtx.beginPath();
+          binaryInspectCtx.moveTo(px, 0);
+          binaryInspectCtx.lineTo(px, HEIGHT * scale);
+          binaryInspectCtx.stroke();
+        }
+        for (y = 0; y <= HEIGHT; y++) {
+          py = y * scale + 0.5;
+          binaryInspectCtx.beginPath();
+          binaryInspectCtx.moveTo(0, py);
+          binaryInspectCtx.lineTo(WIDTH * scale, py);
+          binaryInspectCtx.stroke();
+        }
+
+        if (selectedPoint) {
+          px = selectedPoint.x * scale;
+          py = selectedPoint.y * scale;
+          binaryInspectCtx.strokeStyle = "#cf5b2e";
+          binaryInspectCtx.lineWidth = 2;
+          binaryInspectCtx.strokeRect(px + 1, py + 1, Math.max(scale - 2, 1), Math.max(scale - 2, 1));
+
+          binaryInspectCtx.strokeStyle = "rgba(207, 91, 46, 0.85)";
+          binaryInspectCtx.lineWidth = 1;
+          binaryInspectCtx.beginPath();
+          binaryInspectCtx.moveTo(px + scale / 2, 0);
+          binaryInspectCtx.lineTo(px + scale / 2, HEIGHT * scale);
+          binaryInspectCtx.moveTo(0, py + scale / 2);
+          binaryInspectCtx.lineTo(WIDTH * scale, py + scale / 2);
+          binaryInspectCtx.stroke();
+        }
+
+        if (selectedPoint && grayImage) {
+          grayValue = grayImage[selectedPoint.y][selectedPoint.x];
+          updateInspectInfo(selectedPoint, grayValue, binImage[selectedPoint.y][selectedPoint.x]);
+        } else {
+          updateInspectInfo(null, 0, 0);
+        }
+      }
+
+      function drawBorderInspectLines(lines) {
+        var y;
+        var leftX;
+        var midX;
+        var rightX;
+
+        if (!lines || !lines.ok) {
+          return;
+        }
+
+        for (y = 0; y < HEIGHT; y++) {
+          if (lines.leftValid && lines.leftValid[y]) {
+            leftX = limitAB(lines.leftline[y], 0, WIDTH - 1) * INSPECT_SCALE;
+            borderInspectCtx.fillStyle = "#e63946";
+            borderInspectCtx.fillRect(leftX, y * INSPECT_SCALE, INSPECT_SCALE, INSPECT_SCALE);
+          }
+
+          if (lines.validMask && lines.validMask[y]) {
+            midX = limitAB(lines.midline[y], 0, WIDTH - 1) * INSPECT_SCALE;
+            borderInspectCtx.fillStyle = "#f4a261";
+            borderInspectCtx.fillRect(midX, y * INSPECT_SCALE, INSPECT_SCALE, INSPECT_SCALE);
+          }
+
+          if (lines.rightValid && lines.rightValid[y]) {
+            rightX = limitAB(lines.rightline[y], 0, WIDTH - 1) * INSPECT_SCALE;
+            borderInspectCtx.fillStyle = "#2a9d8f";
+            borderInspectCtx.fillRect(rightX, y * INSPECT_SCALE, INSPECT_SCALE, INSPECT_SCALE);
+          }
+        }
+      }
+
+      function drawBorderInspectCanvas(binImage, grayImage, selectedPoint) {
+        var x;
+        var y;
+        var value;
+        var px;
+        var py;
+        var grayValue;
+
+        borderInspectCtx.clearRect(0, 0, borderInspectCanvas.width, borderInspectCanvas.height);
+
+        for (y = 0; y < HEIGHT; y++) {
+          for (x = 0; x < WIDTH; x++) {
+            value = binImage[y][x];
+            borderInspectCtx.fillStyle = value === WHITE_PIXEL ? "#f7f4ea" : "#101010";
+            borderInspectCtx.fillRect(x * INSPECT_SCALE, y * INSPECT_SCALE, INSPECT_SCALE, INSPECT_SCALE);
+          }
+        }
+
+        drawBorderInspectLines(currentBorderInspectLines);
+
+        borderInspectCtx.strokeStyle = "rgba(120, 120, 120, 0.35)";
+        borderInspectCtx.lineWidth = 1;
+        for (x = 0; x <= WIDTH; x++) {
+          px = x * INSPECT_SCALE + 0.5;
+          borderInspectCtx.beginPath();
+          borderInspectCtx.moveTo(px, 0);
+          borderInspectCtx.lineTo(px, HEIGHT * INSPECT_SCALE);
+          borderInspectCtx.stroke();
+        }
+        for (y = 0; y <= HEIGHT; y++) {
+          py = y * INSPECT_SCALE + 0.5;
+          borderInspectCtx.beginPath();
+          borderInspectCtx.moveTo(0, py);
+          borderInspectCtx.lineTo(WIDTH * INSPECT_SCALE, py);
+          borderInspectCtx.stroke();
+        }
+
+        if (selectedPoint) {
+          px = selectedPoint.x * INSPECT_SCALE;
+          py = selectedPoint.y * INSPECT_SCALE;
+          borderInspectCtx.strokeStyle = "#cf5b2e";
+          borderInspectCtx.lineWidth = 2;
+          borderInspectCtx.strokeRect(px + 1, py + 1, Math.max(INSPECT_SCALE - 2, 1), Math.max(INSPECT_SCALE - 2, 1));
+
+          borderInspectCtx.strokeStyle = "rgba(207, 91, 46, 0.85)";
+          borderInspectCtx.lineWidth = 1;
+          borderInspectCtx.beginPath();
+          borderInspectCtx.moveTo(px + INSPECT_SCALE / 2, 0);
+          borderInspectCtx.lineTo(px + INSPECT_SCALE / 2, HEIGHT * INSPECT_SCALE);
+          borderInspectCtx.moveTo(0, py + INSPECT_SCALE / 2);
+          borderInspectCtx.lineTo(WIDTH * INSPECT_SCALE, py + INSPECT_SCALE / 2);
+          borderInspectCtx.stroke();
+        }
+
+        if (selectedPoint && grayImage) {
+          grayValue = grayImage[selectedPoint.y][selectedPoint.x];
+          updateBorderInspectInfo(selectedPoint, grayValue, binImage[selectedPoint.y][selectedPoint.x]);
+        } else {
+          updateBorderInspectInfo(null, 0, 0);
+        }
+      }
+
+      function resetInspectPanel() {
+        binaryInspectCtx.clearRect(0, 0, binaryInspectCanvas.width, binaryInspectCanvas.height);
+        inspectPixel = null;
+        inspectLocked = false;
+        updateInspectInfo(null, 0, 0);
+        borderInspectCtx.clearRect(0, 0, borderInspectCanvas.width, borderInspectCanvas.height);
+        borderInspectPixel = null;
+        borderInspectLocked = false;
+        updateBorderInspectInfo(null, 0, 0);
+      }
+
+      function getInspectPointFromEvent(event) {
+        var canvas = event.currentTarget || binaryInspectCanvas;
+        var rect = canvas.getBoundingClientRect();
+        var scaleX = canvas.width / rect.width;
+        var scaleY = canvas.height / rect.height;
+        var canvasX = (event.clientX - rect.left) * scaleX;
+        var canvasY = (event.clientY - rect.top) * scaleY;
+        var scale = INSPECT_SCALE;
+        var x = Math.floor(canvasX / scale);
+        var y = Math.floor(canvasY / scale);
+
+        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
+          return null;
+        }
+
+        return { x: x, y: y };
       }
 
       function drawLineResult(ctx, leftline, midline, rightline, validMask, borderOk, blackBackground) {
@@ -776,6 +1383,349 @@
         };
       }
 
+      function createCircleFeature() {
+        return {
+          l_break_row: 0,
+          r_break_row: 0,
+          l_break_delta: 0,
+          r_break_delta: 0,
+          l_inflect_row: 0,
+          r_inflect_row: 0,
+          l_lost_cnt: 0,
+          r_lost_cnt: 0
+        };
+      }
+
+      function circleExtractBreak(l, r, feat) {
+        var row;
+        var delta;
+
+        for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--) {
+          delta = l[row] - l[row - 1];
+          if (delta > CIR2_BREAK_THRESH && row >= CIR2_BREAK_MIN_ROW) {
+            feat.l_break_row = row;
+            feat.l_break_delta = delta;
+            break;
+          }
+        }
+
+        for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--) {
+          delta = r[row - 1] - r[row];
+          if (delta > CIR2_BREAK_THRESH && row >= CIR2_BREAK_MIN_ROW) {
+            feat.r_break_row = row;
+            feat.r_break_delta = delta;
+            break;
+          }
+        }
+      }
+
+      function circleExtractInflect(l, r, feat) {
+        var row;
+        var searchEnd;
+
+        searchEnd = feat.l_break_row > CIR2_INFLECT_RANGE + CIR2_SCAN_TOP ? (feat.l_break_row - 15) : CIR2_SCAN_TOP;
+        if (searchEnd < CIR2_SCAN_TOP + CIR2_INFLECT_RANGE) {
+          searchEnd = CIR2_SCAN_TOP + CIR2_INFLECT_RANGE;
+        }
+        for (row = searchEnd; row > CIR2_SCAN_TOP + CIR2_INFLECT_RANGE; row--) {
+          if (l[row] > l[row + CIR2_INFLECT_RANGE] &&
+              l[row] > l[row - CIR2_INFLECT_RANGE] &&
+              l[row - CIR2_INFLECT_RANGE] !== BORDER_MIN) {
+            feat.l_inflect_row = row;
+            break;
+          }
+        }
+
+        searchEnd = feat.r_break_row > CIR2_INFLECT_RANGE + CIR2_SCAN_TOP ? (feat.r_break_row - 15) : CIR2_SCAN_TOP;
+        if (searchEnd < CIR2_SCAN_TOP + CIR2_INFLECT_RANGE) {
+          searchEnd = CIR2_SCAN_TOP + CIR2_INFLECT_RANGE;
+        }
+        for (row = searchEnd; row > CIR2_SCAN_TOP + CIR2_INFLECT_RANGE; row--) {
+          if (r[row] < r[row + CIR2_INFLECT_RANGE] &&
+              r[row] < r[row - CIR2_INFLECT_RANGE] &&
+              r[row - CIR2_INFLECT_RANGE] !== BORDER_MAX) {
+            feat.r_inflect_row = row;
+            break;
+          }
+        }
+      }
+
+      function circleExtractLost(l, r, feat) {
+        var row;
+
+        for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++) {
+          if (l[row] <= BORDER_MIN + 1) {
+            feat.l_lost_cnt++;
+          }
+          if (r[row] >= BORDER_MAX - 1) {
+            feat.r_lost_cnt++;
+          }
+        }
+      }
+
+      function circleExtractFeature(l, r) {
+        var feat = createCircleFeature();
+
+        circleExtractBreak(l, r, feat);
+        circleExtractInflect(l, r, feat);
+        circleExtractLost(l, r, feat);
+
+        return feat;
+      }
+
+      function circleCheckEntry(feat) {
+        var leftEntry = 0;
+        var rightEntry = 0;
+
+        if (feat.l_break_row > 0 &&
+            feat.l_break_delta >= CIR2_BREAK_THRESH &&
+            feat.r_break_row === 0 &&
+            feat.l_inflect_row > 0) {
+          leftEntry = 1;
+        }
+
+        if (feat.r_break_row > 0 &&
+            feat.r_break_delta >= CIR2_BREAK_THRESH &&
+            feat.l_break_row === 0 &&
+            feat.r_inflect_row > 0) {
+          rightEntry = 1;
+        }
+
+        return leftEntry || rightEntry ? 1 : 0;
+      }
+
+      function circleCheckDebug(feat) {
+        var leftEntry = feat.l_break_row > 0 &&
+                        feat.r_break_row === 0 &&
+                        feat.l_inflect_row > 0;
+        var rightEntry = feat.r_break_row > 0 &&
+                         feat.l_break_row === 0 &&
+                         feat.r_inflect_row > 0;
+        var side = "-";
+
+        if (leftEntry) {
+          side = "L";
+        } else if (rightEntry) {
+          side = "R";
+        }
+
+        return {
+          leftEntry: leftEntry ? 1 : 0,
+          rightEntry: rightEntry ? 1 : 0,
+          side: side,
+          sideLabel: getCircleSideLabel(side),
+          triggered: (leftEntry || rightEntry) ? 1 : 0
+        };
+      }
+
+      function updateCircleDebug(feat, dbg, circleStage) {
+        dbgCircleLBreak.textContent = String(feat.l_break_row);
+        dbgCircleRBreak.textContent = String(feat.r_break_row);
+        dbgCircleLInflect.textContent = String(feat.l_inflect_row);
+        dbgCircleRInflect.textContent = String(feat.r_inflect_row);
+        dbgCircleCond.textContent = dbg.triggered ? (dbg.sideLabel + "-" + getCircleStageLabel(circleStage)) : "-";
+      }
+
+      function resetCircleDebug() {
+        dbgCircleLBreak.textContent = "-";
+        dbgCircleRBreak.textContent = "-";
+        dbgCircleLInflect.textContent = "-";
+        dbgCircleRInflect.textContent = "-";
+        dbgCircleCond.textContent = "-";
+      }
+
+      function circleRepairLeft(l, r, feat) {
+        var row;
+        var anchorTop = 0;
+        var anchorBot = 0;
+        var k;
+        var b;
+        var val;
+
+        if (feat.l_break_row === 0) {
+          return;
+        }
+
+        if (feat.l_inflect_row > 0 && feat.l_inflect_row < feat.l_break_row) {
+          anchorTop = feat.l_inflect_row;
+        } else {
+          for (row = feat.l_break_row; row > CIR2_SCAN_TOP; row--) {
+            if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1) {
+              anchorTop = row;
+              break;
+            }
+          }
+        }
+
+        for (row = feat.l_break_row; row <= CIR2_SCAN_BOT; row++) {
+          if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1) {
+            anchorBot = row;
+            break;
+          }
+        }
+
+        if (!anchorBot) {
+          anchorBot = CIR2_SCAN_BOT;
+        }
+        if (!anchorTop) {
+          anchorTop = CIR2_SCAN_TOP;
+        }
+        if (anchorTop >= anchorBot) {
+          return;
+        }
+
+        k = (l[anchorBot] - l[anchorTop]) / (anchorBot - anchorTop);
+        b = l[anchorTop] - k * anchorTop;
+
+        for (row = anchorTop; row <= anchorBot; row++) {
+          val = Math.trunc(k * row + b);
+          l[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+        }
+      }
+
+      function circleRepairRight(l, r, feat) {
+        var row;
+        var anchorTop = 0;
+        var anchorBot = 0;
+        var k;
+        var b;
+        var val;
+
+        if (feat.r_break_row === 0) {
+          return;
+        }
+
+        if (feat.r_inflect_row > 0 && feat.r_inflect_row < feat.r_break_row) {
+          anchorTop = feat.r_inflect_row;
+        } else {
+          for (row = feat.r_break_row; row > CIR2_SCAN_TOP; row--) {
+            if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1) {
+              anchorTop = row;
+              break;
+            }
+          }
+        }
+
+        for (row = feat.r_break_row; row <= CIR2_SCAN_BOT; row++) {
+          if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1) {
+            anchorBot = row;
+            break;
+          }
+        }
+
+        if (!anchorBot) {
+          anchorBot = CIR2_SCAN_BOT;
+        }
+        if (!anchorTop) {
+          anchorTop = CIR2_SCAN_TOP;
+        }
+        if (anchorTop >= anchorBot) {
+          return;
+        }
+
+        k = (r[anchorBot] - r[anchorTop]) / (anchorBot - anchorTop);
+        b = r[anchorTop] - k * anchorTop;
+
+        for (row = anchorTop; row <= anchorBot; row++) {
+          val = Math.trunc(k * row + b);
+          r[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+        }
+      }
+
+      function circleCalcSlope(border, breakRow) {
+        var startRow = breakRow + CIR2_FIT_LEN;
+        var endRow = breakRow + 2;
+        var sumX = 0;
+        var sumY = 0;
+        var sumXY = 0;
+        var sumX2 = 0;
+        var n = 0;
+        var row;
+        var x;
+        var y;
+        var denom;
+
+        if (startRow > CIR2_SCAN_BOT) {
+          startRow = CIR2_SCAN_BOT;
+        }
+        if (endRow > CIR2_SCAN_BOT || endRow >= startRow) {
+          return {
+            slope: 0,
+            intercept: border[breakRow]
+          };
+        }
+
+        for (row = startRow; row >= endRow; row--) {
+          x = row;
+          y = border[row];
+          sumX += x;
+          sumY += y;
+          sumXY += x * y;
+          sumX2 += x * x;
+          n += 1;
+        }
+
+        denom = n * sumX2 - sumX * sumX;
+        if (denom > 0.001 || denom < -0.001) {
+          return {
+            slope: (n * sumXY - sumX * sumY) / denom,
+            intercept: (sumY - ((n * sumXY - sumX * sumY) / denom) * sumX) / n
+          };
+        }
+
+        return {
+          slope: 0,
+          intercept: border[breakRow]
+        };
+      }
+
+      function circleRepairApproach(l, r, feat, side) {
+        var breakRow = 0;
+        var border = null;
+        var fit;
+        var stopRow;
+        var row;
+        var val;
+
+        if (side === "L") {
+          breakRow = feat.l_break_row;
+          border = l;
+        } else if (side === "R") {
+          breakRow = feat.r_break_row;
+          border = r;
+        } else {
+          return;
+        }
+
+        if (breakRow <= CIR2_SCAN_TOP + 1) {
+          return;
+        }
+
+        fit = circleCalcSlope(border, breakRow);
+        stopRow = breakRow - CIR2_APPROACH_REPAIR_LEN;
+        if (stopRow < CIR2_SCAN_TOP) {
+          stopRow = CIR2_SCAN_TOP;
+        }
+
+        for (row = breakRow; row >= stopRow; row--) {
+          val = Math.trunc(fit.slope * row + fit.intercept);
+          border[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+        }
+      }
+
+      function markCircleRepairedRows(beforeL, beforeR, afterL, afterR, leftValid, rightValid) {
+        var row;
+
+        for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++) {
+          if (beforeL[row] !== afterL[row] && !leftValid[row]) {
+            leftValid[row] = 2;
+          }
+          if (beforeR[row] !== afterR[row] && !rightValid[row]) {
+            rightValid[row] = 2;
+          }
+        }
+      }
+
       function createCrossFeature() {
         return {
           l_break_row: 0,
@@ -808,7 +1758,7 @@
 
         for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--) {
           delta = l[row] - l[row - 1];
-          if (delta > CROSS2_BREAK_THRESH) {
+          if (delta > CROSS2_BREAK_THRESH && row >= CROSS2_BREAK_MIN_ROW) {
             feat.l_break_row = row;
             feat.l_break_delta = delta;
             break;
@@ -817,7 +1767,7 @@
 
         for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--) {
           delta = r[row - 1] - r[row];
-          if (delta > CROSS2_BREAK_THRESH) {
+          if (delta > CROSS2_BREAK_THRESH && row >= CROSS2_BREAK_MIN_ROW) {
             feat.r_break_row = row;
             feat.r_break_delta = delta;
             break;
@@ -910,8 +1860,8 @@
       }
 
       function crossCalcSlope(border, breakRow) {
-        var startRow = breakRow - CROSS2_FIT_LEN;
-        var endRow = breakRow - 2;
+        var startRow = breakRow + CROSS2_FIT_LEN;
+        var endRow = breakRow + 2;
         var sumX = 0;
         var sumY = 0;
         var sumXY = 0;
@@ -922,17 +1872,17 @@
         var slope;
         var intercept;
 
-        if (startRow < CROSS2_SCAN_TOP) {
-          startRow = CROSS2_SCAN_TOP;
+        if (startRow > CROSS2_SCAN_BOT) {
+          startRow = CROSS2_SCAN_BOT;
         }
-        if (endRow <= startRow) {
+        if (endRow > CROSS2_SCAN_BOT || endRow >= startRow) {
           return {
             slope: 0,
             intercept: border[breakRow]
           };
         }
 
-        for (i = startRow; i <= endRow; i++) {
+        for (i = startRow; i >= endRow; i--) {
           sumX += i;
           sumY += border[i];
           sumXY += i * border[i];
@@ -1002,7 +1952,7 @@
           score++;
         }
 
-        return score >= 2 ? 1 : 0;
+        return score >= 1 ? 1 : 0;
       }
 
       function crossCheckDebug(feat) {
@@ -1013,20 +1963,24 @@
         var singleSide = ((feat.l_break_row > 0) ^ (feat.r_break_row > 0)) ? 1 : 0;
         var score = 0;
         var triggered;
+        var matched = [];
 
         if (!singleSide) {
           if (bothBreak) {
             score++;
+            matched.push("1");
           }
           if (bothDir) {
             score++;
+            matched.push("2");
           }
           if (widthWide && bottomOk) {
             score++;
+            matched.push("3");
           }
         }
 
-        triggered = singleSide ? 0 : (score >= 2 ? 1 : 0);
+        triggered = singleSide ? 0 : (score >= 1 ? 1 : 0);
 
         return {
           bothBreak: bothBreak ? 1 : 0,
@@ -1035,7 +1989,8 @@
           bottomOk: bottomOk ? 1 : 0,
           singleSide: singleSide ? 1 : 0,
           score: score,
-          triggered: triggered
+          triggered: triggered,
+          matched: matched.join("+")
         };
       }
 
@@ -1045,7 +2000,8 @@
         dbgLDir.textContent = String(feat.l_dir_break_row);
         dbgRDir.textContent = String(feat.r_dir_break_row);
         dbgWide.textContent = String(feat.wide_cnt);
-        dbgScore.textContent = String(dbg.score) + " (ss=" + String(dbg.singleSide) + ")";
+        dbgScore.textContent = dbg.matched ? (dbg.matched + " (score=" + String(dbg.score) + ", ss=" + String(dbg.singleSide) + ")")
+                                           : ("- (score=" + String(dbg.score) + ", ss=" + String(dbg.singleSide) + ")");
       }
 
       function resetCrossDebug() {
@@ -1062,11 +2018,16 @@
         var lBp = feat.l_break_row ? feat.l_break_row : feat.l_dir_break_row;
         var rBp = feat.r_break_row ? feat.r_break_row : feat.r_dir_break_row;
         var estW;
+        var stopRow;
         var val;
 
         if (lBp > CROSS2_FIT_LEN + CROSS2_SCAN_TOP) {
-          for (row = lBp; row <= CROSS2_SCAN_BOT; row++) {
-            val = Math.round(feat.l_slope * row + feat.l_intercept);
+          stopRow = lBp - CROSS2_REPAIR_LEN;
+          if (stopRow < CROSS2_SCAN_TOP) {
+            stopRow = CROSS2_SCAN_TOP;
+          }
+          for (row = lBp; row >= stopRow; row--) {
+            val = Math.trunc(feat.l_slope * row + feat.l_intercept);
             l[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
           }
         } else if (feat.l_lost_cnt > CROSS2_LOST_THRESH) {
@@ -1083,8 +2044,12 @@
         }
 
         if (rBp > CROSS2_FIT_LEN + CROSS2_SCAN_TOP) {
-          for (row = rBp; row <= CROSS2_SCAN_BOT; row++) {
-            val = Math.round(feat.r_slope * row + feat.r_intercept);
+          stopRow = rBp - CROSS2_REPAIR_LEN;
+          if (stopRow < CROSS2_SCAN_TOP) {
+            stopRow = CROSS2_SCAN_TOP;
+          }
+          for (row = rBp; row >= stopRow; row--) {
+            val = Math.trunc(feat.r_slope * row + feat.r_intercept);
             r[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
           }
         } else if (feat.r_lost_cnt > CROSS2_LOST_THRESH) {
@@ -1146,52 +2111,166 @@
 
       function processGray(grayImage) {
         var threshold = parseInt(thresholdInput.value, 10);
+        var circleStage = getCircleStage();
         var binImage = buildBinary(grayImage, threshold);
         var startInfo = getStartPoint(binImage, HEIGHT - 2);
         var searchResult;
         var leftResult;
         var rightResult;
         var midResult;
+        var circleFeat;
+        var circleDbg;
+        var circleTriggered;
         var crossFeat;
-        var crossTriggered;
         var crossDbg;
+        var crossTriggered;
+        var leftHitsPerRow;
+        var rightHitsPerRow;
+        var leftBorderRaw;
+        var rightBorderRaw;
+        var leftBorderAfterCircle;
+        var rightBorderAfterCircle;
+        var circleApplied;
+        var crossApplied;
+        var row;
+        var j;
 
         drawGrayCanvas(sourceCtx, grayImage);
         drawBinaryCanvas(binaryCtx, binImage);
+        currentBinary = binImage;
+        currentInspectHits = null;
+        currentInspectBorderMeta = null;
+        currentBorderInspectLines = null;
+        inspectThreshold.textContent = String(threshold);
+        if (!inspectPixel) {
+          inspectPixel = { x: Math.floor(WIDTH / 2), y: Math.floor(HEIGHT / 2) };
+        }
+        if (!borderInspectPixel) {
+          borderInspectPixel = { x: Math.floor(WIDTH / 2), y: Math.floor(HEIGHT / 2) };
+        }
 
         if (startInfo.ok) {
           searchResult = searchLR(binImage, startInfo);
           leftResult = fillBorder(searchResult.pointsL, searchResult.leftCount, BORDER_MIN, 1);
           rightResult = fillBorder(searchResult.pointsR, searchResult.rightCount, BORDER_MAX, -1);
-          midResult = calcMidline(leftResult.border, rightResult.border, leftResult.valid, rightResult.valid);
+          leftBorderRaw = leftResult.border.slice();
+          rightBorderRaw = rightResult.border.slice();
+          leftHitsPerRow = new Array(HEIGHT);
+          rightHitsPerRow = new Array(HEIGHT);
+          for (row = 0; row < HEIGHT; row++) {
+            leftHitsPerRow[row] = 0;
+            rightHitsPerRow[row] = 0;
+          }
+          for (j = 0; j < searchResult.leftCount; j++) {
+            if (searchResult.pointsL[j][1] >= 0 && searchResult.pointsL[j][1] < HEIGHT) {
+              leftHitsPerRow[searchResult.pointsL[j][1]]++;
+            }
+          }
+          for (j = 0; j < searchResult.rightCount; j++) {
+            if (searchResult.pointsR[j][1] >= 0 && searchResult.pointsR[j][1] < HEIGHT) {
+              rightHitsPerRow[searchResult.pointsR[j][1]]++;
+            }
+          }
+          circleFeat = circleExtractFeature(leftResult.border, rightResult.border);
+          circleDbg = circleCheckDebug(circleFeat);
+          circleTriggered = !!circleDbg.triggered;
+          updateCircleDebug(circleFeat, circleDbg, circleStage);
+          circleApplied = circleTriggered;
+          crossApplied = false;
+          if (circleApplied) {
+            if (circleStage === "first") {
+              circleRepairApproach(leftResult.border, rightResult.border, circleFeat, circleDbg.side);
+            } else if (circleDbg.side === "L") {
+              circleRepairLeft(leftResult.border, rightResult.border, circleFeat);
+            } else if (circleDbg.side === "R") {
+              circleRepairRight(leftResult.border, rightResult.border, circleFeat);
+            }
+            markCircleRepairedRows(leftBorderRaw, rightBorderRaw, leftResult.border, rightResult.border,
+                                   leftResult.valid, rightResult.valid);
+          }
+          leftBorderAfterCircle = leftResult.border.slice();
+          rightBorderAfterCircle = rightResult.border.slice();
           crossFeat = crossExtractFeature(leftResult.border, rightResult.border, binImage, searchResult);
           crossDbg = crossCheckDebug(crossFeat);
-          crossTriggered = crossDbg.triggered;
+          crossTriggered = !!crossDbg.triggered;
           updateCrossDebug(crossFeat, crossDbg);
-
-          if (crossTriggered) {
+          if (!circleApplied && crossTriggered) {
+            crossApplied = true;
             crossRepairBoth(leftResult.border, rightResult.border, crossFeat);
             markCrossRepairedRows(leftResult.border, rightResult.border, leftResult.valid, rightResult.valid);
-            midResult = calcMidline(leftResult.border, rightResult.border, leftResult.valid, rightResult.valid);
-            statCross.textContent = "on";
-          } else {
-            statCross.textContent = "off";
           }
+          midResult = calcMidline(leftResult.border, rightResult.border, leftResult.valid, rightResult.valid);
+          if (circleTriggered) {
+            statTrackType.textContent = "circle";
+          } else if (crossTriggered) {
+            statTrackType.textContent = "cross";
+          } else {
+            statTrackType.textContent = "normal";
+          }
+          statCircle.textContent = circleTriggered ? (circleDbg.sideLabel + "-" + getCircleStageLabel(circleStage)) : "off";
+          statCross.textContent = crossApplied ? "applied" : "off";
 
           statStart.textContent = "left/right start found";
           statLeft.textContent = String(searchResult.leftCount);
           statRight.textContent = String(searchResult.rightCount);
           statBorder.textContent = "ok";
           statMid.textContent = String(midResult.midline[HEIGHT - 5]);
+          currentInspectHits = {
+            pointsL: searchResult.pointsL,
+            pointsR: searchResult.pointsR,
+            leftCount: searchResult.leftCount,
+            rightCount: searchResult.rightCount,
+            ok: true
+          };
+          currentInspectBorderMeta = new Array(HEIGHT);
+          for (row = 0; row < HEIGHT; row++) {
+            currentInspectBorderMeta[row] = {
+              leftValid: leftResult.valid[row],
+              rightValid: rightResult.valid[row],
+              leftBorder: leftResult.border[row],
+              rightBorder: rightResult.border[row],
+              leftBorderRaw: leftBorderRaw[row],
+              rightBorderRaw: rightBorderRaw[row],
+              leftBreakRow: circleApplied ? circleFeat.l_break_row : crossFeat.l_break_row,
+              rightBreakRow: circleApplied ? circleFeat.r_break_row : crossFeat.r_break_row,
+              leftCircleRewrite: circleApplied && leftBorderRaw[row] !== leftBorderAfterCircle[row] ? "yes" : "no",
+              rightCircleRewrite: circleApplied && rightBorderRaw[row] !== rightBorderAfterCircle[row] ? "yes" : "no",
+              leftCrossRewrite: crossApplied && leftBorderAfterCircle[row] !== leftResult.border[row] ? "yes" : "no",
+              rightCrossRewrite: crossApplied && rightBorderAfterCircle[row] !== rightResult.border[row] ? "yes" : "no",
+              leftHits: leftHitsPerRow[row],
+              rightHits: rightHitsPerRow[row],
+              leftIndex: leftResult.valid[row] === 1 ? leftResult.index[row] : -1,
+              rightIndex: rightResult.valid[row] === 1 ? rightResult.index[row] : -1
+            };
+          }
+          currentBorderInspectLines = {
+            leftline: midResult.leftline,
+            midline: midResult.midline,
+            rightline: midResult.rightline,
+            leftValid: leftResult.valid,
+            rightValid: rightResult.valid,
+            validMask: midResult.validMask,
+            ok: true
+          };
+          drawInspectCanvas(binImage, grayImage, inspectPixel);
+          drawBorderInspectCanvas(binImage, grayImage, borderInspectPixel);
           drawOverlay(grayImage, midResult.leftline, midResult.midline, midResult.rightline, midResult.validMask, true);
         } else {
+          statTrackType.textContent = "undetermined";
           statStart.textContent = "start point not found";
           statLeft.textContent = "0";
           statRight.textContent = "0";
           statBorder.textContent = "fail";
+          statCircle.textContent = "off";
           statCross.textContent = "off";
           statMid.textContent = "-";
+          resetCircleDebug();
           resetCrossDebug();
+          currentInspectHits = { ok: false };
+          currentInspectBorderMeta = null;
+          currentBorderInspectLines = { ok: false };
+          drawInspectCanvas(binImage, grayImage, inspectPixel);
+          drawBorderInspectCanvas(binImage, grayImage, borderInspectPixel);
           drawOverlay(grayImage, [], [], [], null, false);
         }
       }
@@ -1245,6 +2324,111 @@
       });
 
       scaleSelect.addEventListener("change", updateCanvasScale);
+      circleStageSelect.addEventListener("change", function () {
+        if (currentGray) {
+          processGray(currentGray);
+        }
+      });
+      binaryInspectCanvas.addEventListener("mousemove", function (event) {
+        var point;
+
+        if (!currentBinary || inspectLocked) {
+          return;
+        }
+
+        point = getInspectPointFromEvent(event);
+        if (!point) {
+          return;
+        }
+
+        inspectPixel = point;
+        drawInspectCanvas(currentBinary, currentGray, inspectPixel);
+      });
+
+      binaryInspectCanvas.addEventListener("mouseleave", function () {
+        if (!currentBinary || inspectLocked) {
+          return;
+        }
+
+        drawInspectCanvas(currentBinary, currentGray, inspectPixel);
+      });
+
+      binaryInspectCanvas.addEventListener("click", function (event) {
+        var point;
+
+        if (!currentBinary) {
+          return;
+        }
+
+        point = getInspectPointFromEvent(event);
+        if (!point) {
+          return;
+        }
+
+        if (inspectLocked && inspectPixel && inspectPixel.x === point.x && inspectPixel.y === point.y) {
+          inspectLocked = false;
+        } else {
+          inspectPixel = point;
+          inspectLocked = true;
+        }
+
+        drawInspectCanvas(currentBinary, currentGray, inspectPixel);
+      });
+
+      borderInspectCanvas.addEventListener("mousemove", function (event) {
+        var point;
+
+        if (!currentBinary || borderInspectLocked) {
+          return;
+        }
+
+        point = getInspectPointFromEvent({
+          clientX: event.clientX,
+          clientY: event.clientY,
+          currentTarget: borderInspectCanvas
+        });
+        if (!point) {
+          return;
+        }
+
+        borderInspectPixel = point;
+        drawBorderInspectCanvas(currentBinary, currentGray, borderInspectPixel);
+      });
+
+      borderInspectCanvas.addEventListener("mouseleave", function () {
+        if (!currentBinary || borderInspectLocked) {
+          return;
+        }
+
+        drawBorderInspectCanvas(currentBinary, currentGray, borderInspectPixel);
+      });
+
+      borderInspectCanvas.addEventListener("click", function (event) {
+        var point;
+
+        if (!currentBinary) {
+          return;
+        }
+
+        point = getInspectPointFromEvent({
+          clientX: event.clientX,
+          clientY: event.clientY,
+          currentTarget: borderInspectCanvas
+        });
+        if (!point) {
+          return;
+        }
+
+        if (borderInspectLocked && borderInspectPixel &&
+            borderInspectPixel.x === point.x && borderInspectPixel.y === point.y) {
+          borderInspectLocked = false;
+        } else {
+          borderInspectPixel = point;
+          borderInspectLocked = true;
+        }
+
+        drawBorderInspectCanvas(currentBinary, currentGray, borderInspectPixel);
+      });
 
       fileInput.addEventListener("change", function () {
         if (fileInput.files && fileInput.files[0]) {
@@ -1253,12 +2437,18 @@
       });
 
       thresholdValue.textContent = thresholdInput.value;
+      resizeInspectCanvas();
       updateCanvasScale();
+      resetInspectPanel();
 
       sourceCtx.fillStyle = "#101010";
       sourceCtx.fillRect(0, 0, WIDTH, HEIGHT);
       binaryCtx.fillStyle = "#101010";
       binaryCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      binaryInspectCtx.fillStyle = "#101010";
+      binaryInspectCtx.fillRect(0, 0, binaryInspectCanvas.width, binaryInspectCanvas.height);
+      borderInspectCtx.fillStyle = "#101010";
+      borderInspectCtx.fillRect(0, 0, borderInspectCanvas.width, borderInspectCanvas.height);
       overlayCtx.fillStyle = "#101010";
       overlayCtx.fillRect(0, 0, WIDTH, HEIGHT);
       lineCtx.fillStyle = "#000000";

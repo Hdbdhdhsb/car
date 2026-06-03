@@ -9,9 +9,6 @@
  *   3. 双侧补线: 断点上方取 N 行做最小二乘拟合斜率，向下延伸补线
  *   4. 中线重算: 补线后立即重算中线
  *
- * 与 camera.c 兼容:
- *   - 直接操作 l_border / r_border / midline 数组 (uint16)
- *   - 设置 current_track_type / current_state 驱动外层状态机
  ******************************************************************************/
 #include "cross2.h"
 #include "camera.h"
@@ -216,7 +213,7 @@ static void _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f)
     for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--)
     {
         int16 delta = (int16)l[row] - (int16)l[row - 1];
-        if (delta > CROSS2_BREAK_THRESH)
+        if (delta > CROSS2_BREAK_THRESH&& row >= 30)
         {
             f->l_break_row   = row;
             f->l_break_delta = delta;
@@ -228,7 +225,7 @@ static void _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f)
     for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--)
     {
         int16 delta = (int16)r[row - 1] - (int16)r[row];
-        if (delta > CROSS2_BREAK_THRESH)
+        if (delta > CROSS2_BREAK_THRESH && row >= 30)
         {
             f->r_break_row   = row;
             f->r_break_delta = delta;
@@ -349,8 +346,8 @@ static void _cr_extract_corner(uint8 (*img)[MT9V03X_W], Cross2Feature *f)
 static void _cr_calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept)
 {
     int16  i;
-    uint8  start_row = break_row - CROSS2_FIT_LEN;
-    uint8  end_row   = break_row - 2;
+    uint8  start_row = break_row + CROSS2_FIT_LEN;
+    uint8  end_row   = break_row + 2;
     float  sum_x  = 0;
     float  sum_y  = 0;
     float  sum_xy = 0;
@@ -369,7 +366,7 @@ static void _cr_calc_slope(uint16 *border, uint8 break_row, float *slope, float 
         return;
     }
 
-    for (i = start_row; i <= end_row; i++)
+    for (i = start_row; i >= end_row; i--)
     {
         x = (float)i;
         y = (float)border[i];
@@ -431,7 +428,7 @@ static uint8 _cr_check_entry(Cross2Feature *f)
     if (both_dir)   score++;
     if (width_wide && bottom_ok) score++;
 
-    return (score >= 2) ? 1 : 0;
+    return (score >= 1) ? 1 : 0;
 }
 
 /*--------------------------------------------------------------------------
@@ -498,7 +495,7 @@ static void _cr_repair_both(uint16 *l, uint16 *r, Cross2Feature *f)
         b = f->l_intercept;
 
         /* 从断点往下补到底部 */
-        for (row = l_bp; row <= CROSS2_SCAN_BOT; row++)
+        for (row = l_bp; row >= l_bp+15; row--)
         {
             int16 val = (int16)(k * row + b);
             l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
@@ -525,7 +522,7 @@ static void _cr_repair_both(uint16 *l, uint16 *r, Cross2Feature *f)
         k = f->r_slope;
         b = f->r_intercept;
 
-        for (row = r_bp; row <= CROSS2_SCAN_BOT; row++)
+        for (row = r_bp; row >= r_bp+15; row--)
         {
             int16 val = (int16)(k * row + b);
             r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);

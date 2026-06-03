@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               25/05/26  23:20:03  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               30/05/26  16:36:32  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -66,7 +66,7 @@ stmt  level    source
    52   1          printf("\r\n module mac    :%s",wifi_spi_mac_addr);                         // 模块 MAC 信息
    53   1          printf("\r\n module ip     :%s",wifi_spi_ip_addr_port);                     // 模块 IP 地址
    54   1      
-C251 COMPILER V5.60.0,  main                                                               25/05/26  23:20:03  PAGE 2   
+C251 COMPILER V5.60.0,  main                                                               30/05/26  16:36:32  PAGE 2   
 
    55   1          // zf_device_wifi_spi.h 文件内的宏定义可以更改模块连�?(建立) WIFI 之后，是否�
              -�动连�? TCP 服务器、创�? UDP 连接、创�? TCP 服务器等操作
@@ -134,7 +134,7 @@ stmt  level    source
   104   2               current_tick = g_sysTick_ms;
   105   2      
   106   2              if (current_tick - last_10ms_tick >= 10) {
-C251 COMPILER V5.60.0,  main                                                               25/05/26  23:20:03  PAGE 3   
+C251 COMPILER V5.60.0,  main                                                               30/05/26  16:36:32  PAGE 3   
 
   107   3                  last_10ms_tick = current_tick;
   108   3                  
