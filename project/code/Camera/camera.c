@@ -1,7 +1,7 @@
 ﻿#include "camera.h"
 #include "main.h"
 
-#define threshold 100 /* 二值化阈值 */
+#define threshold 235 /* 二值化阈值 */
 
 //方案2：detect_track_type 改成隔帧或条件触发
 
@@ -47,18 +47,11 @@ uint32 last_zebra_time_ms = 0; /* 上次斑马线检测时间(ms) */
 uint8 zebra_count = 0;       /* 斑马线检测计数*/
 
 
-/* 十字相关变量 */
-uint8 flag_cross = 0;              /* 十字标志位*/
-int cross_jud = 0;                 /* 十字状态判断*/
-int cross_jud_time = 0;            /* 十字状态计时*/
-
-
-
 /* 使用图像下方采样行作为控制误差，减去屏幕中心得到横向偏差 */
 static void update_track_error(void) {
-    uint8 sample_row = (MT9V03X_H > 5) ? (MT9V03X_H - 5) : (MT9V03X_H - 1);
+    uint8 sample_row = (MT9V03X_H > 10) ? (MT9V03X_H - 10) : (MT9V03X_H - 1);
     int16 screen_center = MT9V03X_W / 2;
-    track_error = (float)((int16)midline[sample_row] - screen_center);
+    track_error = (float)((int16)screen_center - midline[sample_row]);
 }
 
 
@@ -655,7 +648,6 @@ void image_process() {
     
     /* ===== 第二步：状态机处理（基于本帧边界）===== */
     if(border_ok) {
-    circle_detection_process(l_border, r_border, bin_image);
     switch(current_state) {
         case SEARCH_MODE:
         case TRACKING_MODE:

@@ -4,9 +4,9 @@
             "name": "stc32g144k246",
             "cStandard": "c89",
             "cppStandard": "c++17",
-            "intelliSenseMode": "${default}",
+            "intelliSenseMode": "gcc-x86",
             "includePath": [
-                "D:/KEIL/C251/INC",
+                "D:/Keil_v5/C251/C251/INC",
                 "libraries/zf_common",
                 "libraries/zf_components",
                 "libraries/zf_device",
@@ -14,7 +14,13 @@
                 "project/user",
                 "project/code",
                 "libraries/zf_components/stc32g_usb_lib",
-                "libraries/zf_components/seekfree_assistant"
+                "libraries/zf_components/seekfree_assistant",
+                "project/code/Camera",
+                "project/code/Camera/Circle",
+                "project/code/Camera/Cross",
+                "project/code/Camera/Circle_detection",
+                "project/code/Contact_master",
+                "project/code/PID"
             ],
             "defines": [
                 "__C251__",

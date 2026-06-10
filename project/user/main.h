@@ -4,6 +4,8 @@
 #include "zf_common_headfile.h"
 #include "Contact_master/contact_master.h"
 
+#define UART4_TX UART4_TX_P03
+#define UART4_RX UART4_RX_P02
 #define UART2_TX UART2_TX_P11
 #define UART2_RX UART2_RX_P10
 #define CTRL_PIN IO_P14

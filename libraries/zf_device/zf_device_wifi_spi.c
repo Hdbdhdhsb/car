@@ -271,7 +271,10 @@ static uint8 wifi_spi_get_parameter (wifi_spi_packets_command_enum command, wifi
         read_data->head.command = WIFI_SPI_DATA;
         read_data->head.length = 0;
         wifi_spi_dma_transfer_command(read_data, WIFI_SPI_RECVIVE_SIZE);
-        return_state = 0;
+        if(WIFI_SPI_DATA != read_data->head.command)
+        {
+            return_state = 0;
+        }
     }while(0);
     return return_state;
 }
@@ -306,7 +309,7 @@ static uint8 wifi_spi_get_version (void)
 static uint8 wifi_spi_get_mac_addr (void)
 {
     uint8 return_state;
-    wifi_spi_packets_struct temp_packets;
+    wifi_spi_packets_struct temp_packets = {0};
 
     return_state = wifi_spi_get_parameter(WIFI_SPI_GET_MAC_ADDR, &temp_packets, OTHER_TIME_OUT);
     if((0 == return_state) && (WIFI_SPI_REPLY_MAC_ADDR == temp_packets.head.command))
@@ -327,7 +330,7 @@ static uint8 wifi_spi_get_mac_addr (void)
 static uint8 wifi_spi_get_ip_addr_port (void)
 {
     uint8 return_state;
-    wifi_spi_packets_struct temp_packets;
+    wifi_spi_packets_struct temp_packets = {0};
 
     return_state = wifi_spi_get_parameter(WIFI_SPI_GET_IP_ADDR, &temp_packets, OTHER_TIME_OUT);
     if((0 == return_state) && (WIFI_SPI_REPLY_IP_ADDR == temp_packets.head.command))
@@ -351,7 +354,7 @@ static uint8 wifi_spi_get_ip_addr_port (void)
 uint8 wifi_spi_get_time (wifi_spi_time_enum time_format, char *buffer, uint8 buffer_size)
 {
     uint8 return_state = 1;
-    wifi_spi_packets_struct temp_packets;
+    wifi_spi_packets_struct temp_packets = {0};
     uint8 send_cmd, receive_cmd;
     
     // 接收时间的数组必须大于30个字节
@@ -478,7 +481,7 @@ uint8 wifi_spi_socket_connect (char *transport_type, char *ip_addr, char *port, 
 //-------------------------------------------------------------------------------------------------------------------
 uint8 wifi_spi_socket_disconnect (void)
 {
-    wifi_spi_packets_struct temp_packets;
+    wifi_spi_packets_struct temp_packets = {0};
 
     return wifi_spi_get_parameter(WIFI_SPI_CLOSE_SOCKET, &temp_packets, OTHER_TIME_OUT);
 }
@@ -520,7 +523,7 @@ uint8 wifi_spi_reset (void)
 uint8 wifi_spi_udp_send_now (void)
 {
     uint8 return_state = 1;
-    wifi_spi_packets_struct temp_packets;
+    wifi_spi_packets_struct temp_packets = {0};
     
     if(WIFI_SPI_IDLE == wifi_spi_mutex)
     {
@@ -584,7 +587,7 @@ uint8 wifi_spi_udp_send_now (void)
 uint32 wifi_spi_send_buffer (const uint8 *buffer, uint32 length)
 {
     uint16 send_length;
-    wifi_spi_packets_struct temp_packets;
+    wifi_spi_packets_struct temp_packets = {0};
     
     // 检查WIFI SPI状态，如果在其他中断或者线程中已经发起了通讯，则本次不能发送数据
     if(WIFI_SPI_IDLE == wifi_spi_mutex)
@@ -601,7 +604,11 @@ uint32 wifi_spi_send_buffer (const uint8 *buffer, uint32 length)
                 break;
             }
             
-            wifi_spi_dma_transfer_data(buffer, &temp_packets, send_length);
+                        wifi_spi_dma_transfer_data(buffer, &temp_packets, send_length);
+            if(WIFI_SPI_DATA == temp_packets.head.command)
+            {
+                break;
+            }
             
             // 检查收到的包中是否有数据
             if((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == temp_packets.head.command))
@@ -668,7 +675,7 @@ uint32 wifi_spi_read_buffer (uint8 *buffer, uint32 length)
 {
     uint32 fifo_read_length;
     uint32 write_length = 0;
-    wifi_spi_packets_struct temp_packets;
+    wifi_spi_packets_struct temp_packets = {0};
 
     zf_assert(NULL != buffer);
 

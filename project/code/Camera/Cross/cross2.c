@@ -20,17 +20,17 @@ Cross2State  cross2_state   = CROSS2_IDLE;
 uint8        cross2_timeout = 0;
 
 /*======================== 内部辅助函数声明 ========================*/
-static void   _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f);
+static void  _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f);
 static void   _cr_extract_dir_break(Cross2Feature *f);
 static void   _cr_extract_width(uint16 *l, uint16 *r, Cross2Feature *f);
 static void   _cr_extract_lost(uint16 *l, uint16 *r, Cross2Feature *f);
 static void   _cr_extract_corner(uint8 (*img)[MT9V03X_W], Cross2Feature *f);
-static void   _cr_calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept);
+static void   _cr_calc_slope(uint8 status, uint16 *border, uint8 break_row, uint8 break_row2, float *slope, float *intercept);
 
 static uint8  _cr_check_entry(Cross2Feature *f);
 static uint8  _cr_check_recover(Cross2Feature *f);
 
-static void   _cr_repair_both(uint16 *l, uint16 *r, Cross2Feature *f);
+static void   _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f);
 static void   _cr_recalc_midline(uint16 *l, uint16 *r);
 
 /*======================== 辅助宏 ========================*/
@@ -48,11 +48,14 @@ void cross2_init(void)
 /*******************************************************************************
  * cross2_extract_feature - 一次性提取本帧所有十字相关特征
  ******************************************************************************/
-void cross2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
+uint8 cross2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
                             Cross2Feature *feat)
 {
+    uint8 status = 1;
     feat->l_break_row     = 0;
     feat->r_break_row     = 0;
+    feat->l_break_row2    = 0;
+    feat->r_break_row2    = 0;
     feat->l_break_delta   = 0;
     feat->r_break_delta   = 0;
     feat->l_dir_break_row = 0;
@@ -80,10 +83,14 @@ void cross2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
     _cr_extract_corner(img, feat);
 
     /* 在断点上方拟合斜率，后续补线用 */
-    if (feat->l_break_row > CROSS2_FIT_LEN + CROSS2_SCAN_TOP)
-        _cr_calc_slope(l, feat->l_break_row, &feat->l_slope, &feat->l_intercept);
-    if (feat->r_break_row > CROSS2_FIT_LEN + CROSS2_SCAN_TOP)
-        _cr_calc_slope(r, feat->r_break_row, &feat->r_slope, &feat->r_intercept);
+    if (feat->l_break_row > CROSS2_FIT_LEN + CROSS2_SCAN_TOP&&feat->r_break_row > CROSS2_FIT_LEN + CROSS2_SCAN_TOP){
+        status = 1;
+    }else{
+        status = 0;
+    }
+    _cr_calc_slope(status,l, feat->l_break_row, feat->l_break_row2, &feat->l_slope, &feat->l_intercept);
+    _cr_calc_slope(status,r, feat->r_break_row, feat->r_break_row2, &feat->r_slope, &feat->r_intercept);
+    return status;
 }
 
 /*******************************************************************************
@@ -95,9 +102,10 @@ uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
 {
     uint8 normal = 0;
     Cross2Feature feat;
+    uint8 status = 0;
 
     /* 1. 特征提取 */
-    cross2_extract_feature(l, r, img, &feat);
+    status = cross2_extract_feature(l, r, img, &feat);
 
     /* 2. 十字状态机 */
     switch (cross2_state)
@@ -115,7 +123,7 @@ uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
             current_state      = SPECIAL_MODE;
 
             /* 立即补一次线 */
-            _cr_repair_both(l, r, &feat);
+            _cr_repair_both(status, l, r, &feat);
             _cr_recalc_midline(l, r);
         }
         break;
@@ -125,13 +133,14 @@ uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     case CROSS2_CROSSING:
     {
         /* 每帧都补线 */
-        _cr_repair_both(l, r, &feat);
+        _cr_repair_both(status, l, r, &feat);
         _cr_recalc_midline(l, r);
 
         /* 判断是否开始恢复 */
         if (_cr_check_recover(&feat))
         {
             cross2_state = CROSS2_RECOVER;
+
         }
 
         cross2_timeout++;
@@ -149,7 +158,7 @@ uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     case CROSS2_RECOVER:
     {
         /* 恢复阶段仍然做轻量补线（断口可能还有残余） */
-        _cr_repair_both(l, r, &feat);
+        _cr_repair_both(status, l, r, &feat);
         _cr_recalc_midline(l, r);
 
         /* 判断是否完全恢复正常 */
@@ -213,10 +222,17 @@ static void _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f)
     for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--)
     {
         int16 delta = (int16)l[row] - (int16)l[row - 1];
-        if (delta > CROSS2_BREAK_THRESH&& row >= 30)
+        int16 delta2_1 = (int16)l[row - 1] - (int16)l[row];
+        int16 delta2_2 = (int16)l[row - 2] - (int16)l[row - 1];
+        if (delta > CROSS2_BREAK_THRESH)
         {
             f->l_break_row   = row;
             f->l_break_delta = delta;
+        }
+
+        if (delta2_1 > CROSS2_BREAK_THRESH && delta2_2 < CROSS2_BREAK_THRESH)
+        {
+            f->l_break_row2   = row - 1;
             break;
         }
     }
@@ -225,10 +241,17 @@ static void _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f)
     for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--)
     {
         int16 delta = (int16)r[row - 1] - (int16)r[row];
-        if (delta > CROSS2_BREAK_THRESH && row >= 30)
+        int16 delta2_1 = (int16)r[row] - (int16)r[row - 1];
+        int16 delta2_2 = (int16)r[row - 1] - (int16)r[row - 2];
+        if (delta > CROSS2_BREAK_THRESH)
         {
             f->r_break_row   = row;
             f->r_break_delta = delta;
+        }
+
+        if (delta2_1 > CROSS2_BREAK_THRESH && delta2_2 < CROSS2_BREAK_THRESH)
+        {
+            f->r_break_row2   = row - 1;
             break;
         }
     }
@@ -343,11 +366,12 @@ static void _cr_extract_corner(uint8 (*img)[MT9V03X_W], Cross2Feature *f)
  * 取 [break_row - FIT_LEN, break_row - 2] 这段边线数据拟合 y = k*x + b
  * 用于向下延伸补线
  *--------------------------------------------------------------------------*/
-static void _cr_calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept)
+static void _cr_calc_slope(uint8 status, uint16 *border, uint8 break_row,uint8 break_row2, float *slope, float *intercept)
 {
     int16  i;
-    uint8  start_row = break_row + CROSS2_FIT_LEN;
-    uint8  end_row   = break_row + 2;
+    int16  ref_row   = (int16)break_row;
+    int16  start_row = (int16)break_row + CROSS2_FIT_LEN;
+    int16  end_row   = (int16)break_row + 2;
     float  sum_x  = 0;
     float  sum_y  = 0;
     float  sum_xy = 0;
@@ -356,13 +380,36 @@ static void _cr_calc_slope(uint16 *border, uint8 break_row, float *slope, float 
     float  x;
     float  y;
     float  denom;
+    (void)status;
 
+    *slope     = 0;
+    *intercept = (float)border[break_row];
+    //下断点触底时，改用上断点拟合
+    if (cross2_state == CROSS2_RECOVER)
+    {
+        ref_row = (int16)break_row2;
+        if (ref_row <= CROSS2_SCAN_TOP + 1)
+        {
+            return;
+        }
+        start_row = ref_row - 2;
+        end_row   = ref_row - CROSS2_FIT_LEN;
+    }
+    else if (ref_row <= 0)
+    {
+        return;
+    }
+
+    if (start_row > CROSS2_SCAN_BOT)
+        start_row = CROSS2_SCAN_BOT;
+    if (end_row > CROSS2_SCAN_BOT)
+        end_row = CROSS2_SCAN_BOT;
     if (start_row < CROSS2_SCAN_TOP)
         start_row = CROSS2_SCAN_TOP;
-    if (end_row <= start_row)
+    if (end_row < CROSS2_SCAN_TOP)
+        end_row = CROSS2_SCAN_TOP;
+    if (start_row < end_row)
     {
-        *slope     = 0;
-        *intercept = (float)border[break_row];
         return;
     }
 
@@ -386,7 +433,7 @@ static void _cr_calc_slope(uint16 *border, uint8 break_row, float *slope, float 
     else
     {
         *slope     = 0;
-        *intercept = (float)border[break_row];
+        *intercept = (float)border[ref_row];
     }
 }
 
@@ -439,20 +486,23 @@ static uint8 _cr_check_entry(Cross2Feature *f)
 static uint8 _cr_check_recover(Cross2Feature *f)
 {
     uint8 breaks_gone = 0;
-    uint8 width_ok = 0;
+    uint8 in_break = 0;
     uint8 lost_ok = 0;
-    /* 断口消失或变弱 */
-    breaks_gone = (f->l_break_row == 0 && f->r_break_row == 0) ? 1 : 0;
+    // /* 断口消失或变弱 */
+    // breaks_gone = (f->l_break_row == 0 && f->r_break_row == 0) ? 1 : 0;
 
-    /* 过宽行数减少 */
-    width_ok = (f->wide_cnt < CROSS2_WIDE_CNT_MIN / 2) ? 1 : 0;
+    // /* 过宽行数减少 */
+    // width_ok = (f->wide_cnt < CROSS2_WIDE_CNT_MIN / 2) ? 1 : 0;
 
-    /* 丢线减少 */
-    lost_ok = (f->l_lost_cnt < CROSS2_LOST_THRESH &&
-                     f->r_lost_cnt < CROSS2_LOST_THRESH) ? 1 : 0;
+    // /* 丢线减少 */
+    // lost_ok = (f->l_lost_cnt < CROSS2_LOST_THRESH &&
+    //                  f->r_lost_cnt < CROSS2_LOST_THRESH) ? 1 : 0;
 
-    if (breaks_gone && width_ok)  return 1;
-    if (breaks_gone && lost_ok)   return 1;
+    // if (breaks_gone && width_ok)  return 1;
+    // if (breaks_gone && lost_ok)   return 1;
+    breaks_gone = (f->l_break_row <=  10|| f->r_break_row <=  10) ? 1 : 0;
+    in_break = (f->l_break_row2 > 0 && f->r_break_row2 > 0) ? 1 : 0;
+    if (breaks_gone && in_break)  return 1;
 
     return 0;
 }
@@ -472,34 +522,59 @@ static uint8 _cr_check_recover(Cross2Feature *f)
  *     不修改边线
  *   额外兜底: 如果丢线过多，强制补线（用对侧边线 - 估计宽度）
  *--------------------------------------------------------------------------*/
-static void _cr_repair_both(uint16 *l, uint16 *r, Cross2Feature *f)
+static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f)
 {
-    uint8 row;
+    int16 row;
     uint8 l_bp; 
     uint8 r_bp;
+    uint8 l_bp2;
+    uint8 r_bp2;
     uint16 est_w;
+    int16 repair_start = -1;
+    int16 repair_stop = -1;
     float k;
     float b;
+    (void)status;
     /* 确定左侧断点行: 优先用边线断口，备选链码断点 */
     l_bp = f->l_break_row;
+    l_bp2 = f->l_break_row2;
     if (!l_bp) l_bp = f->l_dir_break_row;
 
     /* 确定右侧断点行 */
     r_bp = f->r_break_row;
+    r_bp2 = f->r_break_row2;
     if (!r_bp) r_bp = f->r_dir_break_row;
 
     /* ---------- 左侧补线 ---------- */
-    if (l_bp > CROSS2_FIT_LEN + CROSS2_SCAN_TOP)
+    if (l_bp > CROSS2_FIT_LEN + CROSS2_SCAN_TOP ||l_bp2 >0)
     {
         k = f->l_slope;
         b = f->l_intercept;
 
-        /* 从断点往下补到底部 */
-        for (row = l_bp; row >= l_bp+15; row--)
-        {
-            int16 val = (int16)(k * row + b);
-            l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+        if(cross2_state == CROSS2_RECOVER){
+            //断点触底时，改用上断点补线补到底部
+            repair_start = (l_bp2 > 0) ? (int16)l_bp2 : (int16)l_bp;
+            if (repair_start < CROSS2_SCAN_TOP)
+            {
+                repair_start = CROSS2_SCAN_TOP;
+            }
+            for (row = repair_start; row <=CROSS2_SCAN_BOT ; row++)
+            {
+                int16 val = (int16)(k * row + b);
+                l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+            }
+        }else{
+            /* 从下断点往上补线 */
+            repair_start = (l_bp > 0) ? (int16)l_bp : (int16)l_bp2;
+            repair_stop = (repair_start > CROSS2_FIX_LEN) ? (repair_start - CROSS2_FIX_LEN) : 0;
+            for (row = repair_start; row >= repair_stop; row--)
+            {
+                int16 val = (int16)(k * row + b);
+                l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+            }
         }
+
+
     }
     else if (f->l_lost_cnt > CROSS2_LOST_THRESH)
     {
@@ -517,15 +592,32 @@ static void _cr_repair_both(uint16 *l, uint16 *r, Cross2Feature *f)
     }
 
     /* ---------- 右侧补线 ---------- */
-    if (r_bp > CROSS2_FIT_LEN + CROSS2_SCAN_TOP)
+    if (r_bp > CROSS2_FIT_LEN + CROSS2_SCAN_TOP ||r_bp2 >0)
     {
         k = f->r_slope;
         b = f->r_intercept;
 
-        for (row = r_bp; row >= r_bp+15; row--)
-        {
-            int16 val = (int16)(k * row + b);
-            r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+        if(cross2_state == CROSS2_RECOVER){
+            //断点触底时，改用上断点补线补到底部
+            repair_start = (r_bp2 > 0) ? (int16)r_bp2 : (int16)r_bp;
+            if (repair_start < CROSS2_SCAN_TOP)
+            {
+                repair_start = CROSS2_SCAN_TOP;
+            }
+            for (row = repair_start; row <=CROSS2_SCAN_BOT ; row++)
+            {
+                int16 val = (int16)(k * row + b);
+                r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+            }
+        }else{
+            /* 从下断点往上补线 */
+            repair_start = (r_bp > 0) ? (int16)r_bp : (int16)r_bp2;
+            repair_stop = (repair_start > CROSS2_FIX_LEN) ? (repair_start - CROSS2_FIX_LEN) : 0;
+            for (row = repair_start; row >= repair_stop; row--)
+            {
+                int16 val = (int16)(k * row + b);
+                r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+            }
         }
     }
     else if (f->r_lost_cnt > CROSS2_LOST_THRESH)

@@ -44,6 +44,8 @@
 #pragma warning disable = 177
 #pragma warning disable = 183
 
+#define UART_DMA_WAIT_TIMEOUT    (200000UL)
+
 
 uart_callback_function uart_rx_handlers[8] = {0};
 
@@ -158,6 +160,33 @@ uint8 xdata uart_rx_buff[UART_RESERVE][1] = {0};
 
     
 
+static uint8 uart_wait_tx_done(uart_index_enum uart_n)
+{
+    uint32 timeout_count = UART_DMA_WAIT_TIMEOUT;
+
+    while(timeout_count--)
+    {
+        if(DMA_URXT_STA(uart_n) & 0x01)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static uint8 uart_wait_rx_done(uart_index_enum uart_n)
+{
+    uint32 timeout_count = UART_DMA_WAIT_TIMEOUT;
+
+    while(timeout_count--)
+    {
+        if(DMA_URXR_STA(uart_n) & 0x03)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
 //#define DMA_URXT_CFG(uart_n)		(*(unsigned char volatile far *)(0x7efa30 + uart_n*0x10))
 //#define DMA_URXT_CR(uart_n)     	(*(unsigned char volatile far *)(0x7efa31 + uart_n*0x10))
 //#define DMA_URXT_STA(uart_n)    	(*(unsigned char volatile far *)(0x7efa32 + uart_n*0x10))
@@ -210,7 +239,12 @@ void uart_write_buffer(uart_index_enum uart_n, const uint8 *buff, uint16 len)
         DMA_URXT_TXAL(uart_n) = (uint8)((uint16)tmp_buff);
         DMA_URXT_CR(uart_n) = 0xC0; 			            // 使能DMA TX功能
 
-        while(!(DMA_URXT_STA(uart_n) & 0x01));	            // 等待发送完成
+        if(!uart_wait_tx_done(uart_n))
+        {
+            DMA_URXT_CR(uart_n) = 0x00;
+            DMA_URXT_STA(uart_n) = 0x00;
+            return;
+        }
 
         DMA_URXT_CR(uart_n) = 0x00;				            // 关闭DMA TX
 	}
@@ -288,8 +322,12 @@ uint8 uart_read_byte(uart_index_enum uart_n)
 	uint8 dat;
 	
 	// 等待串口有数据
-	while(!(DMA_URXR_STA(uart_n)&0x03));
-
+    if(!uart_wait_rx_done(uart_n))
+    {
+        DMA_URXR_STA(uart_n) = 0x00;
+        uart_rx_start_buff(uart_n);
+        return 0;
+    }
 	// 读取数据
 	dat = uart_rx_buff[uart_n][0];
 		

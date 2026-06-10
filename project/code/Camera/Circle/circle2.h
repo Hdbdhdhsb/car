@@ -58,7 +58,7 @@ extern uint8         cir2_entry_cnt;    // 入口计数：第1次入口观察 / 
 /*======================== 配置参数（可在 .c 中修改） ========================*/
 #define CIR2_BREAK_THRESH       8       // 边线跳变阈值
 #define CIR2_INFLECT_RANGE      5       // 拐点搜索邻域
-//#define CIR2_LOST_THRESH        15      // 丢线阈值（认定为大面积丢线）
+#define CIR2_LOST_THRESH        15      // 丢线阈值（认定为大面积丢线）
 #define CIR2_WIDTH_NARROW       20      // 赛道过窄阈值
 #define CIR2_WIDTH_WIDE         120     // 赛道过宽阈值
 #define CIR2_TIMEOUT_MAX        80      // 超时帧数上限（防卡死）

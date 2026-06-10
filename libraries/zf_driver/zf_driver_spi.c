@@ -42,6 +42,8 @@
 #pragma warning disable = 183
 #pragma warning disable = 177
 
+#define SPI_DMA_WAIT_TIMEOUT     (200000UL)
+
 /*
 #define SPI0_WRITE_DAT(dat) 		\
 		SPSTAT = 0xc0;              \
@@ -195,6 +197,19 @@ const vuint32 SPIX_CLKDIV_ADDR[] =
 #define HSSPIX_CFG2(pin)        (*(vuint8 far *)(HSSPIX_CFG2_ADDR[pin]))
 #define SPIX_CLKDIV(pin)        (*(vuint8 far *)(SPIX_CLKDIV_ADDR[pin]))
 
+static uint8 spi_dma_wait_done(spi_index_enum spi_n)
+{
+    uint32 timeout_count = SPI_DMA_WAIT_TIMEOUT;
+
+    while(timeout_count--)
+    {
+        if(DMA_SPIX_STA(spi_n) & 0x01)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
 //-------------------------------------------------------------------------------------------------------------------
 // 函数简介     SPI传输接口
 // 返回参数     void
@@ -230,7 +245,12 @@ void spi_dma_transfer(spi_index_enum spi_n, uint8 *write_buffer, uint8 *read_buf
 			
             DMA_SPIX_CFG(spi_n)  = 1 << 6;                                  		// 发送数据
             DMA_SPIX_CR(spi_n)   = 0xC1;                                    		// 使能SPI_DMA 设置为主机模式 清空FIFO
-            while(!(DMA_SPIX_STA(spi_n) & 0x01));		
+            if(!spi_dma_wait_done(spi_n))
+            {
+                DMA_SPIX_CR(spi_n) = 0x00;
+                DMA_SPIX_STA(spi_n) = 0;
+                return;
+            }
             DMA_SPIX_STA(spi_n)  = 0;                                       		// 清空标志位
 					
 			read_idx += tmp_len;
@@ -247,7 +267,12 @@ void spi_dma_transfer(spi_index_enum spi_n, uint8 *write_buffer, uint8 *read_buf
 		
 		DMA_SPIX_CFG(spi_n)  = 1 << 6 | 1 <<5;                          // 发送数据，读取数据
 		DMA_SPIX_CR(spi_n)   = 0xC1;                                    // 使能SPI_DMA 设置为主机模式 清空FIFO
-		while(!(DMA_SPIX_STA(spi_n) & 0x01));
+            if(!spi_dma_wait_done(spi_n))
+            {
+                DMA_SPIX_CR(spi_n) = 0x00;
+                DMA_SPIX_STA(spi_n) = 0;
+                return;
+            }
 		DMA_SPIX_STA(spi_n)  = 0;                                       // 清空标志位
 	}
 }
@@ -284,7 +309,12 @@ void spi_dma_write(spi_index_enum spi_n, const uint8 *write_buffer, uint32 len)
 
             DMA_SPIX_CFG(spi_n)  = 1 << 6;                                  // 发送数据
             DMA_SPIX_CR(spi_n)   = 0xC1;                                    // 使能SPI_DMA 设置为主机模式 清空FIFO
-            while(!(DMA_SPIX_STA(spi_n) & 0x01));
+            if(!spi_dma_wait_done(spi_n))
+            {
+                DMA_SPIX_CR(spi_n) = 0x00;
+                DMA_SPIX_STA(spi_n) = 0;
+                return;
+            }
             DMA_SPIX_STA(spi_n)  = 0;                                       // 清空标志位
         }
     }
@@ -298,7 +328,12 @@ void spi_dma_write(spi_index_enum spi_n, const uint8 *write_buffer, uint32 len)
 
         DMA_SPIX_CFG(spi_n)  = 1 << 6;                                  // 发送数据
         DMA_SPIX_CR(spi_n)   = 0xC1;                                    // 使能SPI_DMA 设置为主机模式 清空FIFO
-        while(!(DMA_SPIX_STA(spi_n) & 0x01));
+            if(!spi_dma_wait_done(spi_n))
+            {
+                DMA_SPIX_CR(spi_n) = 0x00;
+                DMA_SPIX_STA(spi_n) = 0;
+                return;
+            }
         DMA_SPIX_STA(spi_n)  = 0;                                       // 清空标志位
     }
 }
@@ -317,7 +352,12 @@ void spi_dma_read(spi_index_enum spi_n, const uint8 *read_buffer, uint32 len)
 
     DMA_SPIX_CFG(spi_n)  = 1 << 5;                                  // 读取数据
     DMA_SPIX_CR(spi_n)   = 0xC1;                                    // 使能SPI_DMA 设置为主机模式 清空FIFO
-    while(!(DMA_SPIX_STA(spi_n) & 0x01));
+            if(!spi_dma_wait_done(spi_n))
+            {
+                DMA_SPIX_CR(spi_n) = 0x00;
+                DMA_SPIX_STA(spi_n) = 0;
+                return;
+            }
     DMA_SPIX_STA(spi_n)  = 0;                                       // 清空标志位
 }
 

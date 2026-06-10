@@ -9,6 +9,8 @@ extern float track_error;
 uint32 g_sysTick_ms = 0;
 
 #define BOUNDARY_NUM            MT9V03X_H
+#define ASSISTANT_SEND_DIV      3U
+#define ASSISTANT_SEND_IMAGE    1U
 
 uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
 uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
@@ -39,6 +41,7 @@ void main(void)
     static uint32 current_tick = 0;
     static uint32 last_10ms_tick = 0;
     static uint32 last_200ms_tick = 0;
+    static uint8 assistant_send_divider = 0;
 
     clock_init(SYSTEM_CLOCK_96M); 				/* ʱ�����ü�ϵͳ��ʼ��<��ر���?> */
     debug_init();    
@@ -79,24 +82,15 @@ void main(void)
     seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_WIFI_SPI);
 
     pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                     		
-    gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL); 
+    //gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL);
+    uart_init(UART_4, 115200, UART4_TX, UART4_RX);
     uart_init(UART_2, 115200, UART2_TX, UART2_RX);
-    /* ��ʼ��״̬�� */
     state_machine_init();
 
     while(g_sysTick_ms <=1500);                         /*������Է��밴����⣬Ȼ��Ŀǰ�������ϰ������������յģ�����ʱ����*/                   		
     
 
-    /* ��ʼ������ͷ */
-    while(1)
-    {
-        if(mt9v03x_init())
-            gpio_toggle_level(LED1);                                            /* ��ת LED ����������? ���� LED ���� ��ʼ����������ƻ����ĺ���? */
-        else
-            break;
-        system_delay_ms(500);                                                  /* ���Ʊ�ʾ�쳣 */
-    }
-    seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, mt9v03x_image[0], MT9V03X_W, MT9V03X_H);
+    seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, ASSISTANT_SEND_IMAGE ? mt9v03x_image[0] : NULL, MT9V03X_W, MT9V03X_H);
     seekfree_assistant_camera_boundary_config(X_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, xy_x3_boundary, NULL, NULL, NULL);
     while(1)
     {
@@ -110,16 +104,21 @@ void main(void)
 
         if((current_tick - last_200ms_tick) >= 200){
             last_200ms_tick = current_tick; 
-            gpio_toggle_level(IO_P33); 
+            //gpio_toggle_level(IO_P33);
         }
 
         if(mt9v03x_finish_flag)
         {
             mt9v03x_finish_flag = 0;
             image_process();
-            update_camera_boundary_overlay();
-            seekfree_assistant_camera_send();
-            send_error_data(track_error, 0.0f, UART_2);
+            assistant_send_divider++;
+            if(assistant_send_divider >= ASSISTANT_SEND_DIV)
+            {
+                assistant_send_divider = 0;
+                update_camera_boundary_overlay();
+                seekfree_assistant_camera_send();
+            }
+            send_error_data(track_error, 5.0f, UART_4);
         }
 
     }

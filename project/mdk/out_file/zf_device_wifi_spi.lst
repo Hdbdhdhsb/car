@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 1   
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE zf_device_wifi_spi
@@ -66,7 +66,7 @@ stmt  level    source
    49          *********************************************************************************************************
              -************/
    50          
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 2   
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 2   
 
    51          #include "stdio.h"
    52          #include "zf_common_clock.h"
@@ -134,7 +134,7 @@ stmt  level    source
   112          //-------------------------------------------------------------------------------------------------------
              -------------
   113          // º¯Êý¼ò½é     Ð´ÈëÊý¾Ýµ½WIFI SPI
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 3   
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 3   
 
   114          // ²ÎÊýËµÃ÷     *buffer1        µÚÒ»×éÐèÒª·¢ËÍµÄÊý¾Ý»º³åÇøµØÖ·
   115          // ²ÎÊýËµÃ÷     length1         µÚÒ»×éÊý¾Ý³¤¶È
@@ -202,7 +202,7 @@ stmt  level    source
   169          static void wifi_spi_dma_transfer_data (const uint8 *write_data, wifi_spi_packets_struct *read_data, uint
              -16 length)
   170          {
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 4   
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 4   
 
   171   1          WIFI_SPI_CS(0);
   172   1          
@@ -270,7 +270,7 @@ stmt  level    source
   227   3              }
   228   2              // ½ÓÊÕÓ¦´ðÐÅºÅ
   229   2      
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 5   
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 5   
 
   230   2              head.command = WIFI_SPI_DATA;
   231   2              head.length = 0;
@@ -319,577 +319,584 @@ stmt  level    source
   271   2              read_data->head.command = WIFI_SPI_DATA;
   272   2              read_data->head.length = 0;
   273   2              wifi_spi_dma_transfer_command(read_data, WIFI_SPI_RECVIVE_SIZE);
-  274   2              return_state = 0;
-  275   2          }while(0);
-  276   1          return return_state;
-  277   1      }
-  278          
-  279          //-------------------------------------------------------------------------------------------------------
+  274   2              if(WIFI_SPI_DATA != read_data->head.command)
+  275   2              {
+  276   3                  return_state = 0;
+  277   3              }
+  278   2          }while(0);
+  279   1          return return_state;
+  280   1      }
+  281          
+  282          //-------------------------------------------------------------------------------------------------------
              -------------
-  280          // º¯Êý¼ò½é     WIFI SPI ¹Ì¼þ°æ±¾»ñÈ¡
-  281          // ²ÎÊýËµÃ÷     void            ¶Ë¿ÚºÅ
-  282          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  283          // Ê¹ÓÃÊ¾Àý     
-  284          // ±¸×¢ÐÅÏ¢     µ÷ÓÃº¯ÊýÖ®ºó£¬¹Ì¼þ°æ±¾ÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_versionÊý×éÖÐ
-  285          //-------------------------------------------------------------------------------------------------------
+  283          // º¯Êý¼ò½é     WIFI SPI ¹Ì¼þ°æ±¾»ñÈ¡
+  284          // ²ÎÊýËµÃ÷     void            ¶Ë¿ÚºÅ
+  285          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  286          // Ê¹ÓÃÊ¾Àý     
+  287          // ±¸×¢ÐÅÏ¢     µ÷ÓÃº¯ÊýÖ®ºó£¬¹Ì¼þ°æ±¾ÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_versionÊý×éÖÐ
+  288          //-------------------------------------------------------------------------------------------------------
              -------------
-  286          static uint8 wifi_spi_get_version (void)
-  287          {
-  288   1          uint8 return_state;
-  289   1          wifi_spi_packets_struct temp_packets = {0};
-  290   1      
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 6   
+  289          static uint8 wifi_spi_get_version (void)
+  290          {
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 6   
 
-  291   1          return_state = wifi_spi_get_parameter(WIFI_SPI_GET_VERSION, &temp_packets, OTHER_TIME_OUT);
-  292   1          if((0 == return_state) && (WIFI_SPI_REPLY_VERSION == temp_packets.head.command))
-  293   1          {
-  294   2              memcpy(wifi_spi_version, temp_packets.buffer, temp_packets.head.length);
-  295   2          }
-  296   1          return return_state;
-  297   1      }
-  298          
-  299          //-------------------------------------------------------------------------------------------------------
+  291   1          uint8 return_state;
+  292   1          wifi_spi_packets_struct temp_packets = {0};
+  293   1      
+  294   1          return_state = wifi_spi_get_parameter(WIFI_SPI_GET_VERSION, &temp_packets, OTHER_TIME_OUT);
+  295   1          if((0 == return_state) && (WIFI_SPI_REPLY_VERSION == temp_packets.head.command))
+  296   1          {
+  297   2              memcpy(wifi_spi_version, temp_packets.buffer, temp_packets.head.length);
+  298   2          }
+  299   1          return return_state;
+  300   1      }
+  301          
+  302          //-------------------------------------------------------------------------------------------------------
              -------------
-  300          // º¯Êý¼ò½é     WIFI SPI MACµØÖ·»ñÈ¡
-  301          // ²ÎÊýËµÃ÷     void            ¶Ë¿ÚºÅ
-  302          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  303          // Ê¹ÓÃÊ¾Àý     
-  304          // ±¸×¢ÐÅÏ¢     µ÷ÓÃº¯ÊýÖ®ºó£¬MACµØÖ·ÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_mac_addrÊý×éÖÐ
-  305          //-------------------------------------------------------------------------------------------------------
+  303          // º¯Êý¼ò½é     WIFI SPI MACµØÖ·»ñÈ¡
+  304          // ²ÎÊýËµÃ÷     void            ¶Ë¿ÚºÅ
+  305          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  306          // Ê¹ÓÃÊ¾Àý     
+  307          // ±¸×¢ÐÅÏ¢     µ÷ÓÃº¯ÊýÖ®ºó£¬MACµØÖ·ÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_mac_addrÊý×éÖÐ
+  308          //-------------------------------------------------------------------------------------------------------
              -------------
-  306          static uint8 wifi_spi_get_mac_addr (void)
-  307          {
-  308   1          uint8 return_state;
-  309   1          wifi_spi_packets_struct temp_packets;
-  310   1      
-  311   1          return_state = wifi_spi_get_parameter(WIFI_SPI_GET_MAC_ADDR, &temp_packets, OTHER_TIME_OUT);
-  312   1          if((0 == return_state) && (WIFI_SPI_REPLY_MAC_ADDR == temp_packets.head.command))
-  313   1          {
-  314   2              memcpy(wifi_spi_mac_addr, temp_packets.buffer, temp_packets.head.length);
-  315   2          }
-  316   1          return return_state;
-  317   1      }
-  318          
-  319          //-------------------------------------------------------------------------------------------------------
+  309          static uint8 wifi_spi_get_mac_addr (void)
+  310          {
+  311   1          uint8 return_state;
+  312   1          wifi_spi_packets_struct temp_packets = {0};
+  313   1      
+  314   1          return_state = wifi_spi_get_parameter(WIFI_SPI_GET_MAC_ADDR, &temp_packets, OTHER_TIME_OUT);
+  315   1          if((0 == return_state) && (WIFI_SPI_REPLY_MAC_ADDR == temp_packets.head.command))
+  316   1          {
+  317   2              memcpy(wifi_spi_mac_addr, temp_packets.buffer, temp_packets.head.length);
+  318   2          }
+  319   1          return return_state;
+  320   1      }
+  321          
+  322          //-------------------------------------------------------------------------------------------------------
              -------------
-  320          // º¯Êý¼ò½é     WIFI SPI IPµØÖ·Óë¶Ë¿ÚºÅ»ñÈ¡
-  321          // ²ÎÊýËµÃ÷     void            ¶Ë¿ÚºÅ
-  322          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  323          // Ê¹ÓÃÊ¾Àý     
-  324          // ±¸×¢ÐÅÏ¢     µ÷ÓÃº¯ÊýÖ®ºó£¬IPµØÖ·Óë¶Ë¿ÚºÅÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_ip_addr_portÊý×éÖÐ
-  325          //              ÐèÒªÔÚÁ¬½ÓSocketÖ®ºóµ÷ÓÃ´Ëº¯Êý²ÅÄÜÕý³£»ñÈ¡ÐÅÏ¢
-  326          //-------------------------------------------------------------------------------------------------------
+  323          // º¯Êý¼ò½é     WIFI SPI IPµØÖ·Óë¶Ë¿ÚºÅ»ñÈ¡
+  324          // ²ÎÊýËµÃ÷     void            ¶Ë¿ÚºÅ
+  325          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  326          // Ê¹ÓÃÊ¾Àý     
+  327          // ±¸×¢ÐÅÏ¢     µ÷ÓÃº¯ÊýÖ®ºó£¬IPµØÖ·Óë¶Ë¿ÚºÅÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_ip_addr_portÊý×éÖÐ
+  328          //              ÐèÒªÔÚÁ¬½ÓSocketÖ®ºóµ÷ÓÃ´Ëº¯Êý²ÅÄÜÕý³£»ñÈ¡ÐÅÏ¢
+  329          //-------------------------------------------------------------------------------------------------------
              -------------
-  327          static uint8 wifi_spi_get_ip_addr_port (void)
-  328          {
-  329   1          uint8 return_state;
-  330   1          wifi_spi_packets_struct temp_packets;
-  331   1      
-  332   1          return_state = wifi_spi_get_parameter(WIFI_SPI_GET_IP_ADDR, &temp_packets, OTHER_TIME_OUT);
-  333   1          if((0 == return_state) && (WIFI_SPI_REPLY_IP_ADDR == temp_packets.head.command))
-  334   1          {
-  335   2              memcpy(wifi_spi_ip_addr_port, temp_packets.buffer, temp_packets.head.length);
-  336   2          }
-  337   1          return return_state;
-  338   1      }
-  339          
-  340          //-------------------------------------------------------------------------------------------------------
+  330          static uint8 wifi_spi_get_ip_addr_port (void)
+  331          {
+  332   1          uint8 return_state;
+  333   1          wifi_spi_packets_struct temp_packets = {0};
+  334   1      
+  335   1          return_state = wifi_spi_get_parameter(WIFI_SPI_GET_IP_ADDR, &temp_packets, OTHER_TIME_OUT);
+  336   1          if((0 == return_state) && (WIFI_SPI_REPLY_IP_ADDR == temp_packets.head.command))
+  337   1          {
+  338   2              memcpy(wifi_spi_ip_addr_port, temp_packets.buffer, temp_packets.head.length);
+  339   2          }
+  340   1          return return_state;
+  341   1      }
+  342          
+  343          //-------------------------------------------------------------------------------------------------------
              -------------
-  341          // º¯Êý¼ò½é     WIFI SPI »ñÈ¡ÏµÍ³Ê±¼ä
-  342          // ²ÎÊýËµÃ÷     time_format     Ê±¼ä¸ñÊ½
-  343          // ·µ»Ø²ÎÊý     *buffer         ±£´æÊ±¼ä×Ö·û´®µØÖ· »º³åÇø´óÐ¡ÖÁÉÙÐèÒª30¸ö×Ö½Ú
-  344          // ·µ»Ø²ÎÊý     buffer_size     »º³åÇø´óÐ¡ 
-  345          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  346          // Ê¹ÓÃÊ¾Àý     
-  347          // ±¸×¢ÐÅÏ¢     ÐèÒªÁ¬½ÓÓÐÍøÂçµÄÈÈµãÖ®ºó²ÅÄÜ»ñÈ¡µ½ÕýÈ·µÄÊ±¼ä£¬²¢ÇÒÔÚµ÷ÓÃÕâ¸öº¯ÊýÖ®Ç°ÐèÒªÈ·±£WIFIÄ£¿éÖÐÐèÒ
+  344          // º¯Êý¼ò½é     WIFI SPI »ñÈ¡ÏµÍ³Ê±¼ä
+  345          // ²ÎÊýËµÃ÷     time_format     Ê±¼ä¸ñÊ½
+  346          // ·µ»Ø²ÎÊý     *buffer         ±£´æÊ±¼ä×Ö·û´®µØÖ· »º³åÇø´óÐ¡ÖÁÉÙÐèÒª30¸ö×Ö½Ú
+  347          // ·µ»Ø²ÎÊý     buffer_size     »º³åÇø´óÐ¡ 
+  348          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  349          // Ê¹ÓÃÊ¾Àý     
+  350          // ±¸×¢ÐÅÏ¢     ÐèÒªÁ¬½ÓÓÐÍøÂçµÄÈÈµãÖ®ºó²ÅÄÜ»ñÈ¡µ½ÕýÈ·µÄÊ±¼ä£¬²¢ÇÒÔÚµ÷ÓÃÕâ¸öº¯ÊýÖ®Ç°ÐèÒªÈ·±£WIFIÄ£¿éÖÐÐèÒ
              -ª½ÓÊÕµÄÊý¾ÝÒÑ¾­È«²¿½ÓÊÕÍê±Ï
-  348          // ±¸×¢ÐÅÏ¢     ½öWIFI SPI Íâ½ÓÌìÏß°æ±¾Ö§³Ö
-  349          // ±¸×¢ÐÅÏ¢     Êä³öµÄÐÅÏ¢Îª×Ö·û´®ÐÅÏ¢£¬¿ÉÖ±½Óprintfµ½´®¿ÚÖúÊÖ²é¿´
-  350          //-------------------------------------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 7   
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 7   
 
+  351          // ±¸×¢ÐÅÏ¢     ½öWIFI SPI Íâ½ÓÌìÏß°æ±¾Ö§³Ö
+  352          // ±¸×¢ÐÅÏ¢     Êä³öµÄÐÅÏ¢Îª×Ö·û´®ÐÅÏ¢£¬¿ÉÖ±½Óprintfµ½´®¿ÚÖúÊÖ²é¿´
+  353          //-------------------------------------------------------------------------------------------------------
              -------------
-  351          uint8 wifi_spi_get_time (wifi_spi_time_enum time_format, char *buffer, uint8 buffer_size)
-  352          {
-  353   1          uint8 return_state = 1;
-  354   1          wifi_spi_packets_struct temp_packets;
-  355   1          uint8 send_cmd, receive_cmd;
-  356   1          
-  357   1          // ½ÓÊÕÊ±¼äµÄÊý×é±ØÐë´óÓÚ30¸ö×Ö½Ú
-  358   1          // ²¢ÇÒÄ£¿é¹Ì¼þ±ØÐëÊÇV2°æ±¾
-  359   1          if((30 <= buffer_size) && (!strncmp(wifi_spi_version, "V2", 2)))
-  360   1          {
-  361   2              send_cmd = WIFI_SPI_GET_TIME1 + time_format - WIFI_SPI_UTC_0;
-  362   2              receive_cmd = WIFI_SPI_REPLY_TIME1 + time_format - WIFI_SPI_UTC_0;
-  363   2      
-  364   2              return_state = wifi_spi_get_parameter(send_cmd, &temp_packets, OTHER_TIME_OUT);
-  365   2              if((0 == return_state) && (receive_cmd == temp_packets.head.command))
-  366   2              {
-  367   3                  return_state = strncmp((const char *)temp_packets.buffer, "OK", 2);
-  368   3                  if(0 == return_state)
-  369   3                  {
-  370   4                      memcpy(buffer, &temp_packets.buffer[3], temp_packets.head.length - 3);
-  371   4                      buffer[temp_packets.head.length - 3] = 0;
-  372   4                  }
-  373   3              }
-  374   2          }
-  375   1          return return_state;
-  376   1      }
-  377          
-  378          //-------------------------------------------------------------------------------------------------------
+  354          uint8 wifi_spi_get_time (wifi_spi_time_enum time_format, char *buffer, uint8 buffer_size)
+  355          {
+  356   1          uint8 return_state = 1;
+  357   1          wifi_spi_packets_struct temp_packets = {0};
+  358   1          uint8 send_cmd, receive_cmd;
+  359   1          
+  360   1          // ½ÓÊÕÊ±¼äµÄÊý×é±ØÐë´óÓÚ30¸ö×Ö½Ú
+  361   1          // ²¢ÇÒÄ£¿é¹Ì¼þ±ØÐëÊÇV2°æ±¾
+  362   1          if((30 <= buffer_size) && (!strncmp(wifi_spi_version, "V2", 2)))
+  363   1          {
+  364   2              send_cmd = WIFI_SPI_GET_TIME1 + time_format - WIFI_SPI_UTC_0;
+  365   2              receive_cmd = WIFI_SPI_REPLY_TIME1 + time_format - WIFI_SPI_UTC_0;
+  366   2      
+  367   2              return_state = wifi_spi_get_parameter(send_cmd, &temp_packets, OTHER_TIME_OUT);
+  368   2              if((0 == return_state) && (receive_cmd == temp_packets.head.command))
+  369   2              {
+  370   3                  return_state = strncmp((const char *)temp_packets.buffer, "OK", 2);
+  371   3                  if(0 == return_state)
+  372   3                  {
+  373   4                      memcpy(buffer, &temp_packets.buffer[3], temp_packets.head.length - 3);
+  374   4                      buffer[temp_packets.head.length - 3] = 0;
+  375   4                  }
+  376   3              }
+  377   2          }
+  378   1          return return_state;
+  379   1      }
+  380          
+  381          //-------------------------------------------------------------------------------------------------------
              -------------
-  379          // º¯Êý¼ò½é     WIFI SPI É¨ÃèÈÈµã
-  380          // ²ÎÊýËµÃ÷     *buffer         ±£´æÉ¨Ãèµ½µÄÈÈµãÐÅÏ¢ °üº¬Ãû³ÆÓëÐÅºÅÇ¿¶È£¬Ã¿¸öÐÅºÅÇ¿¶ÈºóÃæ»á¸úÒ»¸ö»»ÐÐ·û
-  381          // ²ÎÊýËµÃ÷     buffer_size     »º³åÇøµÄ³¤¶È
-  382          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  383          // Ê¹ÓÃÊ¾Àý     
-  384          // ±¸×¢ÐÅÏ¢     ½öWIFI SPI Íâ½ÓÌìÏß°æ±¾Ö§³Ö
-  385          // ±¸×¢ÐÅÏ¢     Êä³öµÄÐÅÏ¢Îª×Ö·û´®ÐÅÏ¢£¬¿ÉÖ±½Óprintfµ½´®¿ÚÖúÊÖ²é¿´
-  386          // ±¸×¢ÐÅÏ¢     Ã¿Ò»ÐÐ°üº¬Ò»¸öwifiÃû³ÆÓëÃÜÂë 
-  387          //-------------------------------------------------------------------------------------------------------
+  382          // º¯Êý¼ò½é     WIFI SPI É¨ÃèÈÈµã
+  383          // ²ÎÊýËµÃ÷     *buffer         ±£´æÉ¨Ãèµ½µÄÈÈµãÐÅÏ¢ °üº¬Ãû³ÆÓëÐÅºÅÇ¿¶È£¬Ã¿¸öÐÅºÅÇ¿¶ÈºóÃæ»á¸úÒ»¸ö»»ÐÐ·û
+  384          // ²ÎÊýËµÃ÷     buffer_size     »º³åÇøµÄ³¤¶È
+  385          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  386          // Ê¹ÓÃÊ¾Àý     
+  387          // ±¸×¢ÐÅÏ¢     ½öWIFI SPI Íâ½ÓÌìÏß°æ±¾Ö§³Ö
+  388          // ±¸×¢ÐÅÏ¢     Êä³öµÄÐÅÏ¢Îª×Ö·û´®ÐÅÏ¢£¬¿ÉÖ±½Óprintfµ½´®¿ÚÖúÊÖ²é¿´
+  389          // ±¸×¢ÐÅÏ¢     Ã¿Ò»ÐÐ°üº¬Ò»¸öwifiÃû³ÆÓëÃÜÂë 
+  390          //-------------------------------------------------------------------------------------------------------
              -------------
-  388          uint8 wifi_spi_wifi_scan (char *buffer, uint16 buffer_size)
-  389          {
-  390   1          uint8 return_state = 0;
-  391   1      
-  392   1          
-  393   1          // Ä£¿é±ØÐëÊÇV2°æ±¾µÄ¹Ì¼þ²ÅÖ§³Ö´Ë¹¦ÄÜ
-  394   1          if(!strncmp(wifi_spi_version, "V2", 2))
-  395   1          {
-  396   2              return_state = wifi_spi_set_parameter(WIFI_SPI_SET_WIFI_SCAN, NULL, 0, WIFI_CONNECT_TIME_OUT);
-  397   2              
-  398   2              if(0 == return_state)
-  399   2              {
-  400   3              #if (0 == WIFI_SPI_READ_TRANSFER)
+  391          uint8 wifi_spi_wifi_scan (char *buffer, uint16 buffer_size)
+  392          {
+  393   1          uint8 return_state = 0;
+  394   1      
+  395   1          
+  396   1          // Ä£¿é±ØÐëÊÇV2°æ±¾µÄ¹Ì¼þ²ÅÖ§³Ö´Ë¹¦ÄÜ
+  397   1          if(!strncmp(wifi_spi_version, "V2", 2))
+  398   1          {
+  399   2              return_state = wifi_spi_set_parameter(WIFI_SPI_SET_WIFI_SCAN, NULL, 0, WIFI_CONNECT_TIME_OUT);
+  400   2              
+  401   2              if(0 == return_state)
+  402   2              {
+  403   3              #if (0 == WIFI_SPI_READ_TRANSFER)
                            wifi_spi_send_buffer(NULL, 0);
                        #endif
-  403   3                  while(0 == wifi_spi_read_buffer((uint8 *)buffer, buffer_size))
-  404   3                  {
-  405   4                      system_delay_ms(10);
-  406   4                  }
-  407   3              }
-  408   2          }
-  409   1          
-  410   1          return return_state;
-  411   1      }
-  412          
-  413          //-------------------------------------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 8   
+  406   3                  while(0 == wifi_spi_read_buffer((uint8 *)buffer, buffer_size))
+  407   3                  {
+  408   4                      system_delay_ms(10);
+  409   4                  }
+  410   3              }
+  411   2          }
+  412   1          
+  413   1          return return_state;
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 8   
 
+  414   1      }
+  415          
+  416          //-------------------------------------------------------------------------------------------------------
              -------------
-  414          // º¯Êý¼ò½é     WIFI SPI ÉèÖÃÁ¬½ÓµÄWiFiÐÅÏ¢²¢³¢ÊÔÁ¬½ÓWiFi
-  415          // ²ÎÊýËµÃ÷     *wifi_ssid      WIFIÃû³Æ
-  416          // ²ÎÊýËµÃ÷     *pass_word      WIFIÃÜÂë
-  417          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  418          // Ê¹ÓÃÊ¾Àý     wifi_spi_wifi_connect("SEEKFREE", "SEEKFREE123");
-  419          // ±¸×¢ÐÅÏ¢     wifi_spi_wifi_connect("SEEKFREE", NULL); // Á¬½ÓÃ»ÓÐÃÜÂëµÄWIFIÈÈµã
-  420          //-------------------------------------------------------------------------------------------------------
+  417          // º¯Êý¼ò½é     WIFI SPI ÉèÖÃÁ¬½ÓµÄWiFiÐÅÏ¢²¢³¢ÊÔÁ¬½ÓWiFi
+  418          // ²ÎÊýËµÃ÷     *wifi_ssid      WIFIÃû³Æ
+  419          // ²ÎÊýËµÃ÷     *pass_word      WIFIÃÜÂë
+  420          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  421          // Ê¹ÓÃÊ¾Àý     wifi_spi_wifi_connect("SEEKFREE", "SEEKFREE123");
+  422          // ±¸×¢ÐÅÏ¢     wifi_spi_wifi_connect("SEEKFREE", NULL); // Á¬½ÓÃ»ÓÐÃÜÂëµÄWIFIÈÈµã
+  423          //-------------------------------------------------------------------------------------------------------
              -------------
-  421          uint8 wifi_spi_wifi_connect (char *wifi_ssid, char *pass_word)
-  422          {
-  423   1          uint8 return_state;
-  424   1          uint8 temp_buffer[64];
-  425   1          uint16 length;
-  426   1          
-  427   1          if(NULL != pass_word)
-  428   1          {
-  429   2              // WIFIÈÈµãÓÐÃÜÂë·¢ËÍÈÈµãÃû³ÆÓëÃÜÂë
-  430   2              length = sprintf((char *)temp_buffer, "%s\r\n%s\r\n", wifi_ssid, pass_word);
-  431   2          }
-  432   1          else
-  433   1          {
-  434   2              // WIFIÈÈµãÃ»ÓÐÃÜÂëÖ»ÐèÒª·¢ËÍÈÈµãÃû³Æ
-  435   2              length = sprintf((char *)temp_buffer, "%s\r\n", wifi_ssid);
-  436   2          }
-  437   1          
-  438   1          return_state = wifi_spi_set_parameter(WIFI_SPI_SET_WIFI_INFORMATION, temp_buffer, length, WIFI_CONNEC
+  424          uint8 wifi_spi_wifi_connect (char *wifi_ssid, char *pass_word)
+  425          {
+  426   1          uint8 return_state;
+  427   1          uint8 temp_buffer[64];
+  428   1          uint16 length;
+  429   1          
+  430   1          if(NULL != pass_word)
+  431   1          {
+  432   2              // WIFIÈÈµãÓÐÃÜÂë·¢ËÍÈÈµãÃû³ÆÓëÃÜÂë
+  433   2              length = sprintf((char *)temp_buffer, "%s\r\n%s\r\n", wifi_ssid, pass_word);
+  434   2          }
+  435   1          else
+  436   1          {
+  437   2              // WIFIÈÈµãÃ»ÓÐÃÜÂëÖ»ÐèÒª·¢ËÍÈÈµãÃû³Æ
+  438   2              length = sprintf((char *)temp_buffer, "%s\r\n", wifi_ssid);
+  439   2          }
+  440   1          
+  441   1          return_state = wifi_spi_set_parameter(WIFI_SPI_SET_WIFI_INFORMATION, temp_buffer, length, WIFI_CONNEC
              -T_TIME_OUT);
-  439   1          
-  440   1          // ±¾»úIPµØÖ·Óë¶Ë¿ÚºÅÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_ip_addr_portÊý×éÖÐ
-  441   1          wifi_spi_get_ip_addr_port();
   442   1          
-  443   1          return return_state;
-  444   1      }
-  445          
-  446          //-------------------------------------------------------------------------------------------------------
+  443   1          // ±¾»úIPµØÖ·Óë¶Ë¿ÚºÅÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_ip_addr_portÊý×éÖÐ
+  444   1          wifi_spi_get_ip_addr_port();
+  445   1          
+  446   1          return return_state;
+  447   1      }
+  448          
+  449          //-------------------------------------------------------------------------------------------------------
              -------------
-  447          // º¯Êý¼ò½é     WIFI SPI ÉèÖÃÁ¬½ÓµÄSocketÐÅÏ¢²¢³¢ÊÔÁ¬½ÓSocket
-  448          // ²ÎÊýËµÃ÷     *transport_type ´«ÊäÀàÐÍ
-  449          // ²ÎÊýËµÃ÷     *ip_addr        IPµØÖ·
-  450          // ²ÎÊýËµÃ÷     *port           Ä¿±ê¶Ë¿ÚºÅ
-  451          // ²ÎÊýËµÃ÷     *local_port     ±¾»ú¶Ë¿ÚºÅ
-  452          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  453          // Ê¹ÓÃÊ¾Àý     wifi_spi_socket_connect("TCP", "192.168.2.5", "8080", "6060");
-  454          // ±¸×¢ÐÅÏ¢     
-  455          //-------------------------------------------------------------------------------------------------------
+  450          // º¯Êý¼ò½é     WIFI SPI ÉèÖÃÁ¬½ÓµÄSocketÐÅÏ¢²¢³¢ÊÔÁ¬½ÓSocket
+  451          // ²ÎÊýËµÃ÷     *transport_type ´«ÊäÀàÐÍ
+  452          // ²ÎÊýËµÃ÷     *ip_addr        IPµØÖ·
+  453          // ²ÎÊýËµÃ÷     *port           Ä¿±ê¶Ë¿ÚºÅ
+  454          // ²ÎÊýËµÃ÷     *local_port     ±¾»ú¶Ë¿ÚºÅ
+  455          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  456          // Ê¹ÓÃÊ¾Àý     wifi_spi_socket_connect("TCP", "192.168.2.5", "8080", "6060");
+  457          // ±¸×¢ÐÅÏ¢     
+  458          //-------------------------------------------------------------------------------------------------------
              -------------
-  456          uint8 wifi_spi_socket_connect (char *transport_type, char *ip_addr, char *port, char *local_port)
-  457          {
-  458   1          uint8 return_state;
-  459   1          uint8 temp_buffer[41];
-  460   1          uint16 length;
-  461   1          
-  462   1          length = sprintf((char *)temp_buffer, "%s\r\n%s\r\n%s\r\n%s\r\n", transport_type, ip_addr, port, loca
+  459          uint8 wifi_spi_socket_connect (char *transport_type, char *ip_addr, char *port, char *local_port)
+  460          {
+  461   1          uint8 return_state;
+  462   1          uint8 temp_buffer[41];
+  463   1          uint16 length;
+  464   1          
+  465   1          length = sprintf((char *)temp_buffer, "%s\r\n%s\r\n%s\r\n%s\r\n", transport_type, ip_addr, port, loca
              -l_port);
-  463   1              
-  464   1          return_state = wifi_spi_set_parameter(WIFI_SPI_SET_SOCKET_INFORMATION, temp_buffer, length, SOCKET_CO
+  466   1              
+  467   1          return_state = wifi_spi_set_parameter(WIFI_SPI_SET_SOCKET_INFORMATION, temp_buffer, length, SOCKET_CO
              -NNECT_TIME_OUT);
-  465   1          
-  466   1          // ±¾»úIPµØÖ·Óë¶Ë¿ÚºÅÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_ip_addr_portÊý×éÖÐ
-  467   1          wifi_spi_get_ip_addr_port();
   468   1          
-  469   1          return return_state;
-  470   1      }
-  471          
-  472          //-------------------------------------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 9   
+  469   1          // ±¾»úIPµØÖ·Óë¶Ë¿ÚºÅÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_ip_addr_portÊý×éÖÐ
+  470   1          wifi_spi_get_ip_addr_port();
+  471   1          
+  472   1          return return_state;
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 9   
 
+  473   1      }
+  474          
+  475          //-------------------------------------------------------------------------------------------------------
              -------------
-  473          // º¯Êý¼ò½é     WIFI SPI ¶Ï¿ªSocketÁ¬½Ó
-  474          // ²ÎÊýËµÃ÷     void            
-  475          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  476          // Ê¹ÓÃÊ¾Àý     wifi_spi_socket_disconnect();
-  477          // ±¸×¢ÐÅÏ¢
-  478          //-------------------------------------------------------------------------------------------------------
+  476          // º¯Êý¼ò½é     WIFI SPI ¶Ï¿ªSocketÁ¬½Ó
+  477          // ²ÎÊýËµÃ÷     void            
+  478          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  479          // Ê¹ÓÃÊ¾Àý     wifi_spi_socket_disconnect();
+  480          // ±¸×¢ÐÅÏ¢
+  481          //-------------------------------------------------------------------------------------------------------
              -------------
-  479          uint8 wifi_spi_socket_disconnect (void)
-  480          {
-  481   1          wifi_spi_packets_struct temp_packets;
-  482   1      
-  483   1          return wifi_spi_get_parameter(WIFI_SPI_CLOSE_SOCKET, &temp_packets, OTHER_TIME_OUT);
-  484   1      }
-  485          
-  486          //-------------------------------------------------------------------------------------------------------
+  482          uint8 wifi_spi_socket_disconnect (void)
+  483          {
+  484   1          wifi_spi_packets_struct temp_packets = {0};
+  485   1      
+  486   1          return wifi_spi_get_parameter(WIFI_SPI_CLOSE_SOCKET, &temp_packets, OTHER_TIME_OUT);
+  487   1      }
+  488          
+  489          //-------------------------------------------------------------------------------------------------------
              -------------
-  487          // º¯Êý¼ò½é     WIFI SPI Èí¸´Î»
-  488          // ²ÎÊýËµÃ÷     void            
-  489          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  490          // Ê¹ÓÃÊ¾Àý     
-  491          // ±¸×¢ÐÅÏ¢     
-  492          //-------------------------------------------------------------------------------------------------------
+  490          // º¯Êý¼ò½é     WIFI SPI Èí¸´Î»
+  491          // ²ÎÊýËµÃ÷     void            
+  492          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  493          // Ê¹ÓÃÊ¾Àý     
+  494          // ±¸×¢ÐÅÏ¢     
+  495          //-------------------------------------------------------------------------------------------------------
              -------------
-  493          uint8 wifi_spi_reset (void)
-  494          {
-  495   1          uint8 return_state;
-  496   1          wifi_spi_head_struct head;
-  497   1          return_state = 1;
-  498   1          do
-  499   1          {
-  500   2              head.command = WIFI_SPI_RESET;
-  501   2              head.length  = 0xA5A5;
-  502   2              return_state = wifi_spi_wait_idle(OTHER_TIME_OUT);
-  503   2              if(return_state)
-  504   2              {
-  505   3                  break;
-  506   3              }
-  507   2              wifi_spi_dma_write(&head.command, sizeof(wifi_spi_head_struct), NULL, 0);
-  508   2          }while(0);
-  509   1          
-  510   1          return return_state;
-  511   1      }
-  512          
-  513          //-------------------------------------------------------------------------------------------------------
+  496          uint8 wifi_spi_reset (void)
+  497          {
+  498   1          uint8 return_state;
+  499   1          wifi_spi_head_struct head;
+  500   1          return_state = 1;
+  501   1          do
+  502   1          {
+  503   2              head.command = WIFI_SPI_RESET;
+  504   2              head.length  = 0xA5A5;
+  505   2              return_state = wifi_spi_wait_idle(OTHER_TIME_OUT);
+  506   2              if(return_state)
+  507   2              {
+  508   3                  break;
+  509   3              }
+  510   2              wifi_spi_dma_write(&head.command, sizeof(wifi_spi_head_struct), NULL, 0);
+  511   2          }while(0);
+  512   1          
+  513   1          return return_state;
+  514   1      }
+  515          
+  516          //-------------------------------------------------------------------------------------------------------
              -------------
-  514          // º¯Êý¼ò½é     WIFI SPI UDPÄ£Ê½Ê±Á¢¼´·¢ËÍº¯Êý
-  515          // ²ÎÊýËµÃ÷     void
-  516          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
-  517          // Ê¹ÓÃÊ¾Àý     
-  518          // ±¸×¢ÐÅÏ¢     ÔÚUDPÄ£Ê½ÏÂÄ£¿éÊÕµ½Êý¾Ýºó»áµÈ´ý2ºÁÃë£¬2ºÁÃëºóÎ´ÊÕµ½Êý¾ÝÔò½«Êý¾ÝÍ¨¹ýsocket·¢ËÍµ½ÍøÂç£¬Èç¹û
+  517          // º¯Êý¼ò½é     WIFI SPI UDPÄ£Ê½Ê±Á¢¼´·¢ËÍº¯Êý
+  518          // ²ÎÊýËµÃ÷     void
+  519          // ·µ»Ø²ÎÊý     uint8           ×´Ì¬ 0-³É¹¦ 1-´íÎó
+  520          // Ê¹ÓÃÊ¾Àý     
+  521          // ±¸×¢ÐÅÏ¢     ÔÚUDPÄ£Ê½ÏÂÄ£¿éÊÕµ½Êý¾Ýºó»áµÈ´ý2ºÁÃë£¬2ºÁÃëºóÎ´ÊÕµ½Êý¾ÝÔò½«Êý¾ÝÍ¨¹ýsocket·¢ËÍµ½ÍøÂç£¬Èç¹û
              -Ï£ÍûÁ¢¼´·¢ËÍÔòÔÚÊý¾Ý´«ÊäÍê±Ïºóµ÷ÓÃ´Ëº¯Êý
-  519          //-------------------------------------------------------------------------------------------------------
+  522          //-------------------------------------------------------------------------------------------------------
              -------------
-  520          uint8 wifi_spi_udp_send_now (void)
-  521          {
-  522   1          uint8 return_state = 1;
-  523   1          wifi_spi_packets_struct temp_packets;
-  524   1          
-  525   1          if(WIFI_SPI_IDLE == wifi_spi_mutex)
-  526   1          {
-  527   2              // ½«Í¨Ñ¶×´Ì¬ÉèÖÃÎªÃ¦
-  528   2              wifi_spi_mutex = WIFI_SPI_BUSY;
-  529   2              do
-  530   2              {
-  531   3                  if(wifi_spi_wait_idle(OTHER_TIME_OUT))
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 10  
+  523          uint8 wifi_spi_udp_send_now (void)
+  524          {
+  525   1          uint8 return_state = 1;
+  526   1          wifi_spi_packets_struct temp_packets = {0};
+  527   1          
+  528   1          if(WIFI_SPI_IDLE == wifi_spi_mutex)
+  529   1          {
+  530   2              // ½«Í¨Ñ¶×´Ì¬ÉèÖÃÎªÃ¦
+  531   2              wifi_spi_mutex = WIFI_SPI_BUSY;
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 10  
 
-  532   3                  {
-  533   4                      break;
-  534   4                  }
-  535   3      
-  536   3                  // Á¢¼´¿ªÊ¼socket·¢ËÍ
-  537   3                  temp_packets.head.command = WIFI_SPI_UDP_SEND;
-  538   3                  temp_packets.head.length = 0;
-  539   3                  wifi_spi_dma_transfer_command(&temp_packets, WIFI_SPI_RECVIVE_SIZE);
-  540   3                  
-  541   3                  // ¼ì²éÊÕµ½µÄ°üÖÐÊÇ·ñÓÐÊý¾Ý
-  542   3                  if((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == te
+  532   2              do
+  533   2              {
+  534   3                  if(wifi_spi_wait_idle(OTHER_TIME_OUT))
+  535   3                  {
+  536   4                      break;
+  537   4                  }
+  538   3      
+  539   3                  // Á¢¼´¿ªÊ¼socket·¢ËÍ
+  540   3                  temp_packets.head.command = WIFI_SPI_UDP_SEND;
+  541   3                  temp_packets.head.length = 0;
+  542   3                  wifi_spi_dma_transfer_command(&temp_packets, WIFI_SPI_RECVIVE_SIZE);
+  543   3                  
+  544   3                  // ¼ì²éÊÕµ½µÄ°üÖÐÊÇ·ñÓÐÊý¾Ý
+  545   3                  if((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == te
              -mp_packets.head.command))
-  543   3                  {
-  544   4                      // ±£´æ½ÓÊÕµ½µÄÊý¾Ý
-  545   4                      if(temp_packets.head.length)
-  546   4                      {
-  547   5                          fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer, temp_packets.head.length);
-  548   5                      }
-  549   4                  }
-  550   3                  
-  551   3                  // µÈ´ýÓ¦´ðÐÅºÅ
-  552   3                  if(wifi_spi_wait_idle(OTHER_TIME_OUT))
-  553   3                  {
-  554   4                      break;
-  555   4                  }
-  556   3                  
-  557   3                  // ½ÓÊÕÓ¦´ðÐÅºÅ
-  558   3                  temp_packets.head.command = WIFI_SPI_DATA;
-  559   3                  temp_packets.head.length = 0;
-  560   3                  wifi_spi_dma_transfer_command(&temp_packets, temp_packets.head.length);
-  561   3                  
-  562   3                  if(WIFI_SPI_REPLY_OK == temp_packets.head.command)
-  563   3                  {
-  564   4                      return_state = 0;
-  565   4                  }
-  566   3                  
-  567   3              }while(0);
-  568   2              
-  569   2              // ½«Í¨Ñ¶×´Ì¬ÉèÖÃÎª¿ÕÏÐ
-  570   2              wifi_spi_mutex = WIFI_SPI_IDLE;
-  571   2          } 
-  572   1          
-  573   1          return return_state;
-  574   1      }
-  575          
-  576          //-------------------------------------------------------------------------------------------------------
+  546   3                  {
+  547   4                      // ±£´æ½ÓÊÕµ½µÄÊý¾Ý
+  548   4                      if(temp_packets.head.length)
+  549   4                      {
+  550   5                          fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer, temp_packets.head.length);
+  551   5                      }
+  552   4                  }
+  553   3                  
+  554   3                  // µÈ´ýÓ¦´ðÐÅºÅ
+  555   3                  if(wifi_spi_wait_idle(OTHER_TIME_OUT))
+  556   3                  {
+  557   4                      break;
+  558   4                  }
+  559   3                  
+  560   3                  // ½ÓÊÕÓ¦´ðÐÅºÅ
+  561   3                  temp_packets.head.command = WIFI_SPI_DATA;
+  562   3                  temp_packets.head.length = 0;
+  563   3                  wifi_spi_dma_transfer_command(&temp_packets, temp_packets.head.length);
+  564   3                  
+  565   3                  if(WIFI_SPI_REPLY_OK == temp_packets.head.command)
+  566   3                  {
+  567   4                      return_state = 0;
+  568   4                  }
+  569   3                  
+  570   3              }while(0);
+  571   2              
+  572   2              // ½«Í¨Ñ¶×´Ì¬ÉèÖÃÎª¿ÕÏÐ
+  573   2              wifi_spi_mutex = WIFI_SPI_IDLE;
+  574   2          } 
+  575   1          
+  576   1          return return_state;
+  577   1      }
+  578          
+  579          //-------------------------------------------------------------------------------------------------------
              -------------
-  577          // º¯Êý¼ò½é     WIFI SPI Êý¾Ý¿é·¢ËÍº¯Êý²¢Í¬²½½ÓÊÕÊý¾Ý
-  578          // ²ÎÊýËµÃ÷     *buff           ÐèÒª·¢ËÍµÄÊý¾ÝµØÖ·
-  579          // ²ÎÊýËµÃ÷     length          ·¢ËÍ³¤¶È
-  580          // ·µ»Ø²ÎÊý     uint32          Ê£ÓàÎ´·¢ËÍµÄ³¤¶È
-  581          // Ê¹ÓÃÊ¾Àý     wifi_spi_send_buffer(buffer, 100);
-  582          // ±¸×¢ÐÅÏ¢     
-  583          //-------------------------------------------------------------------------------------------------------
+  580          // º¯Êý¼ò½é     WIFI SPI Êý¾Ý¿é·¢ËÍº¯Êý²¢Í¬²½½ÓÊÕÊý¾Ý
+  581          // ²ÎÊýËµÃ÷     *buff           ÐèÒª·¢ËÍµÄÊý¾ÝµØÖ·
+  582          // ²ÎÊýËµÃ÷     length          ·¢ËÍ³¤¶È
+  583          // ·µ»Ø²ÎÊý     uint32          Ê£ÓàÎ´·¢ËÍµÄ³¤¶È
+  584          // Ê¹ÓÃÊ¾Àý     wifi_spi_send_buffer(buffer, 100);
+  585          // ±¸×¢ÐÅÏ¢     
+  586          //-------------------------------------------------------------------------------------------------------
              -------------
-  584          uint32 wifi_spi_send_buffer (const uint8 *buffer, uint32 length)
-  585          {
-  586   1          uint16 send_length;
-  587   1          wifi_spi_packets_struct temp_packets;
-  588   1          
-  589   1          // ¼ì²éWIFI SPI×´Ì¬£¬Èç¹ûÔÚÆäËûÖÐ¶Ï»òÕßÏß³ÌÖÐÒÑ¾­·¢ÆðÁËÍ¨Ñ¶£¬Ôò±¾´Î²»ÄÜ·¢ËÍÊý¾Ý
-  590   1          if(WIFI_SPI_IDLE == wifi_spi_mutex)
-  591   1          {
-  592   2              // ½«Í¨Ñ¶×´Ì¬ÉèÖÃÎªÃ¦
-  593   2              wifi_spi_mutex = WIFI_SPI_BUSY;
-  594   2              
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 11  
+  587          uint32 wifi_spi_send_buffer (const uint8 *buffer, uint32 length)
+  588          {
+  589   1          uint16 send_length;
+  590   1          wifi_spi_packets_struct temp_packets = {0};
+  591   1          
+  592   1          // ¼ì²éWIFI SPI×´Ì¬£¬Èç¹ûÔÚÆäËûÖÐ¶Ï»òÕßÏß³ÌÖÐÒÑ¾­·¢ÆðÁËÍ¨Ñ¶£¬Ôò±¾´Î²»ÄÜ·¢ËÍÊý¾Ý
+  593   1          if(WIFI_SPI_IDLE == wifi_spi_mutex)
+  594   1          {
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 11  
 
-  595   2              while(length)
-  596   2              {
-  597   3                  send_length = length > WIFI_SPI_TRANSFER_SIZE ? WIFI_SPI_TRANSFER_SIZE : length;
-  598   3                  
-  599   3                  if(wifi_spi_wait_idle(OTHER_TIME_OUT))
-  600   3                  {
-  601   4                      break;
-  602   4                  }
-  603   3                  
-  604   3                  wifi_spi_dma_transfer_data(buffer, &temp_packets, send_length);
-  605   3                  
-  606   3                  // ¼ì²éÊÕµ½µÄ°üÖÐÊÇ·ñÓÐÊý¾Ý
-  607   3                  if((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == te
+  595   2              // ½«Í¨Ñ¶×´Ì¬ÉèÖÃÎªÃ¦
+  596   2              wifi_spi_mutex = WIFI_SPI_BUSY;
+  597   2              
+  598   2              while(length)
+  599   2              {
+  600   3                  send_length = length > WIFI_SPI_TRANSFER_SIZE ? WIFI_SPI_TRANSFER_SIZE : length;
+  601   3                  
+  602   3                  if(wifi_spi_wait_idle(OTHER_TIME_OUT))
+  603   3                  {
+  604   4                      break;
+  605   4                  }
+  606   3                  
+  607   3                              wifi_spi_dma_transfer_data(buffer, &temp_packets, send_length);
+  608   3                  if(WIFI_SPI_DATA == temp_packets.head.command)
+  609   3                  {
+  610   4                      break;
+  611   4                  }
+  612   3                  
+  613   3                  // ¼ì²éÊÕµ½µÄ°üÖÐÊÇ·ñÓÐÊý¾Ý
+  614   3                  if((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == te
              -mp_packets.head.command))
-  608   3                  {
-  609   4                      // ±£´æ½ÓÊÕµ½µÄÊý¾Ý
-  610   4                      if(temp_packets.head.length)
-  611   4                      {
-  612   5                          fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer, temp_packets.head.length);
-  613   5                      }
-  614   4                  }
-  615   3                  
-  616   3                  length -= send_length;
-  617   3                  buffer += send_length;
-  618   3              }
-  619   2              
-  620   2              // ¼ì²é×îºóÒ»´ÎµÄ½ÓÊÕÊÇ·ñ½«ËùÓÐµÄÊý¾Ý¶¼½ÓÊÕÍê±Ï
-  621   2              while(WIFI_SPI_REPLY_DATA_START == temp_packets.head.command)
-  622   2              {
-  623   3                  if(wifi_spi_wait_idle(OTHER_TIME_OUT))
-  624   3                  {
-  625   4                      break;
-  626   4                  }
-  627   3                  
-  628   3                  // ¼ÌÐø¶ÁÈ¡Ä£¿éÊ£ÓàÊý¾Ý
-  629   3                  temp_packets.head.command = WIFI_SPI_DATA;
-  630   3                  temp_packets.head.length  = 0;
-  631   3                  wifi_spi_dma_transfer_command(&temp_packets, WIFI_SPI_RECVIVE_SIZE);
-  632   3                  // ¼ì²éÊÕµ½µÄ°üÖÐÊÇ·ñÓÐÊý¾Ý
-  633   3                  if((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == te
+  615   3                  {
+  616   4                      // ±£´æ½ÓÊÕµ½µÄÊý¾Ý
+  617   4                      if(temp_packets.head.length)
+  618   4                      {
+  619   5                          fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer, temp_packets.head.length);
+  620   5                      }
+  621   4                  }
+  622   3                  
+  623   3                  length -= send_length;
+  624   3                  buffer += send_length;
+  625   3              }
+  626   2              
+  627   2              // ¼ì²é×îºóÒ»´ÎµÄ½ÓÊÕÊÇ·ñ½«ËùÓÐµÄÊý¾Ý¶¼½ÓÊÕÍê±Ï
+  628   2              while(WIFI_SPI_REPLY_DATA_START == temp_packets.head.command)
+  629   2              {
+  630   3                  if(wifi_spi_wait_idle(OTHER_TIME_OUT))
+  631   3                  {
+  632   4                      break;
+  633   4                  }
+  634   3                  
+  635   3                  // ¼ÌÐø¶ÁÈ¡Ä£¿éÊ£ÓàÊý¾Ý
+  636   3                  temp_packets.head.command = WIFI_SPI_DATA;
+  637   3                  temp_packets.head.length  = 0;
+  638   3                  wifi_spi_dma_transfer_command(&temp_packets, WIFI_SPI_RECVIVE_SIZE);
+  639   3                  // ¼ì²éÊÕµ½µÄ°üÖÐÊÇ·ñÓÐÊý¾Ý
+  640   3                  if((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == te
              -mp_packets.head.command))
-  634   3                  {
-  635   4                      // ±£´æ½ÓÊÕµ½µÄÊý¾Ý
-  636   4                      if(temp_packets.head.length)
-  637   4                      {
-  638   5                          fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer, temp_packets.head.length);
-  639   5                      }
-  640   4                  }
-  641   3              }
-  642   2              wifi_spi_mutex = WIFI_SPI_IDLE;
-  643   2          }
-  644   1          return length;
-  645   1      }
-  646          
-  647          //-------------------------------------------------------------------------------------------------------
+  641   3                  {
+  642   4                      // ±£´æ½ÓÊÕµ½µÄÊý¾Ý
+  643   4                      if(temp_packets.head.length)
+  644   4                      {
+  645   5                          fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer, temp_packets.head.length);
+  646   5                      }
+  647   4                  }
+  648   3              }
+  649   2              wifi_spi_mutex = WIFI_SPI_IDLE;
+  650   2          }
+  651   1          return length;
+  652   1      }
+  653          
+  654          //-------------------------------------------------------------------------------------------------------
              -------------
-  648          // º¯Êý¼ò½é     WIFI SPI ×Ö·û´®·¢ËÍº¯Êý²¢Í¬²½½ÓÊÕÊý¾Ý
-  649          // ²ÎÊýËµÃ÷     *string           ÐèÒª·¢ËÍµÄ×Ö·û´®
-  650          // ·µ»Ø²ÎÊý     void          
-  651          // Ê¹ÓÃÊ¾Àý     wifi_spi_send_string("123");
-  652          // ±¸×¢ÐÅÏ¢     
-  653          //-------------------------------------------------------------------------------------------------------
-             -------------
-  654          void wifi_spi_send_string(const char *string)
-  655          {
-  656   1          wifi_spi_send_buffer((uint8*)string, strlen(string));
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 12  
+  655          // º¯Êý¼ò½é     WIFI SPI ×Ö·û´®·¢ËÍº¯Êý²¢Í¬²½½ÓÊÕÊý¾Ý
+  656          // ²ÎÊýËµÃ÷     *string           ÐèÒª·¢ËÍµÄ×Ö·û´®
+  657          // ·µ»Ø²ÎÊý     void          
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 12  
 
-  657   1      }
-  658              
-  659          //-------------------------------------------------------------------------------------------------------
+  658          // Ê¹ÓÃÊ¾Àý     wifi_spi_send_string("123");
+  659          // ±¸×¢ÐÅÏ¢     
+  660          //-------------------------------------------------------------------------------------------------------
              -------------
-  660          // º¯Êý¼ò½é     WIFI SPI ¶ÁÈ¡»º³åÇø
-  661          // ²ÎÊýËµÃ÷     *buff           ½ÓÊÕ»º³åÇø
-  662          // ²ÎÊýËµÃ÷     length          ¶ÁÈ¡Êý¾Ý³¤¶È
-  663          // ·µ»Ø²ÎÊý     uint32          Êµ¼Ê¶ÁÈ¡Êý¾Ý³¤¶È
-  664          // Ê¹ÓÃÊ¾Àý     wifi_spi_read_buffer(buffer, 100);
-  665          // ±¸×¢ÐÅÏ¢     
+  661          void wifi_spi_send_string(const char *string)
+  662          {
+  663   1          wifi_spi_send_buffer((uint8*)string, strlen(string));
+  664   1      }
+  665              
   666          //-------------------------------------------------------------------------------------------------------
              -------------
-  667          uint32 wifi_spi_read_buffer (uint8 *buffer, uint32 length)
-  668          {
-  669   1          uint32 fifo_read_length;
-  670   1          uint32 write_length = 0;
-  671   1          wifi_spi_packets_struct temp_packets;
-  672   1      
-  673   1          zf_assert(NULL != buffer);
-  674   1      
-  675   1          // Ê×ÏÈÅÐ¶ÏFIFOÖÐÊÇ·ñÓÐÊý¾Ý£¬Èç¹ûÓÐÔòÏÈ´ÓFIFO¶ÁÈ¡
-  676   1          if(fifo_used(&wifi_spi_fifo))
-  677   1          {
-  678   2              fifo_read_length = fifo_used(&wifi_spi_fifo);
-  679   2              fifo_read_length = length < fifo_read_length ? length : fifo_read_length;
-  680   2              fifo_read_buffer(&wifi_spi_fifo, buffer, &fifo_read_length, FIFO_READ_AND_CLEAN);
-  681   2              
-  682   2              buffer += fifo_read_length;
-  683   2              length -= fifo_read_length;
-  684   2              write_length += fifo_read_length;
-  685   2          }
-  686   1          
-  687   1      #if(1 == WIFI_SPI_READ_TRANSFER)
-  688   1          if(WIFI_SPI_IDLE == wifi_spi_mutex)
-  689   1          {
-  690   2              wifi_spi_mutex = WIFI_SPI_BUSY;                         // ½«Í¨Ñ¶×´Ì¬ÉèÖÃÎªÃ¦
-  691   2              
-  692   2              do
-  693   2              {
-  694   3                  if( (WIFI_SPI_RECVIVE_SIZE > wifi_spi_fifo.siz) || // Èç¹û»º³åÇø¿Õ¼ä²»¹»Ôò²»ÔÙ¶ÁÈ¡
-  695   3                      (wifi_spi_wait_idle(OTHER_TIME_OUT))            // ³¬Ê±ÍË³ö
-  696   3                    )
-  697   3                  {
-  698   4                      break;
-  699   4                  }
-  700   3                  
-  701   3                  temp_packets.head.command = WIFI_SPI_DATA;
-  702   3                  temp_packets.head.length  = 0;
-  703   3                  wifi_spi_dma_transfer_command(&temp_packets, WIFI_SPI_RECVIVE_SIZE);
-  704   3                  // ¼ì²éÊÕµ½µÄ°üÖÐÊÇ·ñÓÐÊý¾Ý
-  705   3                  if( ((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == 
-             -temp_packets.head.command)) &&
-  706   3                      (temp_packets.head.length)
-  707   3                    )
-  708   3                  {
-  709   4                      if(length)
-  710   4                      {
-  711   5                          fifo_read_length = length >= temp_packets.head.length ? temp_packets.head.length : le
-             -ngth;
-  712   5                          memcpy(buffer, temp_packets.buffer, (uint32)fifo_read_length);
-  713   5                          buffer += fifo_read_length;
-  714   5                          length -= fifo_read_length;
-  715   5                          write_length += fifo_read_length;
-  716   5                          if(fifo_read_length < temp_packets.head.length) // Íâ²¿»º³å²»×ã¶àÓà²¿·ÖÐ´ÈëFIFO
-  717   5                          {
-  718   6                              fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer + fifo_read_length, temp_pa
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 13  
-
-             -ckets.head.length - fifo_read_length);
-  719   6                          }
-  720   5                      }
-  721   4                      else                                                // È«²¿Ð´ÈëFIFO
-  722   4                      {
-  723   5                          fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer, temp_packets.head.length);
-  724   5                      }
-  725   4                  }
-  726   3              }while(WIFI_SPI_REPLY_DATA_START == temp_packets.head.command);
-  727   2              wifi_spi_mutex = WIFI_SPI_IDLE;
-  728   2          }
-  729   1      #endif
-  730   1          
-  731   1          return write_length;
-  732   1      }
-  733          
-  734          //-------------------------------------------------------------------------------------------------------
+  667          // º¯Êý¼ò½é     WIFI SPI ¶ÁÈ¡»º³åÇø
+  668          // ²ÎÊýËµÃ÷     *buff           ½ÓÊÕ»º³åÇø
+  669          // ²ÎÊýËµÃ÷     length          ¶ÁÈ¡Êý¾Ý³¤¶È
+  670          // ·µ»Ø²ÎÊý     uint32          Êµ¼Ê¶ÁÈ¡Êý¾Ý³¤¶È
+  671          // Ê¹ÓÃÊ¾Àý     wifi_spi_read_buffer(buffer, 100);
+  672          // ±¸×¢ÐÅÏ¢     
+  673          //-------------------------------------------------------------------------------------------------------
              -------------
-  735          // º¯Êý¼ò½é     WiFi Ä£¿é³õÊ¼»¯
-  736          // ²ÎÊýËµÃ÷     *wifi_ssid      Ä¿±êÁ¬½ÓµÄ WiFi µÄÃû³Æ ×Ö·û´®ÐÎÊ½
-  737          // ²ÎÊýËµÃ÷     *pass_word      Ä¿±êÁ¬½ÓµÄ WiFi µÄÃÜÂë ×Ö·û´®ÐÎÊ½
-  738          // ·µ»Ø²ÎÊý     uint8           Ä£¿é³õÊ¼»¯×´Ì¬ 0-³É¹¦ 1-´íÎó
-  739          // Ê¹ÓÃÊ¾Àý     wifi_spi_init("SEEKFREE", "SEEKFREE123");
-  740          // ±¸×¢ÐÅÏ¢     wifi_spi_init("SEEKFREE", NULL); // Á¬½ÓÃ»ÓÐÃÜÂëµÄWIFIÈÈµã
+  674          uint32 wifi_spi_read_buffer (uint8 *buffer, uint32 length)
+  675          {
+  676   1          uint32 fifo_read_length;
+  677   1          uint32 write_length = 0;
+  678   1          wifi_spi_packets_struct temp_packets = {0};
+  679   1      
+  680   1          zf_assert(NULL != buffer);
+  681   1      
+  682   1          // Ê×ÏÈÅÐ¶ÏFIFOÖÐÊÇ·ñÓÐÊý¾Ý£¬Èç¹ûÓÐÔòÏÈ´ÓFIFO¶ÁÈ¡
+  683   1          if(fifo_used(&wifi_spi_fifo))
+  684   1          {
+  685   2              fifo_read_length = fifo_used(&wifi_spi_fifo);
+  686   2              fifo_read_length = length < fifo_read_length ? length : fifo_read_length;
+  687   2              fifo_read_buffer(&wifi_spi_fifo, buffer, &fifo_read_length, FIFO_READ_AND_CLEAN);
+  688   2              
+  689   2              buffer += fifo_read_length;
+  690   2              length -= fifo_read_length;
+  691   2              write_length += fifo_read_length;
+  692   2          }
+  693   1          
+  694   1      #if(1 == WIFI_SPI_READ_TRANSFER)
+  695   1          if(WIFI_SPI_IDLE == wifi_spi_mutex)
+  696   1          {
+  697   2              wifi_spi_mutex = WIFI_SPI_BUSY;                         // ½«Í¨Ñ¶×´Ì¬ÉèÖÃÎªÃ¦
+  698   2              
+  699   2              do
+  700   2              {
+  701   3                  if( (WIFI_SPI_RECVIVE_SIZE > wifi_spi_fifo.siz) || // Èç¹û»º³åÇø¿Õ¼ä²»¹»Ôò²»ÔÙ¶ÁÈ¡
+  702   3                      (wifi_spi_wait_idle(OTHER_TIME_OUT))            // ³¬Ê±ÍË³ö
+  703   3                    )
+  704   3                  {
+  705   4                      break;
+  706   4                  }
+  707   3                  
+  708   3                  temp_packets.head.command = WIFI_SPI_DATA;
+  709   3                  temp_packets.head.length  = 0;
+  710   3                  wifi_spi_dma_transfer_command(&temp_packets, WIFI_SPI_RECVIVE_SIZE);
+  711   3                  // ¼ì²éÊÕµ½µÄ°üÖÐÊÇ·ñÓÐÊý¾Ý
+  712   3                  if( ((WIFI_SPI_REPLY_DATA_START == temp_packets.head.command) || (WIFI_SPI_REPLY_DATA_END == 
+             -temp_packets.head.command)) &&
+  713   3                      (temp_packets.head.length)
+  714   3                    )
+  715   3                  {
+  716   4                      if(length)
+  717   4                      {
+  718   5                          fifo_read_length = length >= temp_packets.head.length ? temp_packets.head.length : le
+             -ngth;
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 13  
+
+  719   5                          memcpy(buffer, temp_packets.buffer, (uint32)fifo_read_length);
+  720   5                          buffer += fifo_read_length;
+  721   5                          length -= fifo_read_length;
+  722   5                          write_length += fifo_read_length;
+  723   5                          if(fifo_read_length < temp_packets.head.length) // Íâ²¿»º³å²»×ã¶àÓà²¿·ÖÐ´ÈëFIFO
+  724   5                          {
+  725   6                              fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer + fifo_read_length, temp_pa
+             -ckets.head.length - fifo_read_length);
+  726   6                          }
+  727   5                      }
+  728   4                      else                                                // È«²¿Ð´ÈëFIFO
+  729   4                      {
+  730   5                          fifo_write_buffer(&wifi_spi_fifo, temp_packets.buffer, temp_packets.head.length);
+  731   5                      }
+  732   4                  }
+  733   3              }while(WIFI_SPI_REPLY_DATA_START == temp_packets.head.command);
+  734   2              wifi_spi_mutex = WIFI_SPI_IDLE;
+  735   2          }
+  736   1      #endif
+  737   1          
+  738   1          return write_length;
+  739   1      }
+  740          
   741          //-------------------------------------------------------------------------------------------------------
              -------------
-  742          uint8 wifi_spi_init (char *wifi_ssid, char *pass_word)
-  743          {
-  744   1          uint8 return_state = 0;
-  745   1      
-  746   1      
-  747   1          fifo_init(&wifi_spi_fifo, FIFO_DATA_8BIT, wifi_spi_buffer, WIFI_SPI_RECVIVE_FIFO_SIZE);
-  748   1          spi_dma_init(WIFI_SPI_INDEX, SPI_MODE3, WIFI_SPI_SPEED, WIFI_SPI_SCK_PIN, WIFI_SPI_MOSI_PIN, WIFI_SPI
+  742          // º¯Êý¼ò½é     WiFi Ä£¿é³õÊ¼»¯
+  743          // ²ÎÊýËµÃ÷     *wifi_ssid      Ä¿±êÁ¬½ÓµÄ WiFi µÄÃû³Æ ×Ö·û´®ÐÎÊ½
+  744          // ²ÎÊýËµÃ÷     *pass_word      Ä¿±êÁ¬½ÓµÄ WiFi µÄÃÜÂë ×Ö·û´®ÐÎÊ½
+  745          // ·µ»Ø²ÎÊý     uint8           Ä£¿é³õÊ¼»¯×´Ì¬ 0-³É¹¦ 1-´íÎó
+  746          // Ê¹ÓÃÊ¾Àý     wifi_spi_init("SEEKFREE", "SEEKFREE123");
+  747          // ±¸×¢ÐÅÏ¢     wifi_spi_init("SEEKFREE", NULL); // Á¬½ÓÃ»ÓÐÃÜÂëµÄWIFIÈÈµã
+  748          //-------------------------------------------------------------------------------------------------------
+             -------------
+  749          uint8 wifi_spi_init (char *wifi_ssid, char *pass_word)
+  750          {
+  751   1          uint8 return_state = 0;
+  752   1      
+  753   1      
+  754   1          fifo_init(&wifi_spi_fifo, FIFO_DATA_8BIT, wifi_spi_buffer, WIFI_SPI_RECVIVE_FIFO_SIZE);
+  755   1          spi_dma_init(WIFI_SPI_INDEX, SPI_MODE3, WIFI_SPI_SPEED, WIFI_SPI_SCK_PIN, WIFI_SPI_MOSI_PIN, WIFI_SPI
              -_MISO_PIN, SPI_CS_NULL);//Ó²¼þSPI³õÊ¼»¯
-  749   1      
-  750   1          gpio_init(WIFI_SPI_CS_PIN,  GPO, 1, GPO_PUSH_PULL);
-  751   1          gpio_init(WIFI_SPI_RST_PIN, GPO, 1, GPO_PUSH_PULL);
-  752   1          gpio_init(WIFI_SPI_INT_PIN, GPI, 0, GPI_PULL_DOWN);
-  753   1          
-  754   1          // ¸´Î»
-  755   1          gpio_set_level(WIFI_SPI_RST_PIN, 0);
-  756   1          system_delay_ms(10);
-  757   1          gpio_set_level(WIFI_SPI_RST_PIN, 1);
-  758   1          
-  759   1          // µÈ´ýÄ£¿é³õÊ¼»¯
-  760   1          system_delay_ms(100);
-  761   1          wifi_spi_mutex = WIFI_SPI_IDLE;
-  762   1      
-  763   1          do
-  764   1          {
-  765   2              // ¹Ì¼þ°æ±¾ÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_versionÊý×éÖÐ
-  766   2              return_state = wifi_spi_get_version();
-  767   2              if(return_state)
-  768   2              {
-  769   3                  break;
-  770   3              }
-  771   2            
-  772   2              // MACµØÖ·ÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_mac_addrÊý×éÖÐ
-  773   2              wifi_spi_get_mac_addr();
-  774   2      
-  775   2              if(NULL == wifi_ssid)
-  776   2              {
-  777   3                  // ³õÊ¼»¯µÄÊ±ºò²»ÐèÒªÁ¬½ÓWIFI
-  778   3                  break;
-  779   3              }
-  780   2              return_state = wifi_spi_wifi_connect(wifi_ssid, pass_word);
-C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 21/05/26  14:44:16  PAGE 14  
+  756   1      
+  757   1          gpio_init(WIFI_SPI_CS_PIN,  GPO, 1, GPO_PUSH_PULL);
+  758   1          gpio_init(WIFI_SPI_RST_PIN, GPO, 1, GPO_PUSH_PULL);
+  759   1          gpio_init(WIFI_SPI_INT_PIN, GPI, 0, GPI_PULL_DOWN);
+  760   1          
+  761   1          // ¸´Î»
+  762   1          gpio_set_level(WIFI_SPI_RST_PIN, 0);
+  763   1          system_delay_ms(10);
+  764   1          gpio_set_level(WIFI_SPI_RST_PIN, 1);
+  765   1          
+  766   1          // µÈ´ýÄ£¿é³õÊ¼»¯
+  767   1          system_delay_ms(100);
+  768   1          wifi_spi_mutex = WIFI_SPI_IDLE;
+  769   1      
+  770   1          do
+  771   1          {
+  772   2              // ¹Ì¼þ°æ±¾ÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_versionÊý×éÖÐ
+  773   2              return_state = wifi_spi_get_version();
+  774   2              if(return_state)
+  775   2              {
+  776   3                  break;
+  777   3              }
+  778   2            
+  779   2              // MACµØÖ·ÐÅÏ¢ÒÔ×Ö·û´®ÐÎÊ½±£´æÔÚwifi_spi_mac_addrÊý×éÖÐ
+  780   2              wifi_spi_get_mac_addr();
+C251 COMPILER V5.60.0,  zf_device_wifi_spi                                                 09/06/26  00:28:44  PAGE 14  
 
-  781   2              if(return_state)
-  782   2              {
-  783   3                  break;
-  784   3              }
-  785   2              
-  786   2          #if(1 == WIFI_SPI_AUTO_CONNECT)
+  781   2      
+  782   2              if(NULL == wifi_ssid)
+  783   2              {
+  784   3                  // ³õÊ¼»¯µÄÊ±ºò²»ÐèÒªÁ¬½ÓWIFI
+  785   3                  break;
+  786   3              }
+  787   2              return_state = wifi_spi_wifi_connect(wifi_ssid, pass_word);
+  788   2              if(return_state)
+  789   2              {
+  790   3                  break;
+  791   3              }
+  792   2              
+  793   2          #if(1 == WIFI_SPI_AUTO_CONNECT)
                        return_state = wifi_spi_socket_connect("TCP", WIFI_SPI_TARGET_IP, WIFI_SPI_TARGET_PORT, WIFI_SPI_
              -LOCAL_PORT);
                        if(return_state)
@@ -897,8 +904,8 @@ stmt  level    source
                            break;
                        }
                    #endif
-  793   2              
-  794   2          #if(2 == WIFI_SPI_AUTO_CONNECT)
+  800   2              
+  801   2          #if(2 == WIFI_SPI_AUTO_CONNECT)
                        return_state = wifi_spi_socket_connect("UDP", WIFI_SPI_TARGET_IP, WIFI_SPI_TARGET_PORT, WIFI_SPI_
              -LOCAL_PORT);
                        if(return_state)
@@ -906,16 +913,16 @@ stmt  level    source
                            break;
                        }
                    #endif
-  801   2          }while(0);
-  802   1      
-  803   1          return return_state;
-  804   1      }
+  808   2          }while(0);
+  809   1      
+  810   1          return return_state;
+  811   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      4293     ------
+  ecode size           =      4480     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
@@ -929,7 +936,7 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =      1256     ------
+  hconst size          =      1508     ------
 End of Module Information.
 
 

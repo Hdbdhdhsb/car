@@ -32,8 +32,10 @@ typedef enum
 typedef struct
 {
     // --- 边线断口（边线值跳变） ---
-    uint8  l_break_row;         // 左边线断口行号（0 = 未找到）
-    uint8  r_break_row;         // 右边线断口行号
+    uint8  l_break_row;         // 左下边线断口行号（0 = 未找到）
+    uint8  r_break_row;         // 右下边线断口行号
+    uint8  l_break_row2;       // 左上断口行号
+    uint8  r_break_row2;       // 右上断口行号
     int16  l_break_delta;       // 左断口跳变量
     int16  r_break_delta;       // 右断口跳变量
 
@@ -70,7 +72,7 @@ extern Cross2State  cross2_state;       // 当前十字状态
 extern uint8        cross2_timeout;     // 超时计数器（帧数）
 
 /*======================== 配置参数 ========================*/
-#define CROSS2_BREAK_THRESH     15       // 边线跳变阈值
+#define CROSS2_BREAK_THRESH     6       // 边线跳变阈值
 #define CROSS2_DIR_UP           4       // 八邻域方向：向上
 #define CROSS2_DIR_DOWN         0       // 八邻域方向：向下
 #define CROSS2_DIR_BREAK_UP     2       // 链码断点模式中的"向上偏"方向
@@ -81,6 +83,7 @@ extern uint8        cross2_timeout;     // 超时计数器（帧数）
 #define CROSS2_SCAN_TOP         5       // 扫描起始行
 #define CROSS2_SCAN_BOT         (MT9V03X_H - 5)    // 扫描结束行
 #define CROSS2_FIT_LEN          10      // 拟合用的行数（断点上方取多少行做最小二乘）
+#define CROSS2_FIX_LEN          20      // 补线时固定长度
 //1：双侧断口同时存在
 //2：双侧方向断点同时存在
 //3：过宽行数足够多且底角为白
@@ -95,7 +98,7 @@ void cross2_init(void);
 uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W]);
 
 // 特征提取（内部使用，也可供调试查看）
-void cross2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
+uint8 cross2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
                             Cross2Feature *feat);
 
 // 调试查询
