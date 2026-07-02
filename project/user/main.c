@@ -42,60 +42,55 @@ void main(void)
     static uint32 last_10ms_tick = 0;
     static uint32 last_200ms_tick = 0;
     static uint8 assistant_send_divider = 0;
+    static uint32 assistant_retry_after_tick = 0;
 
-    clock_init(SYSTEM_CLOCK_96M); 				/* ʱ�����ü�ϵͳ��ʼ��<��ر���?> */
+    clock_init(SYSTEM_CLOCK_96M); 				
     debug_init();    
     while(wifi_spi_init(WIFI_SSID_TEST, WIFI_PASSWORD_TEST))
     {
         printf("\r\n connect wifi failed. \r\n");
-        system_delay_ms(100);                                                   // 初�?�化失败 等待 100ms
+        system_delay_ms(100);                                                   // 鍒濓拷?锟藉寲澶辫触 绛夊緟 100ms
     }
 
-    printf("\r\n module version:%s",wifi_spi_version);                          // 模块固件版本
-    printf("\r\n module mac    :%s",wifi_spi_mac_addr);                         // 模块 MAC 信息
-    printf("\r\n module ip     :%s",wifi_spi_ip_addr_port);                     // 模块 IP 地址
+    printf("\r\n module version:%s",wifi_spi_version);                          // 妯″潡鍥轰欢鐗堟湰
+    printf("\r\n module mac    :%s",wifi_spi_mac_addr);                         // 妯″潡 MAC 淇℃伅
+    printf("\r\n module ip     :%s",wifi_spi_ip_addr_port);                     // 妯″潡 IP 鍦板潃
 
-    // zf_device_wifi_spi.h 文件内的宏定义可以更改模块连�?(建立) WIFI 之后，是否自动连�? TCP 服务器、创�? UDP 连接、创�? TCP 服务器等操作
-    if(1 != WIFI_SPI_AUTO_CONNECT)                                              // 如果没有开�?�?动连�? 就需要手动连接目�? IP
+    if(1 != WIFI_SPI_AUTO_CONNECT)                                              
     {
-        while(wifi_spi_socket_connect(                                          // 向指定目�? IP 的�??口建�? TCP 连接
-            "TCP",                                                              // 指定使用TCP方式通�??
-            WIFI_SPI_TARGET_IP,                                                 // 指定远�??的IP地址，填写上位机的IP地址
-            WIFI_SPI_TARGET_PORT,                                               // 指定远�??的�??口号，填写上位机的�??口号，通常上位机默认是8080
-            WIFI_SPI_LOCAL_PORT))                                               // 指定�?机的�?口号
+        while(wifi_spi_socket_connect(                                          
+            "TCP",                                                              
+            WIFI_SPI_TARGET_IP,                                                 
+            WIFI_SPI_TARGET_PORT,                                               
+            WIFI_SPI_LOCAL_PORT))                                               
         {
-            // 如果一直建立失�? 考虑一下是不是没有接硬件�?�位
             printf("\r\n Connect TCP Servers error, try again.");
-            system_delay_ms(100);                                               // 建立连接失败 等待 100ms
+            system_delay_ms(100);                                            
         }
     }
 
-    // 推荐先初始化摄像头，后初始化逐�?�助�?
     while(mt9v03x_init())
     {
         system_delay_ms(100); 
 		printf("\r\n mt9v03x_init error, try again.");
     }
 
-    // 使用高�? WIFI SPI模块时无法使用屏幕（因为引脚有共�?�?
-    // 逐�?�助手初始化 数据传输使用高速WIFI SPI
+    
     seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_WIFI_SPI);
 
     pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                     		
     //gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL);
-    uart_init(UART_4, 115200, UART4_TX, UART4_RX);
-    uart_init(UART_2, 115200, UART2_TX, UART2_RX);
+    uart_init(DEBUG_DATA_UART, 115200, UART4_TX, UART4_RX);
     state_machine_init();
 
-    while(g_sysTick_ms <=1500);                         /*������Է��밴����⣬Ȼ��Ŀǰ�������ϰ������������յģ�����ʱ����*/                   		
+    while(g_sysTick_ms <=1500);                                           		
     
 
     seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, ASSISTANT_SEND_IMAGE ? mt9v03x_image[0] : NULL, MT9V03X_W, MT9V03X_H);
     seekfree_assistant_camera_boundary_config(X_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, xy_x3_boundary, NULL, NULL, NULL);
     while(1)
-    {
-        
-         current_tick = g_sysTick_ms;
+    { 
+        current_tick = g_sysTick_ms;
 
         if (current_tick - last_10ms_tick >= 10) {
             last_10ms_tick = current_tick;
@@ -115,16 +110,21 @@ void main(void)
             if(assistant_send_divider >= ASSISTANT_SEND_DIV)
             {
                 assistant_send_divider = 0;
-                update_camera_boundary_overlay();
-                seekfree_assistant_camera_send();
+                if(current_tick >= assistant_retry_after_tick)
+                {
+                    update_camera_boundary_overlay();
+                    if(!seekfree_assistant_camera_send())
+                    {
+                        assistant_retry_after_tick = current_tick + 500;
+                    }
+                }
             }
-            send_error_data(track_error, 5.0f, UART_4);
+            send_error_data(track_error, 5.0f, DEBUG_DATA_UART);
         }
 
     }
 }
 
 void sys_tick_handler (void){
-    g_sysTick_ms += 1;                                                                 /* ϵͳ���� */      
+    g_sysTick_ms += 1;                                                                 /* 系统锟斤拷锟斤拷 */      
 }
-

@@ -151,7 +151,7 @@ extern uint32 (*seekfree_assistant_receive_callback)    	(uint8 *buff, uint32 le
 void    seekfree_assistant_oscilloscope_send                (seekfree_assistant_oscilloscope_struct *seekfree_assistant_oscilloscope);
 void    seekfree_assistant_camera_information_config        (seekfree_assistant_image_type_enum camera_type, void *image_addr, uint16 width, uint16 height);
 void    seekfree_assistant_camera_boundary_config           (seekfree_assistant_boundary_type_enum boundary_type, uint16 dot_num, void *dot_x1, void *dot_x2, void *dot_x3, void *dot_y1, void *dot_y2, void *dot_y3);
-void    seekfree_assistant_camera_send                      (void);
+uint8   seekfree_assistant_camera_send                      (void);
 void    seekfree_assistant_data_analysis                    (void);
 void    seekfree_assistant_init                             (void);
 

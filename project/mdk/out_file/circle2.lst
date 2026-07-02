@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 1   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE circle2
@@ -66,7 +66,7 @@ stmt  level    source
    53   1          cir2_state   = CIR2_IDLE;
    54   1          cir2_dir     = CIR2_NONE;
    55   1          cir2_timeout = 0;
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 2   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 2   
 
    56   1          cir2_entry_cnt = 0;
    57   1      }
@@ -134,7 +134,7 @@ stmt  level    source
   119   1          /* 2. 状态机 */
   120   1          switch (cir2_state)
   121   1          {
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 3   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 3   
 
   122   2          /*---------- IDLE: 寻找圆环入口 ----------*/
   123   2          case CIR2_IDLE:
@@ -202,7 +202,7 @@ stmt  level    source
   185   2      
   186   2          /*---------- ENTRY: 正在进入圆环 ----------*/
   187   2          case CIR2_ENTRY:
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 4   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 4   
 
   188   2          {
   189   3              /* 补线 */
@@ -270,7 +270,7 @@ stmt  level    source
   251   3              {
   252   4                  recovered = 1;
   253   4              }
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 5   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 5   
 
   254   3      
   255   3              if (recovered)
@@ -338,7 +338,7 @@ stmt  level    source
   317   1          {
   318   2              int16 delta = (int16)r[row - 1] - (int16)r[row];
   319   2              if (delta > CIR2_BREAK_THRESH && row >= 30)
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 6   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 6   
 
   320   2              {
   321   3                  f->r_break_row   = row;
@@ -406,7 +406,7 @@ stmt  level    source
   383   1          uint16 w_top = 0;
   384   1      
   385   1          f->width_bottom = (uint8)(r[CIR2_SCAN_BOT] - l[CIR2_SCAN_BOT]);
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 7   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 7   
 
   386   1      
   387   1          for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
@@ -474,7 +474,7 @@ stmt  level    source
   448   2              *slope = 0;
   449   2              *intercept = (float)border[break_row];
   450   2              return;
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 8   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 8   
 
   451   2          }
   452   1      
@@ -542,7 +542,7 @@ stmt  level    source
   514   2          }
   515   1      }
   516          
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 9   
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 9   
 
   517          /*============================================================================
   518           *                         内部: 状态判断函数
@@ -610,7 +610,7 @@ stmt  level    source
   580   2                  return 1;
   581   2          }
   582   1          return 0;
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 10  
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 10  
 
   583   1      }
   584          
@@ -678,7 +678,7 @@ stmt  level    source
   646   1          if (cir2_state == CIR2_INSIDE)
   647   1          {
   648   2              /* 内部阶段: 左侧全丢线，用右边线 - 赛道宽度估计 */
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 11  
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 11  
 
   649   2              uint16 est_width = f->width_bottom;
   650   2              if (est_width < CIR2_WIDTH_NARROW) est_width = CIR2_WIDTH_NARROW;
@@ -746,7 +746,7 @@ stmt  level    source
   712           *--------------------------------------------------------------------------*/
   713          static void _repair_right(uint16 *l, uint16 *r, Circle2Feature *f)
   714          {
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 12  
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 12  
 
   715   1          uint8 row;
   716   1          uint8 anchor_top = 0;
@@ -814,7 +814,7 @@ stmt  level    source
   778          
   779          /*--------------------------------------------------------------------------
   780           * _recalc_midline - 修复后重算中线（感知 valid 标记）
-C251 COMPILER V5.60.0,  circle2                                                            07/06/26  02:13:48  PAGE 13  
+C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 13  
 
   781           *--------------------------------------------------------------------------*/
   782          static void _recalc_midline(uint16 *l, uint16 *r)
