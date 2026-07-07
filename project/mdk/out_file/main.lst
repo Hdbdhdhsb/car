@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               14/06/26  04:39:36  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -15,238 +15,288 @@ stmt  level    source
     2          #include "main.h"
     3          #include "camera.h"
     4          #include "PID.h"
-    5          
-    6          #define false 0
-    7          #define true 1
-    8          extern float track_error;
-    9          uint32 g_sysTick_ms = 0;
-   10          
-   11          #define BOUNDARY_NUM            MT9V03X_H
-   12          #define ASSISTANT_SEND_DIV      3U
-   13          #define ASSISTANT_SEND_IMAGE    1U
-   14          
-   15          uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
-   16          uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
-   17          
-   18          uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
-   19          uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
-   20          
-   21          #define LED1                    (P33 )
-   22          #define WIFI_SSID_TEST          "y"
-   23          #define WIFI_PASSWORD_TEST      "ksh12345" 
-   24          int32 j;
-   25          int32 i = MT9V03X_H - 1;
-   26          static char wifi_cmd_line[WIFI_CMD_LINE_SIZE];
-   27          static uint8 wifi_cmd_line_len = 0;
-   28          
-   29          static void update_camera_boundary_overlay(void)
-   30          {
-   31   1          uint8 row;
-   32   1      
-   33   1          for(row = 0; row < MT9V03X_H; row++)
-   34   1          {
-   35   2              xy_x1_boundary[row] = (uint8)limit_a_b((int16)leftline[row], 0, MT9V03X_W - 1);
-   36   2              xy_x2_boundary[row] = (uint8)limit_a_b((int16)midline[row], 0, MT9V03X_W - 1);
-   37   2              xy_x3_boundary[row] = (uint8)limit_a_b((int16)rightline[row], 0, MT9V03X_W - 1);
-   38   2          }
-   39   1      }
-   40          
-   41          static void wifi_ctrl_send_ack(const char *message)
-   42          {
-   43   1          wifi_spi_send_string(message);
-   44   1          wifi_spi_send_string("\r\n");
-   45   1      }
-   46          
-   47          static void handle_wifi_ctrl_command(const char *command)
-   48          {
-   49   1          if(0 == strcmp(command, "START"))
-   50   1          {
-   51   2              send_ctrl_data(LOWER_START_SPEED0, LOWER_START_SPEED1, LOWER_START_TURN, LOWER_CTRL_UART);
-   52   2              wifi_ctrl_send_ack("ACK START");
-   53   2          }
-   54   1          else if(0 == strcmp(command, "STOP"))
-   55   1          {
-C251 COMPILER V5.60.0,  main                                                               14/06/26  04:39:36  PAGE 2   
+    5          #include <string.h>
+    6          
+    7          #define false 0
+    8          #define true 1
+    9          
+   10          extern float track_error;
+   11          uint32 g_sysTick_ms = 0;
+   12          
+   13          #define BOUNDARY_NUM            MT9V03X_H
+   14          #define ASSISTANT_SEND_DIV      3U
+   15          #define ASSISTANT_SEND_IMAGE    1U
+   16          
+   17          uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
+   18          uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
+   19          
+   20          uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
+   21          uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
+   22          
+   23          #define LED1                    (P33)
+   24          #define WIFI_SSID_TEST          "y"
+   25          #define WIFI_PASSWORD_TEST      "ksh12345"
+   26          
+   27          int32 j;
+   28          int32 i = MT9V03X_H - 1;
+   29          
+   30          static char  wifi_cmd_line[WIFI_CMD_LINE_SIZE];
+   31          static uint8 wifi_cmd_line_len = 0;
+   32          static uint8 wifi_ctrl_running = false;
+   33          static uint32 last_wifi_ctrl_tick = 0;
+   34          static uint32 last_ctrl_send_tick = 0;
+   35          
+   36          //更新图像边界
+   37          static void update_camera_boundary_overlay(void)
+   38          {
+   39   1          uint8 row;
+   40   1      
+   41   1          for(row = 0; row < MT9V03X_H; row++)
+   42   1          {
+   43   2              xy_x1_boundary[row] = (uint8)limit_a_b((int16)leftline[row], 0, MT9V03X_W - 1);
+   44   2              xy_x2_boundary[row] = (uint8)limit_a_b((int16)midline[row], 0, MT9V03X_W - 1);
+   45   2              xy_x3_boundary[row] = (uint8)limit_a_b((int16)rightline[row], 0, MT9V03X_W - 1);
+   46   2          }
+   47   1      }
+   48          
+   49          /* Send a short text response so the desktop side can see command handling state. */
+   50          static void wifi_ctrl_send_ack(const char *message)
+   51          {
+   52   1          wifi_spi_send_string(message);
+   53   1          wifi_spi_send_string("\r\n");
+   54   1      }
+   55          
+C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 2   
 
-   56   2              send_ctrl_data(LOWER_STOP_SPEED0, LOWER_STOP_SPEED1, LOWER_STOP_TURN, LOWER_CTRL_UART);
-   57   2              wifi_ctrl_send_ack("ACK STOP");
-   58   2          }
-   59   1          else if(0 == strcmp(command, "PING"))
-   60   1          {
-   61   2              wifi_ctrl_send_ack("PONG");
-   62   2          }
-   63   1          else if('\0' != command[0])
-   64   1          {
-   65   2              wifi_ctrl_send_ack("ERR UNKNOWN CMD");
-   66   2          }
-   67   1      }
-   68          
-   69          static void poll_wifi_ctrl_command(void)
-   70          {
-   71   1          uint8 rx_buffer[WIFI_CMD_RX_BUF_SIZE];
-   72   1          uint32 rx_length = wifi_spi_read_buffer(rx_buffer, WIFI_CMD_RX_BUF_SIZE);
-   73   1          uint32 index = 0;
-   74   1      
-   75   1          for(index = 0; index < rx_length; index++)
-   76   1          {
-   77   2              uint8 ch = rx_buffer[index];
-   78   2      
-   79   2              if('\r' == ch)
-   80   2              {
-   81   3                  continue;
-   82   3              }
-   83   2      
-   84   2              if('\n' == ch)
-   85   2              {
-   86   3                  wifi_cmd_line[wifi_cmd_line_len] = '\0';
-   87   3                  handle_wifi_ctrl_command(wifi_cmd_line);
-   88   3                  wifi_cmd_line_len = 0;
-   89   3                  continue;
-   90   3              }
-   91   2      
-   92   2              if(wifi_cmd_line_len < (WIFI_CMD_LINE_SIZE - 1))
-   93   2              {
-   94   3                  wifi_cmd_line[wifi_cmd_line_len++] = (char)ch;
-   95   3              }
-   96   2              else
-   97   2              {
-   98   3                  wifi_cmd_line_len = 0;
-   99   3                  wifi_ctrl_send_ack("ERR CMD TOO LONG");
-  100   3              }
-  101   2          }
-  102   1      }
-  103          
-  104          void main(void)
-  105          {
-  106   1          static uint32 current_tick = 0;
-  107   1          static uint32 last_10ms_tick = 0;
-  108   1          static uint32 last_200ms_tick = 0;
-  109   1          static uint8 assistant_send_divider = 0;
-  110   1          static uint32 assistant_retry_after_tick = 0;
-  111   1      
-  112   1          clock_init(SYSTEM_CLOCK_96M);         /* 时锟斤拷锟斤拷锟矫硷拷系统锟斤拷始锟斤拷<锟
-             -斤拷乇锟斤拷锟?> */
-  113   1          debug_init();    
-  114   1          while(wifi_spi_init(WIFI_SSID_TEST, WIFI_PASSWORD_TEST))
-  115   1          {
-  116   2              printf("\r\n connect wifi failed. \r\n");
-  117   2              system_delay_ms(100);                                                   // 鍒濓拷?锟藉寲澶
-             -辫触 绛夊緟 100ms
-  118   2          }
-  119   1      
-C251 COMPILER V5.60.0,  main                                                               14/06/26  04:39:36  PAGE 3   
+   56          static void send_lower_start_frame(void)
+   57          {
+   58   1          send_ctrl_data(LOWER_START_SPEED0, LOWER_START_SPEED1, LOWER_START_TURN, LOWER_CTRL_UART);
+   59   1      }
+   60          
+   61          static void send_lower_stop_frame(void)
+   62          {
+   63   1          send_ctrl_data(LOWER_STOP_SPEED0, LOWER_STOP_SPEED1, LOWER_STOP_TURN, LOWER_CTRL_UART);
+   64   1      }
+   65          
+   66          static void handle_wifi_ctrl_command(const char *command)
+   67          {
+   68   1          if(0 == strcmp(command, "START"))
+   69   1          {
+   70   2              last_wifi_ctrl_tick = g_sysTick_ms;
+   71   2      
+   72   2              /* The GUI sends START periodically as a heartbeat. Only ack the state change once. */
+   73   2              if(!wifi_ctrl_running)
+   74   2              {
+   75   3                  wifi_ctrl_running = true;
+   76   3                  send_lower_start_frame();
+   77   3                  last_ctrl_send_tick = g_sysTick_ms;
+   78   3                  wifi_ctrl_send_ack("ACK START");
+   79   3              }
+   80   2          }
+   81   1          else if(0 == strcmp(command, "STOP"))
+   82   1          {
+   83   2              wifi_ctrl_running = false;
+   84   2              send_lower_stop_frame();
+   85   2              wifi_ctrl_send_ack("ACK STOP");
+   86   2          }
+   87   1          else if(0 == strcmp(command, "PING"))
+   88   1          {
+   89   2              wifi_ctrl_send_ack("PONG");
+   90   2          }
+   91   1          else if('\0' != command[0])
+   92   1          {
+   93   2              wifi_ctrl_send_ack("ERR UNKNOWN CMD");
+   94   2          }
+   95   1      }
+   96          
+   97          /* Read line-based commands from the existing WiFi TCP link. */
+   98          static void poll_wifi_ctrl_command(void)
+   99          {
+  100   1          uint8 rx_buffer[WIFI_CMD_RX_BUF_SIZE];
+  101   1          uint32 rx_length = wifi_spi_read_buffer(rx_buffer, WIFI_CMD_RX_BUF_SIZE);
+  102   1          uint32 index = 0;
+  103   1      
+  104   1          for(index = 0; index < rx_length; index++)
+  105   1          {
+  106   2              uint8 ch = rx_buffer[index];
+  107   2      
+  108   2              if('\r' == ch)
+  109   2              {
+  110   3                  continue;
+  111   3              }
+  112   2      
+  113   2              if('\n' == ch)
+  114   2              {
+  115   3                  wifi_cmd_line[wifi_cmd_line_len] = '\0';
+  116   3                  handle_wifi_ctrl_command(wifi_cmd_line);
+  117   3                  wifi_cmd_line_len = 0;
+  118   3                  continue;
+  119   3              }
+  120   2      
+  121   2              if(wifi_cmd_line_len < (WIFI_CMD_LINE_SIZE - 1U))
+C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 3   
 
-  120   1          printf("\r\n module version:%s",wifi_spi_version);                          // 妯″潡鍥轰欢鐗�
-             -��湰
-  121   1          printf("\r\n module mac    :%s",wifi_spi_mac_addr);                         // 妯″潡 MAC 淇℃�
-             -�
-  122   1          printf("\r\n module ip     :%s",wifi_spi_ip_addr_port);                     // 妯″潡 IP 鍦板潃
-  123   1      
-  124   1          // zf_device_wifi_spi.h 鏂囦欢鍐呯殑瀹忓畾涔夊彲浠ユ洿鏀规ā鍧楄繛锟?(寤虹珛)
-             - WIFI 涔嬪悗锛屾槸鍚﹁嚜鍔ㄨ繛锟? TCP 鏈嶅姟鍣ㄣ€佸垱锟? UDP 杩炴帴銆佸垱锟? TCP 鏈嶅姟
-             -鍣ㄧ瓑鎿嶄綔
-  125   1          if(1 != WIFI_SPI_AUTO_CONNECT)                                              // 濡傛灉娌℃湁寮�
-             -��锟?锟?鍔ㄨ繛锟? 灏遍渶瑕佹墜鍔ㄨ繛鎺ョ洰锟? IP
-  126   1          {
-  127   2              while(wifi_spi_socket_connect(                                          // 鍚戞寚瀹氱洰锟?
-             - IP 鐨勶拷??鍙ｅ缓锟? TCP 杩炴帴
-  128   2                  "TCP",                                                              // 鎸囧畾浣跨敤TCP�
-             -��瑰紡閫氾拷??
-  129   2                  WIFI_SPI_TARGET_IP,                                                 // 鎸囧畾杩滐拷??�
-             -�処P鍦板潃锛屽～鍐欎笂浣嶆満鐨処P鍦板潃
-  130   2                  WIFI_SPI_TARGET_PORT,                                               // 鎸囧畾杩滐拷??�
-             -�勶拷??鍙ｅ彿锛屽～鍐欎笂浣嶆満鐨勶拷??鍙ｅ彿锛岄€氬父涓婁綅鏈洪粯璁ゆ槸8080
-  131   2                  WIFI_SPI_LOCAL_PORT))                                               // 鎸囧畾锟?鏈虹殑
-             -锟?鍙ｅ彿
-  132   2              {
-  133   3                  // 濡傛灉涓€鐩村缓绔嬪け锟? 鑰冭檻涓€涓嬫槸涓嶆槸娌℃湁鎺ョ‖�
-             -��讹拷?锟戒綅
-  134   3                  printf("\r\n Connect TCP Servers error, try again.");
-  135   3                  system_delay_ms(100);                                               // 寤虹珛杩炴帴澶�
-             -��触 绛夊緟 100ms
-  136   3              }
-  137   2          }
-  138   1      
-  139   1          // 鎺ㄨ崘鍏堝垵濮嬪寲鎽勫儚澶达紝鍚庡垵濮嬪寲閫愶拷?锟藉姪锟?
-  140   1          while(mt9v03x_init())
-  141   1          {
-  142   2              system_delay_ms(100); 
-  143   2          printf("\r\n mt9v03x_init error, try again.");
-  144   2          }
-  145   1      
-  146   1          // 浣跨敤楂橈拷? WIFI SPI妯″潡鏃舵棤娉曚娇鐢ㄥ睆骞曪紙鍥犱负寮曡剼鏈夊�
-             -��锟?锟?
-  147   1          // 閫愶拷?锟藉姪鎵嬪垵濮嬪寲 鏁版嵁浼犺緭浣跨敤楂橀€焀IFI SPI
-  148   1          seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_WIFI_SPI);
-  149   1      
-  150   1          pit_ms_init(TIM0_PIT, 1, sys_tick_handler);                         
-  151   1          //gpio_init(IO_P33,GPO,1,GPO_PUSH_PULL);
-  152   1          uart_init(DEBUG_DATA_UART, 115200, UART4_TX, UART4_RX);
-  153   1          state_machine_init();
-  154   1      
-  155   1          while(g_sysTick_ms <=1500);                         /*锟斤拷锟斤拷锟斤拷苑锟斤拷氚达�
-             -�锟斤拷锟解，然锟斤拷目前锟斤拷锟斤拷锟斤拷锟较帮拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤�
-             -�锟秸的ｏ拷锟斤拷锟斤拷时锟斤拷锟斤拷*/                      
-  156   1          
-  157   1      
-  158   1          seekfree_assistant_camera_information_config(SEEKFREE_ASSISTANT_MT9V03X, ASSISTANT_SEND_IMAGE ? mt9v0
-             -3x_image[0] : NULL, MT9V03X_W, MT9V03X_H);
-  159   1          seekfree_assistant_camera_boundary_config(X_BOUNDARY, BOUNDARY_NUM, xy_x1_boundary, xy_x2_boundary, x
-             -y_x3_boundary, NULL, NULL, NULL);
-  160   1          while(1)
-  161   1          {
-  162   2              poll_wifi_ctrl_command();
-  163   2              current_tick = g_sysTick_ms;
-  164   2      
-  165   2              if (current_tick - last_10ms_tick >= 10) {
-  166   3                  last_10ms_tick = current_tick;
-  167   3                  
-  168   3              }
-C251 COMPILER V5.60.0,  main                                                               14/06/26  04:39:36  PAGE 4   
+  122   2              {
+  123   3                  wifi_cmd_line[wifi_cmd_line_len++] = (char)ch;
+  124   3              }
+  125   2              else
+  126   2              {
+  127   3                  wifi_cmd_line_len = 0;
+  128   3                  wifi_ctrl_send_ack("ERR CMD TOO LONG");
+  129   3              }
+  130   2          }
+  131   1      }
+  132          
+  133          /*
+  134           * Keep sending control frames while the GUI is in run mode.
+  135           * If the GUI or WiFi link disappears, the heartbeat times out and the car is stopped.
+  136           */
+  137          static void service_wifi_ctrl_loop(uint32 current_tick)
+  138          {
+  139   1          if(!wifi_ctrl_running)
+  140   1          {
+  141   2              return;
+  142   2          }
+  143   1      
+  144   1          if((current_tick - last_wifi_ctrl_tick) > WIFI_CTRL_COMMAND_TIMEOUT_MS)
+  145   1          {
+  146   2              wifi_ctrl_running = false;
+  147   2              send_lower_stop_frame();
+  148   2              wifi_ctrl_send_ack("ACK TIMEOUT STOP");
+  149   2              return;
+  150   2          }
+  151   1      
+  152   1          if((current_tick - last_ctrl_send_tick) >= WIFI_CTRL_SEND_PERIOD_MS)
+  153   1          {
+  154   2              last_ctrl_send_tick = current_tick;
+  155   2          }
+  156   1      }
+  157          
+  158          void main(void)
+  159          {
+  160   1          static uint32 current_tick = 0;
+  161   1          static uint32 last_10ms_tick = 0;
+  162   1          static uint32 last_200ms_tick = 0;
+  163   1          static uint8 assistant_send_divider = 0;
+  164   1          static uint32 assistant_retry_after_tick = 0;
+  165   1      
+  166   1          clock_init(SYSTEM_CLOCK_96M);
+  167   1          debug_init();
+  168   1      
+  169   1          while(wifi_spi_init(WIFI_SSID_TEST, WIFI_PASSWORD_TEST))
+  170   1          {
+  171   2              printf("\r\n connect wifi failed. \r\n");
+  172   2              system_delay_ms(100);
+  173   2          }
+  174   1      
+  175   1          printf("\r\n module version:%s", wifi_spi_version);
+  176   1          printf("\r\n module mac    :%s", wifi_spi_mac_addr);
+  177   1          printf("\r\n module ip     :%s", wifi_spi_ip_addr_port);
+  178   1      
+  179   1          if(1 != WIFI_SPI_AUTO_CONNECT)
+  180   1          {
+  181   2              while(wifi_spi_socket_connect(
+  182   2                  "TCP",
+  183   2                  WIFI_SPI_TARGET_IP,
+  184   2                  WIFI_SPI_TARGET_PORT,
+  185   2                  WIFI_SPI_LOCAL_PORT))
+  186   2              {
+  187   3                  printf("\r\n Connect TCP Servers error, try again.");
+C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 4   
 
-  169   2      
-  170   2              if((current_tick - last_200ms_tick) >= 200){
-  171   3                  last_200ms_tick = current_tick; 
-  172   3                  //gpio_toggle_level(IO_P33);
-  173   3              }
-  174   2      
-  175   2              if(mt9v03x_finish_flag)
-  176   2              {
-  177   3                  mt9v03x_finish_flag = 0;
-  178   3                  image_process();
-  179   3                  assistant_send_divider++;
-  180   3                  if(assistant_send_divider >= ASSISTANT_SEND_DIV)
-  181   3                  {
-  182   4                      assistant_send_divider = 0;
-  183   4                      if(current_tick >= assistant_retry_after_tick)
-  184   4                      {
-  185   5                          update_camera_boundary_overlay();
-  186   5                          if(!seekfree_assistant_camera_send())
-  187   5                          {
-  188   6                              assistant_retry_after_tick = current_tick + 500;
-  189   6                          }
-  190   5                      }
-  191   4                  }
-  192   3                  send_error_data(track_error, 5.0f, DEBUG_DATA_UART);
-  193   3              }
-  194   2      
-  195   2          }
-  196   1      }
-  197          
-  198          void sys_tick_handler (void){
-  199   1          g_sysTick_ms += 1;                                                                 /* 系统锟斤拷
-             -锟斤拷 */      
-  200   1      }
+  188   3                  system_delay_ms(100);
+  189   3              }
+  190   2          }
+  191   1      
+  192   1          while(mt9v03x_init())
+  193   1          {
+  194   2              system_delay_ms(100);
+  195   2              printf("\r\n mt9v03x_init error, try again.");
+  196   2          }
+  197   1      
+  198   1          seekfree_assistant_interface_init(SEEKFREE_ASSISTANT_WIFI_SPI);
+  199   1      
+  200   1          pit_ms_init(TIM0_PIT, 1, sys_tick_handler);
+  201   1          uart_init(DEBUG_DATA_UART, 115200, UART4_TX, UART4_RX);
+  202   1          state_machine_init();
+  203   1      
+  204   1          /* Boot into a known-safe state so the lower controller does not keep stale motion commands. */
+  205   1          send_lower_stop_frame();
+  206   1      
+  207   1          seekfree_assistant_camera_information_config(
+  208   1              SEEKFREE_ASSISTANT_MT9V03X,
+  209   1              ASSISTANT_SEND_IMAGE ? mt9v03x_image[0] : NULL,
+  210   1              MT9V03X_W,
+  211   1              MT9V03X_H);
+  212   1          seekfree_assistant_camera_boundary_config(
+  213   1              X_BOUNDARY,
+  214   1              BOUNDARY_NUM,
+  215   1              xy_x1_boundary,
+  216   1              xy_x2_boundary,
+  217   1              xy_x3_boundary,
+  218   1              NULL,
+  219   1              NULL,
+  220   1              NULL);
+  221   1      
+  222   1          while(1)
+  223   1          {
+  224   2              poll_wifi_ctrl_command();
+  225   2              current_tick = g_sysTick_ms;
+  226   2              service_wifi_ctrl_loop(current_tick);
+  227   2      
+  228   2              if((current_tick - last_10ms_tick) >= 10)
+  229   2              {
+  230   3                  last_10ms_tick = current_tick;
+  231   3              }
+  232   2      
+  233   2              if((current_tick - last_200ms_tick) >= 200)
+  234   2              {
+  235   3                  last_200ms_tick = current_tick;
+  236   3                  //gpio_toggle_level(IO_P33);
+  237   3              }
+  238   2      
+  239   2              if(mt9v03x_finish_flag)
+  240   2              {
+  241   3                  mt9v03x_finish_flag = 0;
+  242   3                  image_process();
+  243   3                  assistant_send_divider++;
+  244   3                  if(assistant_send_divider >= ASSISTANT_SEND_DIV)
+  245   3                  {
+  246   4                      assistant_send_divider = 0;
+  247   4                      if(current_tick >= assistant_retry_after_tick)
+  248   4                      {
+  249   5                          update_camera_boundary_overlay();
+  250   5                          if(!seekfree_assistant_camera_send())
+  251   5                          {
+  252   6                              assistant_retry_after_tick = current_tick + 500;
+  253   6                          }
+C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 5   
+
+  254   5                      }
+  255   4                  }
+  256   3                  if(wifi_ctrl_running)
+  257   3                  {
+  258   4                      send_error_data(track_error, 5.0f, DEBUG_DATA_UART);
+  259   4                  }
+  260   3                 
+  261   3              }
+  262   2          }
+  263   1      }
+  264          
+  265          void sys_tick_handler(void)
+  266          {
+  267   1          g_sysTick_ms += 1;
+  268   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      1621     ------
+  ecode size           =      1823     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =      1044     ------
+  xdata size           =      1057     ------
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------
@@ -256,7 +306,7 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =       342     ------
+  hconst size          =       383     ------
 End of Module Information.
 
 

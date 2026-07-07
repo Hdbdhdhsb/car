@@ -52,8 +52,21 @@ static void update_track_error(void) {
     uint8 sample_row = (MT9V03X_H > 14) ? (MT9V03X_H - 14) : (MT9V03X_H - 1);
     uint8 sample_row2 = (MT9V03X_H > 8) ? (MT9V03X_H - 8) : (MT9V03X_H - 1);
     int16 screen_center = MT9V03X_W / 2;
-    float track_error1 = (float)((int16)screen_center - midline[sample_row]);
-    float track_error2 = (float)((int16)screen_center - midline[sample_row2]);
+    float track_error1;
+    float track_error2;
+
+    /*
+     * While entering the second circle mouth, look a little farther ahead.
+     * This makes steering react to the pull-in trend earlier instead of waiting
+     * for the bottom rows to drift.
+     */
+    if(current_track_type == CIRCLE_TRACK && circle2_get_state() == CIR2_ENTRY) {
+        sample_row = (MT9V03X_H > CIR2_ENTRY_ERR_ROW_A) ? (MT9V03X_H - CIR2_ENTRY_ERR_ROW_A) : 0;
+        sample_row2 = (MT9V03X_H > CIR2_ENTRY_ERR_ROW_B) ? (MT9V03X_H - CIR2_ENTRY_ERR_ROW_B) : 0;
+    }
+
+    track_error1 = (float)((int16)screen_center - midline[sample_row]);
+    track_error2 = (float)((int16)screen_center - midline[sample_row2]);
     track_error = 0.6 * track_error1 +0.4 * track_error2;
 }
 

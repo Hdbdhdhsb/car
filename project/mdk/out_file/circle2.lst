@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 1   
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE circle2
@@ -36,813 +36,1387 @@ stmt  level    source
    23          Circle2Dir    cir2_dir     = CIR2_NONE;
    24          uint8         cir2_timeout = 0;
    25          uint8         cir2_entry_cnt = 0;
-   26          
-   27          /*======================== 内部辅助函数声明 ========================*/
-   28          static void   _extract_break(uint16 *l, uint16 *r, Circle2Feature *f);
-   29          static void   _extract_inflect(uint16 *l, uint16 *r, Circle2Feature *f);
-   30          static void   _extract_width(uint16 *l, uint16 *r, Circle2Feature *f);
-   31          static void   _extract_lost(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W], Circle2Feature *f);
-   32          static void   _extract_corner(uint8 (*img)[MT9V03X_W], Circle2Feature *f);
-   33          
-   34          static uint8  _check_entry(Circle2Feature *f);
-   35          static uint8  _check_inside(Circle2Feature *f);
-   36          static uint8  _check_exit(Circle2Feature *f);
-   37          
-   38          static void   _calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept);
-   39          static void   _repair_approach(uint16 *l, uint16 *r, Circle2Feature *f);
-   40          static void   _repair_left(uint16 *l, uint16 *r, Circle2Feature *f);
-   41          static void   _repair_right(uint16 *l, uint16 *r, Circle2Feature *f);
-   42          static void   _recalc_midline(uint16 *l, uint16 *r);
-   43          
-   44          /*======================== 辅助宏 ========================*/
-   45          #define ABS_DIFF(a, b)  ((int16)(a) > (int16)(b) ? (int16)(a) - (int16)(b) : (int16)(b) - (int16)(a))
-   46          #define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
-   47          
-   48          /*******************************************************************************
-   49           * circle2_init - 复位圆环状态
-   50           ******************************************************************************/
-   51          void circle2_init(void)
-   52          {
-   53   1          cir2_state   = CIR2_IDLE;
-   54   1          cir2_dir     = CIR2_NONE;
-   55   1          cir2_timeout = 0;
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 2   
+   26          static uint8  cir2_cached_anchor_top = 0;//上描点
+   27          static uint8  cir2_cached_anchor_bot = 0;//下描点
+   28          static uint8  cir2_entry_hold_cnt = 0;//入口计数
+   29          
+   30          /*======================== 内部辅助函数声明 ========================*/
+   31          static void   _extract_break(uint16 *l, uint16 *r, Circle2Feature *f);
+   32          static void   _extract_inflect(uint16 *l, uint16 *r, Circle2Feature *f);
+   33          static void   _extract_width(uint16 *l, uint16 *r, Circle2Feature *f);
+   34          static void   _extract_lost(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W], Circle2Feature *f);
+   35          static void   _extract_corner(uint8 (*img)[MT9V03X_W], Circle2Feature *f);
+   36          static uint8  _check_left_inflect_trend(uint16 *l, uint8 row);
+   37          static uint8  _check_right_inflect_trend(uint16 *r, uint8 row);
+   38          static uint8  _check_left_rebound_trend(uint16 *l, Circle2Feature *f);
+   39          static uint8  _check_right_rebound_trend(uint16 *r, Circle2Feature *f);
+   40          
+   41          static uint8  _check_entry(Circle2Feature *f);
+   42          static uint8 _check_entry2(Circle2Feature *f);
+   43          static uint8  _check_inside(Circle2Feature *f);
+   44          static uint8  _check_exit(Circle2Feature *f);
+   45          
+   46          static void   _calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept);
+   47          static void   _set_repaired_point(uint16 *border, uint8 *valid, uint8 row, int16 val);
+   48          static uint8  _calc_entry_pull(uint8 anchor_top, uint8 anchor_bot, uint8 row);
+   49          static void   _repair_approach(uint16 *l, uint16 *r, Circle2Feature *f);
+   50          static uint8  _repair_approach_end(uint16 *l, uint16 *r, Circle2Feature *f);
+   51          static void   _repair_left(uint16 *l, uint16 *r, Circle2Feature *f);
+   52          static void   _repair_right(uint16 *l, uint16 *r, Circle2Feature *f);
+   53          static void   _recalc_midline(uint16 *l, uint16 *r);
+   54          static uint8  _get_model_width(Circle2Feature *f);
+   55          static uint8  _get_model_ratio_num(void);
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 2   
 
-   56   1          cir2_entry_cnt = 0;
-   57   1      }
+   56          static uint8  _get_model_ratio_den(void);
+   57          static void   _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f);
    58          
-   59          /*******************************************************************************
-   60           * circle2_extract_feature - 一次性提取本帧所有圆环相关特征
-   61           ******************************************************************************/
-   62          void circle2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
-   63                                       Circle2Feature *f)
-   64          {
-   65   1          /* 清零 */
-   66   1          f->l_break_row    = 0;
-   67   1          f->r_break_row    = 0;
-   68   1          f->l_break_delta  = 0;
-   69   1          f->r_break_delta  = 0;
-   70   1          f->l_inflect_row  = 0;
-   71   1          f->r_inflect_row  = 0;
-   72   1          f->width_max      = 0;
-   73   1          f->width_min      = 255;
-   74   1          f->width_bottom   = 0;
-   75   1          f->width_diff     = 0;
-   76   1          f->l_lost_cnt     = 0;
-   77   1          f->r_lost_cnt     = 0;
-   78   1          f->corner_bl      = 0;
-   79   1          f->corner_br      = 0;
-   80   1          f->corner_tl      = 0;
-   81   1          f->corner_tr      = 0;
-   82   1      
-   83   1          _extract_break(l, r, f);
-   84   1          _extract_inflect(l, r, f);
-   85   1          _extract_width(l, r, f);
-   86   1          _extract_lost(l, r, img, f);
-   87   1          _extract_corner(img, f);
-   88   1      }
-   89          
-   90          /*******************************************************************************
-   91           * circle2_process - 每帧调用一次的主入口
-   92           *
-   93           * 参数:
-   94           *   l   - l_border 数组指针
-   95           *   r   - r_border 数组指针
-   96           *   img - bin_image 二值图
-   97           *
-   98           * 返回:
-   99           *   1 = 当前帧处于圆环处理中 (ENTRY/INSIDE/EXIT)
-  100           *   0 = IDLE
-  101           ******************************************************************************/
-  102          uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
-  103          {
-  104   1          Circle2Feature feat;
-  105   1          Circle2Dir cand_dir = CIR2_NONE;
-  106   1      
-  107   1          /* 1. 特征提取 */
-  108   1          circle2_extract_feature(l, r, img, &feat);
-  109   1      
-  110   1          if (feat.l_break_row && !feat.r_break_row)
-  111   1              cand_dir = CIR2_LEFT;
-  112   1          else if (feat.r_break_row && !feat.l_break_row)
-  113   1              cand_dir = CIR2_RIGHT;
-  114   1          else if (feat.l_break_delta > feat.r_break_delta)
-  115   1              cand_dir = CIR2_LEFT;
-  116   1          else if (feat.r_break_delta > 0)
-  117   1              cand_dir = CIR2_RIGHT;
-  118   1      
-  119   1          /* 2. 状态机 */
-  120   1          switch (cir2_state)
-  121   1          {
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 3   
+   59          /*======================== 辅助宏 ========================*/
+   60          #define ABS_DIFF(a, b)  ((int16)(a) > (int16)(b) ? (int16)(a) - (int16)(b) : (int16)(b) - (int16)(a))
+   61          #define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
+   62          
+   63          /*******************************************************************************
+   64           * circle2_init - 复位圆环状态
+   65           ******************************************************************************/
+   66          void circle2_init(void)
+   67          {
+   68   1          cir2_state   = CIR2_IDLE;
+   69   1          cir2_dir     = CIR2_NONE;
+   70   1          cir2_timeout = 0;
+   71   1          cir2_entry_cnt = 0;
+   72   1          cir2_cached_anchor_top = 0;
+   73   1          cir2_cached_anchor_bot = 0;
+   74   1          cir2_entry_hold_cnt = 0;
+   75   1      }
+   76          
+   77          /*******************************************************************************
+   78           * circle2_extract_feature - 提取本帧所有圆环相关特征
+   79           ******************************************************************************/
+   80          void circle2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
+   81                                       Circle2Feature *f)
+   82          {
+   83   1          /* 清零 */
+   84   1          f->l_break_row    = 0;
+   85   1          f->r_break_row    = 0;
+   86   1          f->l_break_delta  = 0;
+   87   1          f->r_break_delta  = 0;
+   88   1          f->l_inflect_row  = 0;
+   89   1          f->r_inflect_row  = 0;
+   90   1          f->l_rebound_trend = 0;
+   91   1          f->r_rebound_trend = 0;
+   92   1          f->width_max      = 0;
+   93   1          f->width_min      = 255;
+   94   1          f->width_bottom   = 0;
+   95   1          f->width_diff     = 0;
+   96   1          f->l_lost_cnt     = 0;
+   97   1          f->r_lost_cnt     = 0;
+   98   1          f->corner_bl      = 0;
+   99   1          f->corner_br      = 0;
+  100   1          f->corner_tl      = 0;
+  101   1          f->corner_tr      = 0;
+  102   1      
+  103   1          _extract_break(l, r, f);
+  104   1          f->l_rebound_trend = _check_left_rebound_trend(l, f);
+  105   1          f->r_rebound_trend = _check_right_rebound_trend(r, f);
+  106   1          _extract_inflect(l, r, f);
+  107   1          _extract_width(l, r, f);
+  108   1          _extract_lost(l, r, img, f);
+  109   1          _extract_corner(img, f);
+  110   1      }
+  111          
+  112          /*******************************************************************************
+  113           * circle2_process - 每帧调用一次的主入口
+  114           *
+  115           * 参数:
+  116           *   l   - l_border 数组指针
+  117           *   r   - r_border 数组指针
+  118           *   img - bin_image 二值图
+  119           *
+  120           * 返回:
+  121           *   1 = 当前帧处于圆环处理中 (ENTRY/INSIDE/EXIT)
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 3   
 
-  122   2          /*---------- IDLE: 寻找圆环入口 ----------*/
-  123   2          case CIR2_IDLE:
-  124   2          {
-  125   3              if (_check_entry(&feat))
-  126   3              {
-  127   4                  cir2_state   = CIR2_APPROACH;
-  128   4                  cir2_timeout = 0;
-  129   4                  cir2_entry_cnt = 1;
-  130   4                  cir2_dir = cand_dir;
-  131   4              }
-  132   3              break;
-  133   3          }
-  134   2      
-  135   2          /*---------- APPROACH: 第一入口直行保护，等待第二入口 ----------*/
-  136   2          case CIR2_APPROACH:
-  137   2          {
-  138   3              /* 第一个入口仍在画面中：只做直行保护补线，不进入圆环 */
-  139   3              if (cir2_entry_cnt == 1)
-  140   3              {
-  141   4                  if (_check_entry(&feat) && cand_dir == cir2_dir)
-  142   4                  {
-  143   5                      _repair_approach(l, r, &feat);
-  144   5                      _recalc_midline(l, r);
-  145   5                      cir2_timeout++;
-  146   5                      if (cir2_timeout > CIR2_APPROACH_TIMEOUT)
-  147   5                      {
-  148   6                          circle2_init();
-  149   6                          return 0;
-  150   6                      }
-  151   5                      return 1;
-  152   5                  }
-  153   4      
-  154   4                  /* 第一个入口已经走完，开始等待第二入口 */
-  155   4                  cir2_entry_cnt = 2;
-  156   4                  cir2_timeout = 0;
-  157   4                  return 1;
-  158   4              }
-  159   3      
-  160   3              /* 第二次看到同方向入口，才真正按圆环处理 */
-  161   3              if (_check_entry(&feat) && cand_dir == cir2_dir)
+  122           *   0 = IDLE
+  123           ******************************************************************************/
+  124          uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
+  125          {
+  126   1          Circle2Feature feat;
+  127   1          Circle2Dir cand_dir = CIR2_NONE;
+  128   1      
+  129   1          /* 1. 特征提取 */
+  130   1          circle2_extract_feature(l, r, img, &feat);
+  131   1      
+  132   1          if (feat.l_break_row && !feat.r_break_row)
+  133   1              cand_dir = CIR2_LEFT;
+  134   1          else if (feat.r_break_row && !feat.l_break_row)
+  135   1              cand_dir = CIR2_RIGHT;
+  136   1          else if (feat.l_break_delta > feat.r_break_delta)
+  137   1              cand_dir = CIR2_LEFT;
+  138   1          else if (feat.r_break_delta > 0)
+  139   1              cand_dir = CIR2_RIGHT;
+  140   1      
+  141   1          /* 2. 状态机 */
+  142   1          switch (cir2_state)
+  143   1          {
+  144   2          /*---------- IDLE: 寻找圆环入口 ----------*/
+  145   2          case CIR2_IDLE:
+  146   2          {
+  147   3              if (_check_entry(&feat))
+  148   3              {
+  149   4                  cir2_state   = CIR2_APPROACH;
+  150   4                  cir2_timeout = 0;
+  151   4                  cir2_entry_cnt = 1;
+  152   4                  cir2_dir = cand_dir;
+  153   4              }
+  154   3              break;
+  155   3          }
+  156   2      
+  157   2          /*---------- APPROACH: 第一入口直行补线 ----------*/
+  158   2          case CIR2_APPROACH:
+  159   2          {
+  160   3              /* 第一个入口仍在画面中：只做直行保护补线，不进入圆环 */
+  161   3              if (cir2_entry_cnt == 1)
   162   3              {
-  163   4                  cir2_state     = CIR2_ENTRY;
-  164   4                  cir2_timeout   = 0;
-  165   4      
-  166   4                  current_track_type = CIRCLE_TRACK;
-  167   4                  current_state      = SPECIAL_MODE;
-  168   4      
-  169   4                  if (cir2_dir == CIR2_LEFT)
-  170   4                      _repair_left(l, r, &feat);
-  171   4                  else
-  172   4                      _repair_right(l, r, &feat);
-  173   4                  _recalc_midline(l, r);
-  174   4                  return 1;
-  175   4              }
-  176   3      
-  177   3              cir2_timeout++;
-  178   3              if (cir2_timeout > CIR2_APPROACH_TIMEOUT)
-  179   3              {
-  180   4                  circle2_init();
-  181   4                  return 0;
-  182   4              }
-  183   3              return 1;
-  184   3          }
-  185   2      
-  186   2          /*---------- ENTRY: 正在进入圆环 ----------*/
-  187   2          case CIR2_ENTRY:
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 4   
+  163   4                  if (_check_entry(&feat) && cand_dir == cir2_dir)
+  164   4                  {
+  165   5                      _repair_approach(l, r, &feat);/*直线补线*/
+  166   5                      _recalc_midline(l, r);
+  167   5                      cir2_timeout++;
+  168   5                      if (cir2_timeout > CIR2_APPROACH_TIMEOUT)
+  169   5                      {
+  170   6                          circle2_init();
+  171   6                          return 0;
+  172   6                      }
+  173   5                      return 1;
+  174   5                  }
+  175   4      
+  176   4                  /* 第一个入口特征消失，补线等待第二入口 */
+  177   4                  if (((cir2_dir == CIR2_LEFT &&
+  178   4                        (feat.l_lost_cnt >= CIR2_LOST_THRESH ||
+  179   4                         feat.l_break_row > 0 ||
+  180   4                         feat.width_diff >= CIR2_WIDTH_DIFF_MIN)) ||
+  181   4                       (cir2_dir == CIR2_RIGHT &&
+  182   4                        (feat.r_lost_cnt >= CIR2_LOST_THRESH ||
+  183   4                         feat.r_break_row > 0 ||
+  184   4                         feat.width_diff >= CIR2_WIDTH_DIFF_MIN))) &&
+  185   4                      _repair_approach_end(l, r, &feat))/*找点连线补线*/
+  186   4                  {
+  187   5                      _recalc_midline(l, r);
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 4   
 
-  188   2          {
-  189   3              /* 补线 */
-  190   3              if (cir2_dir == CIR2_LEFT)
-  191   3                  _repair_left(l, r, &feat);
-  192   3              else
-  193   3                  _repair_right(l, r, &feat);
-  194   3              _recalc_midline(l, r);
-  195   3      
-  196   3              /* 判断是否已完全进入圆环内部 */
-  197   3              if (_check_inside(&feat))
-  198   3              {
-  199   4                  cir2_state = CIR2_INSIDE;
-  200   4              }
-  201   3              /* 超时保护 */
-  202   3              cir2_timeout++;
-  203   3              if (cir2_timeout > CIR2_TIMEOUT_MAX)
-  204   3              {
-  205   4                  circle2_init();
-  206   4                  current_track_type = NORMAL_TRACK;
-  207   4                  current_state      = SEARCH_MODE;
-  208   4              }
-  209   3              break;
-  210   3          }
-  211   2      
-  212   2          /*---------- INSIDE: 行驶在圆环内部 ----------*/
-  213   2          case CIR2_INSIDE:
-  214   2          {
-  215   3              /* 内部也可能局部丢线，持续补线 */
-  216   3              if (cir2_dir == CIR2_LEFT)
-  217   3                  _repair_left(l, r, &feat);
-  218   3              else
-  219   3                  _repair_right(l, r, &feat);
-  220   3              _recalc_midline(l, r);
-  221   3      
-  222   3              /* 判断是否进入出口阶段 */
-  223   3              if (_check_exit(&feat))
-  224   3              {
-  225   4                  cir2_state = CIR2_EXIT;
-  226   4              }
-  227   3              cir2_timeout++;
-  228   3              if (cir2_timeout > CIR2_TIMEOUT_MAX)
-  229   3              {
-  230   4                  circle2_init();
-  231   4                  current_track_type = NORMAL_TRACK;
-  232   4                  current_state      = SEARCH_MODE;
-  233   4              }
-  234   3              break;
-  235   3          }
-  236   2      
-  237   2          /*---------- EXIT: 正在驶出圆环 ----------*/
-  238   2          case CIR2_EXIT:
-  239   2          {
-  240   3              uint8 recovered = 0;
-  241   3              /* 出口阶段继续补线 */
-  242   3              if (cir2_dir == CIR2_LEFT)
-  243   3                  _repair_left(l, r, &feat);
-  244   3              else
-  245   3                  _repair_right(l, r, &feat);
-  246   3              _recalc_midline(l, r);
-  247   3      
-  248   3              /* 判断是否已完全恢复正常赛道 */
-  249   3              if (feat.l_lost_cnt < 5 && feat.r_lost_cnt < 5 &&
-  250   3                  !feat.l_break_row && !feat.r_break_row)
+  188   5                      cir2_timeout++;
+  189   5                      if (cir2_timeout > CIR2_APPROACH_TIMEOUT)
+  190   5                      {
+  191   6                          circle2_init();
+  192   6                          return 0;
+  193   6                      }
+  194   5                      return 1;
+  195   5                  }
+  196   4      
+  197   4                  cir2_timeout = 0;
+  198   4                  return 1;
+  199   4              }
+  200   3      
+  201   3              /* 第二次看到同方向入口，才真正按圆环处理 */
+  202   3              if (_check_entry2(&feat) && cand_dir == cir2_dir)
+  203   3              {
+  204   4                  cir2_state     = CIR2_ENTRY;
+  205   4                  cir2_timeout   = 0;
+  206   4      
+  207   4                  current_track_type = CIRCLE_TRACK;
+  208   4                  current_state      = SPECIAL_MODE;
+  209   4      
+  210   4                  _recalc_circle_midline(l, r, &feat);/*宽度模型算中线*/
+  211   4                  return 1;
+  212   4              }
+  213   3      
+  214   3              cir2_timeout++;
+  215   3              if (cir2_timeout > CIR2_APPROACH_TIMEOUT)
+  216   3              {
+  217   4                  circle2_init();
+  218   4                  return 0;
+  219   4              }
+  220   3              return 1;
+  221   3          }
+  222   2      
+  223   2          /*---------- ENTRY: 正在进入圆环 ----------*/
+  224   2          case CIR2_ENTRY:
+  225   2          {
+  226   3              _recalc_circle_midline(l, r, &feat);/*宽度模型算中线*/
+  227   3      
+  228   3              /* 判断是否已完全进入圆环内部 */
+  229   3              if (_check_inside(&feat))
+  230   3              {
+  231   4                  cir2_state = CIR2_INSIDE;
+  232   4              }
+  233   3      
+  234   3              cir2_timeout++;
+  235   3              if (cir2_timeout > CIR2_TIMEOUT_MAX)
+  236   3              {
+  237   4                  circle2_init();
+  238   4                  current_track_type = NORMAL_TRACK;
+  239   4                  current_state      = SEARCH_MODE;
+  240   4              }
+  241   3              break;
+  242   3          }
+  243   2      
+  244   2          /*---------- INSIDE: 行驶在圆环内部 ----------*/
+  245   2          case CIR2_INSIDE:
+  246   2          {
+  247   3              _recalc_circle_midline(l, r, &feat);
+  248   3      
+  249   3              /* 判断是否进入出口阶段 */
+  250   3              if (_check_exit(&feat))
   251   3              {
-  252   4                  recovered = 1;
+  252   4                  cir2_state = CIR2_EXIT;
   253   4              }
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 5   
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 5   
 
-  254   3      
-  255   3              if (recovered)
+  254   3              cir2_timeout++;
+  255   3              if (cir2_timeout > CIR2_TIMEOUT_MAX)
   256   3              {
   257   4                  circle2_init();
   258   4                  current_track_type = NORMAL_TRACK;
   259   4                  current_state      = SEARCH_MODE;
-  260   4                  return 0;
-  261   4              }
-  262   3              cir2_timeout++;
-  263   3              if (cir2_timeout > CIR2_TIMEOUT_MAX)
-  264   3              {
-  265   4                  circle2_init();
-  266   4                  current_track_type = NORMAL_TRACK;
-  267   4                  current_state      = SEARCH_MODE;
-  268   4              }
-  269   3              break;
-  270   3          }
-  271   2      
-  272   2          default:
-  273   2              circle2_init();
-  274   2              break;
-  275   2          }
-  276   1      
-  277   1          return (cir2_state == CIR2_APPROACH ||
-  278   1                  cir2_state == CIR2_ENTRY ||
-  279   1                  cir2_state == CIR2_INSIDE ||
-  280   1                  cir2_state == CIR2_EXIT) ? 1 : 0;
-  281   1      }
-  282          
-  283          /*******************************************************************************
-  284           * circle2_get_state / circle2_get_dir - 调试查询
-  285           ******************************************************************************/
-  286          Circle2State circle2_get_state(void) { return cir2_state; }
-  287          Circle2Dir   circle2_get_dir(void)   { return cir2_dir;   }
-  288          
-  289          /*============================================================================
-  290           *                         内部: 特征提取函数
-  291           *============================================================================*/
-  292          
-  293          /*--------------------------------------------------------------------------
-  294           * _extract_break - 搜索左/右边线断口
-  295           *
-  296           * 断口定义: 相邻行边线值跳变超过 CIR2_BREAK_THRESH
-  297           * 从底部向上扫描，找到第一个显著断口即记录
-  298           *--------------------------------------------------------------------------*/
-  299          static void _extract_break(uint16 *l, uint16 *r, Circle2Feature *f)
-  300          {
-  301   1          uint8 row;
-  302   1      
-  303   1          /* 左边线断口: 向上扫描，l[row] 突然变小（向左跳） */
-  304   1          for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--)
-  305   1          {
-  306   2              int16 delta = (int16)l[row] - (int16)l[row - 1];
-  307   2              if (delta > CIR2_BREAK_THRESH&& row >= 30)
-  308   2              {
-  309   3                  f->l_break_row   = row;
-  310   3                  f->l_break_delta = delta;
-  311   3                  break;
-  312   3              }
-  313   2          }
-  314   1      
-  315   1          /* 右边线断口: 向上扫描，r[row] 突然变大（向右跳） */
-  316   1          for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--)
-  317   1          {
-  318   2              int16 delta = (int16)r[row - 1] - (int16)r[row];
-  319   2              if (delta > CIR2_BREAK_THRESH && row >= 30)
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 6   
+  260   4              }
+  261   3              break;
+  262   3          }
+  263   2      
+  264   2          /*---------- EXIT: 正在驶出圆环 ----------*/
+  265   2          case CIR2_EXIT:
+  266   2          {
+  267   3              uint8 recovered = 0;
+  268   3              _recalc_circle_midline(l, r, &feat);
+  269   3      
+  270   3              /* 判断是否已完全恢复正常赛道 */
+  271   3              if (feat.l_lost_cnt < 5 && feat.r_lost_cnt < 5 &&
+  272   3                  !feat.l_break_row && !feat.r_break_row)
+  273   3              {
+  274   4                  recovered = 1;
+  275   4              }
+  276   3      
+  277   3              if (recovered)
+  278   3              {
+  279   4                  circle2_init();
+  280   4                  current_track_type = NORMAL_TRACK;
+  281   4                  current_state      = SEARCH_MODE;
+  282   4                  return 0;
+  283   4              }
+  284   3              cir2_timeout++;
+  285   3              if (cir2_timeout > CIR2_TIMEOUT_MAX)
+  286   3              {
+  287   4                  circle2_init();
+  288   4                  current_track_type = NORMAL_TRACK;
+  289   4                  current_state      = SEARCH_MODE;
+  290   4              }
+  291   3              break;
+  292   3          }
+  293   2      
+  294   2          default:
+  295   2              circle2_init();
+  296   2              break;
+  297   2          }
+  298   1      
+  299   1          return (cir2_state == CIR2_APPROACH ||
+  300   1                  cir2_state == CIR2_ENTRY ||
+  301   1                  cir2_state == CIR2_INSIDE ||
+  302   1                  cir2_state == CIR2_EXIT) ? 1 : 0;
+  303   1      }
+  304          
+  305          /*******************************************************************************
+  306           * circle2_get_state / circle2_get_dir - 调试查询
+  307           ******************************************************************************/
+  308          Circle2State circle2_get_state(void) { return cir2_state; }
+  309          Circle2Dir   circle2_get_dir(void)   { return cir2_dir;   }
+  310          
+  311          /*============================================================================
+  312           *                         内部: 特征提取函数
+  313           *============================================================================*/
+  314          
+  315          /*--------------------------------------------------------------------------
+  316           * _extract_break - 搜索左/右边线断口
+  317           *
+  318           * 断口定义: 相邻行边线值跳变超过 CIR2_BREAK_THRESH
+  319           * 从底部向上扫描，找到第一个显著断口即记录
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 6   
 
-  320   2              {
-  321   3                  f->r_break_row   = row;
-  322   3                  f->r_break_delta = delta;
-  323   3                  break;
-  324   3              }
-  325   2          }
-  326   1      }
-  327          
-  328          /*--------------------------------------------------------------------------
-  329           * _extract_inflect - 搜索单侧边线拐点
-  330           *
-  331           * 拐点定义: 边线先增后减（或先减后增）的极值点
-  332           * 在断口上方区域搜索，用于确认圆环弧形边线
-  333           *--------------------------------------------------------------------------*/
-  334          static void _extract_inflect(uint16 *l, uint16 *r, Circle2Feature *f)
-  335          {
-  336   1          uint8 row;
-  337   1          uint8 search_end;
-  338   1      
-  339   1          /* 左边线拐点: 在断口上方寻找局部极大值 */
-  340   1          search_end = (f->l_break_row > CIR2_INFLECT_RANGE + CIR2_SCAN_TOP)
-  341   1                           ? (f->l_break_row - 15)
-  342   1                           : CIR2_SCAN_TOP;
-  343   1          if (search_end < CIR2_SCAN_TOP + CIR2_INFLECT_RANGE)
-  344   1              search_end = CIR2_SCAN_TOP + CIR2_INFLECT_RANGE;
-  345   1      
-  346   1          for (row = search_end; row > CIR2_SCAN_TOP + CIR2_INFLECT_RANGE; row--)
-  347   1          {
-  348   2              if (l[row] > l[row + CIR2_INFLECT_RANGE] &&
-  349   2                  l[row] > l[row - CIR2_INFLECT_RANGE] &&
-  350   2                  l[row - CIR2_INFLECT_RANGE] != BORDER_MIN)
-  351   2              {
-  352   3                  f->l_inflect_row = row;
-  353   3                  break;
-  354   3              }
-  355   2          }
-  356   1      
-  357   1          /* 右边线拐点: 局部极小值 */
-  358   1          search_end = (f->r_break_row > CIR2_INFLECT_RANGE + CIR2_SCAN_TOP)
-  359   1                           ? (f->r_break_row - 15)
-  360   1                           : CIR2_SCAN_TOP;
-  361   1          if (search_end < CIR2_SCAN_TOP + CIR2_INFLECT_RANGE)
-  362   1              search_end = CIR2_SCAN_TOP + CIR2_INFLECT_RANGE;
-  363   1      
-  364   1          for (row = search_end; row > CIR2_SCAN_TOP + CIR2_INFLECT_RANGE; row--)
-  365   1          {
-  366   2              if (r[row] < r[row + CIR2_INFLECT_RANGE] &&
-  367   2                  r[row] < r[row - CIR2_INFLECT_RANGE] &&
-  368   2                  r[row - CIR2_INFLECT_RANGE] != BORDER_MAX)
-  369   2              {
-  370   3                  f->r_inflect_row = row;
-  371   3                  break;
-  372   3              }
-  373   2          }
-  374   1      }
-  375          
-  376          /*--------------------------------------------------------------------------
-  377           * _extract_width - 赛道宽度模型
-  378           *--------------------------------------------------------------------------*/
-  379          static void _extract_width(uint16 *l, uint16 *r, Circle2Feature *f)
-  380          {
-  381   1          uint8  row;
-  382   1          uint8  w;
-  383   1          uint16 w_top = 0;
-  384   1      
-  385   1          f->width_bottom = (uint8)(r[CIR2_SCAN_BOT] - l[CIR2_SCAN_BOT]);
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 7   
+  320           *--------------------------------------------------------------------------*/
+  321          static void _extract_break(uint16 *l, uint16 *r, Circle2Feature *f)
+  322          {
+  323   1          uint8 row;
+  324   1      
+  325   1          /* 左边线断口: 向上扫描，l[row] 突然变小（向左跳） */
+  326   1          for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--)
+  327   1          {
+  328   2              int16 delta = (int16)l[row] - (int16)l[row - 1];
+  329   2              if (delta > CIR2_BREAK_THRESH && row > CIR2_BREAK_MIN_ROW)
+  330   2              {
+  331   3                  f->l_break_row   = row;
+  332   3                  f->l_break_delta = delta;
+  333   3                  break;
+  334   3              }
+  335   2          }
+  336   1      
+  337   1          /* 右边线断口: 向上扫描，r[row] 突然变大（向右跳） */
+  338   1          for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--)
+  339   1          {
+  340   2              int16 delta = (int16)r[row - 1] - (int16)r[row];
+  341   2              if (delta > CIR2_BREAK_THRESH && row > CIR2_BREAK_MIN_ROW)
+  342   2              {
+  343   3                  f->r_break_row   = row;
+  344   3                  f->r_break_delta = delta;
+  345   3                  break;
+  346   3              }
+  347   2          }
+  348   1      }
+  349          
+  350          static uint8 _check_left_inflect_trend(uint16 *l, uint8 row)
+  351          {
+  352   1          uint8 i;
+  353   1          int16 rise_sum = 0;
+  354   1          int16 fall_sum = 0;
+  355   1      
+  356   1          for (i = 1; i <= CIR2_INFLECT_RANGE; i++)
+  357   1          {
+  358   2              if (l[row - i] <= BORDER_MIN + 1 || l[row + i] <= BORDER_MIN + 1)
+  359   2              {
+  360   3                  return 0;
+  361   3              }
+  362   2      
+  363   2              rise_sum += (int16)l[row] - (int16)l[row - i];
+  364   2              fall_sum += (int16)l[row + i] - (int16)l[row];
+  365   2          }
+  366   1      
+  367   1          return (rise_sum >= CIR2_INFLECT_TREND_THRESH &&
+  368   1                  fall_sum <= -CIR2_INFLECT_TREND_THRESH) ? 1 : 0;
+  369   1      }
+  370          
+  371          static uint8 _check_right_inflect_trend(uint16 *r, uint8 row)
+  372          {
+  373   1          uint8 i;
+  374   1          int16 rise_sum = 0;
+  375   1          int16 fall_sum = 0;
+  376   1      
+  377   1          for (i = 1; i <= CIR2_INFLECT_RANGE; i++)
+  378   1          {
+  379   2              if (r[row - i] >= BORDER_MAX - 1 || r[row + i] >= BORDER_MAX - 1)
+  380   2              {
+  381   3                  return 0;
+  382   3              }
+  383   2      
+  384   2              rise_sum += (int16)r[row] - (int16)r[row - i];
+  385   2              fall_sum += (int16)r[row + i] - (int16)r[row];
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 7   
 
-  386   1      
-  387   1          for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
-  388   1          {
-  389   2              if (r[row] > l[row])
-  390   2                  w = (uint8)(r[row] - l[row]);
-  391   2              else
-  392   2                  w = 0;
-  393   2      
-  394   2              if (w > f->width_max) f->width_max = w;
-  395   2              if (w < f->width_min) f->width_min = w;
-  396   2      
-  397   2              if (row == CIR2_SCAN_TOP + 10)
-  398   2                  w_top = w;
-  399   2          }
-  400   1      
-  401   1          f->width_diff = (int16)w_top - (int16)f->width_bottom;
-  402   1      }
-  403          
-  404          /*--------------------------------------------------------------------------
-  405           * _extract_lost - 边线丢失统计
-  406           *
-  407           * 判断丢线: 左边界贴 BORDER_MIN 或右边界贴 BORDER_MAX
-  408           *--------------------------------------------------------------------------*/
-  409          static void _extract_lost(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
-  410                                     Circle2Feature *f)
-  411          {
-  412   1          uint8 row;
-  413   1      
-  414   1          for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
-  415   1          {
-  416   2              if (l[row] <= BORDER_MIN + 1) f->l_lost_cnt++;
-  417   2              if (r[row] >= BORDER_MAX - 1) f->r_lost_cnt++;
-  418   2          }
-  419   1      }
-*** WARNING C47 IN LINE 409 OF ..\code\Camera\Circle\circle2.c: 'img': unreferenced parameter
-  420          
-  421          /*--------------------------------------------------------------------------
-  422           * _extract_corner - 四角像素采样
-  423           *--------------------------------------------------------------------------*/
-  424          static void _extract_corner(uint8 (*img)[MT9V03X_W], Circle2Feature *f)
-  425          {
-  426   1          f->corner_bl = img[MT9V03X_H - 2][2];
-  427   1          f->corner_br = img[MT9V03X_H - 2][MT9V03X_W - 3];
-  428   1          f->corner_tl = img[MT9V03X_H / 2][2];
-  429   1          f->corner_tr = img[MT9V03X_H / 2][MT9V03X_W - 3];
-  430   1      }
-  431          
-  432          static void _calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept)
-  433          {
-  434   1          int16 i;
-  435   1          uint8 start_row = break_row + CIR2_FIT_LEN;
-  436   1          uint8 end_row   = break_row + 2;
-  437   1          float sum_x = 0;
-  438   1          float sum_y = 0;
-  439   1          float sum_xy = 0;
-  440   1          float sum_x2 = 0;
-  441   1          float n = 0;
-  442   1          float denom;
-  443   1      
-  444   1          if (start_row > CIR2_SCAN_BOT)
-  445   1              start_row = CIR2_SCAN_BOT;
-  446   1          if (end_row > CIR2_SCAN_BOT || end_row >= start_row)
-  447   1          {
-  448   2              *slope = 0;
-  449   2              *intercept = (float)border[break_row];
-  450   2              return;
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 8   
+  386   2          }
+  387   1      
+  388   1          return (rise_sum <= -CIR2_INFLECT_TREND_THRESH &&
+  389   1                  fall_sum >= CIR2_INFLECT_TREND_THRESH) ? 1 : 0;
+  390   1      }
+  391          
+  392          static uint8 _check_left_rebound_trend(uint16 *l, Circle2Feature *f)
+  393          {
+  394   1          uint8 row = f->l_break_row;
+  395   1          int16 break_delta;
+  396   1          int16 rebound_delta;
+  397   1      
+  398   1          if (row <= CIR2_BREAK_MIN_ROW || row + CIR2_INFLECT_RANGE >= CIR2_SCAN_BOT)
+  399   1          {
+  400   2              return 0;
+  401   2          }
+  402   1      
+  403   1          if (l[row] <= BORDER_MIN + 1 || l[row - 1] <= BORDER_MIN + 1 ||
+  404   1              l[row + CIR2_INFLECT_RANGE] <= BORDER_MIN + 1)
+  405   1          {
+  406   2              return 0;
+  407   2          }
+  408   1      
+  409   1          break_delta = (int16)l[row] - (int16)l[row - 1];
+  410   1          rebound_delta = (int16)l[row] - (int16)l[row + CIR2_INFLECT_RANGE];
+  411   1      
+  412   1          return (break_delta > CIR2_BREAK_THRESH &&
+  413   1                  rebound_delta >= CIR2_REBOUND_TREND_THRESH) ? 1 : 0;
+  414   1      }
+  415          
+  416          static uint8 _check_right_rebound_trend(uint16 *r, Circle2Feature *f)
+  417          {
+  418   1          uint8 row = f->r_break_row;
+  419   1          int16 break_delta;
+  420   1          int16 rebound_delta;
+  421   1      
+  422   1          if (row <= CIR2_BREAK_MIN_ROW || row + CIR2_INFLECT_RANGE >= CIR2_SCAN_BOT)
+  423   1          {
+  424   2              return 0;
+  425   2          }
+  426   1      
+  427   1          if (r[row] >= BORDER_MAX - 1 || r[row - 1] >= BORDER_MAX - 1 ||
+  428   1              r[row + CIR2_INFLECT_RANGE] >= BORDER_MAX - 1)
+  429   1          {
+  430   2              return 0;
+  431   2          }
+  432   1      
+  433   1          break_delta = (int16)r[row - 1] - (int16)r[row];
+  434   1          rebound_delta = (int16)r[row + CIR2_INFLECT_RANGE] - (int16)r[row];
+  435   1      
+  436   1          return (break_delta > CIR2_BREAK_THRESH &&
+  437   1                  rebound_delta >= CIR2_REBOUND_TREND_THRESH) ? 1 : 0;
+  438   1      }
+  439          
+  440          /*--------------------------------------------------------------------------
+  441           * _extract_inflect - 搜索单侧边线拐点
+  442           *
+  443           * 拐点定义: 边线趋势先向一侧发展，再向另一侧回摆
+  444           * 在断口上方区域搜索，用于确认圆环弧形边线
+  445           *--------------------------------------------------------------------------*/
+  446          static void _extract_inflect(uint16 *l, uint16 *r, Circle2Feature *f)
+  447          {
+  448   1          uint8 row;
+  449   1          uint8 search_end;
+  450   1      
+  451   1          /* 左边线拐点: 在断口上方寻找“先增后减”的趋势反转 */
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 8   
 
-  451   2          }
-  452   1      
-  453   1          for (i = start_row; i >= end_row; i--)
-  454   1          {
-  455   2              float x = (float)i;
-  456   2              float y = (float)border[i];
-  457   2              sum_x  += x;
-  458   2              sum_y  += y;
-  459   2              sum_xy += x * y;
-  460   2              sum_x2 += x * x;
-  461   2              n      += 1.0f;
-  462   2          }
-  463   1      
-  464   1          denom = n * sum_x2 - sum_x * sum_x;
-  465   1          if (denom > 0.001f || denom < -0.001f)
-  466   1          {
-  467   2              *slope     = (n * sum_xy - sum_x * sum_y) / denom;
-  468   2              *intercept = (sum_y - (*slope) * sum_x) / n;
-  469   2          }
-  470   1          else
-  471   1          {
-  472   2              *slope = 0;
-  473   2              *intercept = (float)border[break_row];
-  474   2          }
-  475   1      }
-  476          
-  477          static void _repair_approach(uint16 *l, uint16 *r, Circle2Feature *f)
-  478          {
-  479   1          int16 row;
-  480   1          uint8 break_row = 0;
-  481   1          uint16 *border = 0;
-  482   1          float k = 0;
-  483   1          float b = 0;
-  484   1          int16 stop_row;
-  485   1      
-  486   1          if (cir2_dir == CIR2_LEFT)
-  487   1          {
-  488   2              break_row = f->l_break_row;
-  489   2              border = l;
-  490   2          }
-  491   1          else if (cir2_dir == CIR2_RIGHT)
-  492   1          {
-  493   2              break_row = f->r_break_row;
-  494   2              border = r;
-  495   2          }
-  496   1          else
-  497   1          {
-  498   2              return;
-  499   2          }
-  500   1      
-  501   1          if (break_row <= CIR2_SCAN_TOP + 1)
-  502   1              return;
-  503   1      
-  504   1          _calc_slope(border, break_row, &k, &b);
-  505   1      
-  506   1          stop_row = (int16)break_row - CIR2_APPROACH_REPAIR_LEN;
-  507   1          if (stop_row < CIR2_SCAN_TOP)
-  508   1              stop_row = CIR2_SCAN_TOP;
-  509   1      
-  510   1          for (row = (int16)break_row; row >= stop_row; row--)
-  511   1          {
-  512   2              int16 val = (int16)(k * row + b);
-  513   2              border[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
-  514   2          }
-  515   1      }
-  516          
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 9   
+  452   1          search_end = (f->l_break_row > CIR2_INFLECT_RANGE + CIR2_SCAN_TOP)
+  453   1                           ? (f->l_break_row - 15)
+  454   1                           : CIR2_SCAN_TOP;
+  455   1          if (search_end < CIR2_SCAN_TOP + CIR2_INFLECT_RANGE)
+  456   1              search_end = CIR2_SCAN_TOP + CIR2_INFLECT_RANGE;
+  457   1      
+  458   1          for (row = search_end; row > CIR2_SCAN_TOP + CIR2_INFLECT_RANGE; row--)
+  459   1          {
+  460   2              if (_check_left_inflect_trend(l, row))
+  461   2              {
+  462   3                  f->l_inflect_row = row;
+  463   3                  break;
+  464   3              }
+  465   2          }
+  466   1      
+  467   1          /* 右边线拐点: 在断口上方寻找“先减后增”的趋势反转 */
+  468   1          search_end = (f->r_break_row > CIR2_INFLECT_RANGE + CIR2_SCAN_TOP)
+  469   1                           ? (f->r_break_row - 15)
+  470   1                           : CIR2_SCAN_TOP;
+  471   1          if (search_end < CIR2_SCAN_TOP + CIR2_INFLECT_RANGE)
+  472   1              search_end = CIR2_SCAN_TOP + CIR2_INFLECT_RANGE;
+  473   1      
+  474   1          for (row = search_end; row > CIR2_SCAN_TOP + CIR2_INFLECT_RANGE; row--)
+  475   1          {
+  476   2              if (_check_right_inflect_trend(r, row))
+  477   2              {
+  478   3                  f->r_inflect_row = row;
+  479   3                  break;
+  480   3              }
+  481   2          }
+  482   1      }
+  483          
+  484          /*--------------------------------------------------------------------------
+  485           * _extract_width - 赛道宽度模型
+  486           *--------------------------------------------------------------------------*/
+  487          static void _extract_width(uint16 *l, uint16 *r, Circle2Feature *f)
+  488          {
+  489   1          uint8  row;
+  490   1          uint8  w;
+  491   1          uint16 w_top = 0;
+  492   1      
+  493   1          f->width_bottom = (uint8)(r[CIR2_SCAN_BOT] - l[CIR2_SCAN_BOT]);
+  494   1      
+  495   1          for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
+  496   1          {
+  497   2              if (r[row] > l[row])
+  498   2                  w = (uint8)(r[row] - l[row]);
+  499   2              else
+  500   2                  w = 0;
+  501   2      
+  502   2              if (w > f->width_max) f->width_max = w;
+  503   2              if (w < f->width_min) f->width_min = w;
+  504   2      
+  505   2              if (row == CIR2_SCAN_TOP + 10)
+  506   2                  w_top = w;
+  507   2          }
+  508   1      
+  509   1          f->width_diff = (int16)w_top - (int16)f->width_bottom;
+  510   1      }
+  511          
+  512          /*--------------------------------------------------------------------------
+  513           * _extract_lost - 边线丢失统计
+  514           *--------------------------------------------------------------------------*/
+  515          static void _extract_lost(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
+  516                                     Circle2Feature *f)
+  517          {
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 9   
 
-  517          /*============================================================================
-  518           *                         内部: 状态判断函数
-  519           *============================================================================*/
-  520          
-  521          /*--------------------------------------------------------------------------
-  522           * _check_entry - IDLE→ENTRY 条件
-  523           *
-  524           * 左圆环入口特征:
-  525           *   1. 左侧出现断口 (l_break_row > 0)，且断口跳变量较大
-  526           *   2. 右侧无断口（或断口很小）
-  527           *   3. 断口上方能找到拐点（说明是连续弧线而非噪声）
-  528           *   4. 右侧丢线少（排除十字等干扰）
-  529           *
-  530           * 右圆环同理取反
-  531           *--------------------------------------------------------------------------*/
-  532          static uint8 _check_entry(Circle2Feature *f)
-  533          {
-  534   1          uint8 left_entry  = 0;
-  535   1          uint8 right_entry = 0;
-  536   1      
-  537   1          /* 左圆环入口 */
-  538   1          if (f->l_break_row > 0 &&
-  539   1              f->r_break_row == 0 &&
-  540   1              f->l_inflect_row > 0 )
-  541   1          {
-  542   2              left_entry = 1;
-  543   2          }
-  544   1      
-  545   1          /* 右圆环入口 */
-  546   1          if (f->r_break_row > 0  &&
-  547   1              f->l_break_row == 0 &&
-  548   1              f->r_inflect_row > 0 )
-  549   1          {
-  550   2              right_entry = 1;
-  551   2          }
-  552   1      
-  553   1          return (left_entry || right_entry);
-  554   1      }
-  555          
-  556          /*--------------------------------------------------------------------------
-  557           * _check_inside - ENTRY→INSIDE 条件
-  558           *
-  559           * 进入内部的标志:
-  560           *   - 左圆环: 底部左下角变黑（车辆已经偏离原赛道进入圆环内侧）
-  561           *             且断口侧大面积丢线
-  562           *   - 右圆环: 底部右下角变黑
-  563           *--------------------------------------------------------------------------*/
-  564          static uint8 _check_inside(Circle2Feature *f)
-  565          {
-  566   1          if (cir2_dir == CIR2_LEFT)
-  567   1          {
-  568   2              /* 左圆环: 左下角变黑 + 左侧大面积丢线 */
-  569   2              if (f->corner_bl == BLACK_PIXEL && f->l_lost_cnt >= CIR2_LOST_THRESH)
-  570   2                  return 1;
-  571   2              /* 或者：两侧都丢线严重（已完全在圆环内） */
-  572   2              if (f->l_lost_cnt >= CIR2_LOST_THRESH && f->r_lost_cnt >= CIR2_LOST_THRESH)
-  573   2                  return 1;
-  574   2          }
-  575   1          else if (cir2_dir == CIR2_RIGHT)
-  576   1          {
-  577   2              if (f->corner_br == BLACK_PIXEL && f->r_lost_cnt >= CIR2_LOST_THRESH)
-  578   2                  return 1;
-  579   2              if (f->l_lost_cnt >= CIR2_LOST_THRESH && f->r_lost_cnt >= CIR2_LOST_THRESH)
-  580   2                  return 1;
-  581   2          }
-  582   1          return 0;
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 10  
+  518   1          uint8 row;
+  519   1      
+  520   1          for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
+  521   1          {
+  522   2              if (l[row] <= BORDER_MIN + 1) f->l_lost_cnt++;
+  523   2              if (r[row] >= BORDER_MAX - 1) f->r_lost_cnt++;
+  524   2          }
+  525   1      }
+*** WARNING C47 IN LINE 515 OF ..\code\Camera\Circle\circle2.c: 'img': unreferenced parameter
+  526          
+  527          /*--------------------------------------------------------------------------
+  528           * _extract_corner - 四角像素采样
+  529           *--------------------------------------------------------------------------*/
+  530          static void _extract_corner(uint8 (*img)[MT9V03X_W], Circle2Feature *f)
+  531          {
+  532   1          f->corner_bl = img[MT9V03X_H - 2][2];
+  533   1          f->corner_br = img[MT9V03X_H - 2][MT9V03X_W - 3];
+  534   1          f->corner_tl = img[MT9V03X_H / 2][2];
+  535   1          f->corner_tr = img[MT9V03X_H / 2][MT9V03X_W - 3];
+  536   1      }
+  537          
+  538          static void _calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept)
+  539          {
+  540   1          int16 i;
+  541   1          uint8 start_row = break_row + CIR2_FIT_LEN;
+  542   1          uint8 end_row   = break_row + 2;
+  543   1          float sum_x = 0;
+  544   1          float sum_y = 0;
+  545   1          float sum_xy = 0;
+  546   1          float sum_x2 = 0;
+  547   1          float n = 0;
+  548   1          float denom;
+  549   1      
+  550   1          if (start_row > CIR2_SCAN_BOT)
+  551   1              start_row = CIR2_SCAN_BOT;
+  552   1          if (end_row > CIR2_SCAN_BOT || end_row >= start_row)
+  553   1          {
+  554   2              *slope = 0;
+  555   2              *intercept = (float)border[break_row];
+  556   2              return;
+  557   2          }
+  558   1      
+  559   1          for (i = start_row; i >= end_row; i--)
+  560   1          {
+  561   2              float x = (float)i;
+  562   2              float y = (float)border[i];
+  563   2              sum_x  += x;
+  564   2              sum_y  += y;
+  565   2              sum_xy += x * y;
+  566   2              sum_x2 += x * x;
+  567   2              n      += 1.0f;
+  568   2          }
+  569   1      
+  570   1          denom = n * sum_x2 - sum_x * sum_x;
+  571   1          if (denom > 0.001f || denom < -0.001f)
+  572   1          {
+  573   2              *slope     = (n * sum_xy - sum_x * sum_y) / denom;
+  574   2              *intercept = (sum_y - (*slope) * sum_x) / n;
+  575   2          }
+  576   1          else
+  577   1          {
+  578   2              *slope = 0;
+  579   2              *intercept = (float)border[break_row];
+  580   2          }
+  581   1      }
+  582          
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 10  
 
-  583   1      }
-  584          
-  585          /*--------------------------------------------------------------------------
-  586           * _check_exit - INSIDE→EXIT 条件
-  587           *
-  588           * 出口特征:
-  589           *   - 对侧角落重新变白（恢复正常赛道边界）
-  590           *   - 断口侧丢线减少
-  591           *   - 或者出现新的断口但方向反转
-  592           *--------------------------------------------------------------------------*/
-  593          static uint8 _check_exit(Circle2Feature *f)
-  594          {
-  595   1          if (cir2_dir == CIR2_LEFT)
-  596   1          {
-  597   2              /* 左圆环出口: 右下角白+左下角白，且左侧丢线开始恢复 */
-  598   2              if (f->corner_bl == WHITE_PIXEL &&
-  599   2                  f->corner_br == WHITE_PIXEL &&
-  600   2                  f->l_lost_cnt < CIR2_LOST_THRESH)
-  601   2              {
-  602   3                  return 1;
-  603   3              }
-  604   2              /* 或：右侧出现新断口（出口第二断口特征） */
-  605   2              if (f->r_break_row > 0 && f->l_lost_cnt < CIR2_LOST_THRESH)
-  606   2              {
-  607   3                  return 1;
-  608   3              }
-  609   2          }
-  610   1          else if (cir2_dir == CIR2_RIGHT)
-  611   1          {
-  612   2              if (f->corner_bl == WHITE_PIXEL &&
-  613   2                  f->corner_br == WHITE_PIXEL &&
-  614   2                  f->r_lost_cnt < CIR2_LOST_THRESH)
-  615   2              {
-  616   3                  return 1;
-  617   3              }
-  618   2              if (f->l_break_row > 0 && f->r_lost_cnt < CIR2_LOST_THRESH)
-  619   2              {
-  620   3                  return 1;
-  621   3              }
-  622   2          }
-  623   1          return 0;
-  624   1      }
-  625          
-  626          /*============================================================================
-  627           *                         内部: 边线修复函数
-  628           *============================================================================*/
-  629          
-  630          /*--------------------------------------------------------------------------
-  631           * _repair_left - 左圆环补线
-  632           *
-  633           * 策略: 左侧断口区域用线性插值修复左边线
-  634           *   - 如果找到拐点: 从拐点到断口做线性插值
-  635           *   - 如果没有拐点: 用对侧(右)边线偏移来推测左边线
-  636           *   - 大面积丢线(INSIDE): 左边线设为 BORDER_MIN，用右边线 - 固定宽度
-  637           *--------------------------------------------------------------------------*/
-  638          static void _repair_left(uint16 *l, uint16 *r, Circle2Feature *f)
-  639          {
-  640   1          uint8 row;
-  641   1          uint8 anchor_top = 0;   /* 断口上方的正常点 */
-  642   1          uint8 anchor_bot = 0;   /* 断口下方的正常点 */
-  643   1          float k;
-  644   1          float b;
-  645   1      
-  646   1          if (cir2_state == CIR2_INSIDE)
-  647   1          {
-  648   2              /* 内部阶段: 左侧全丢线，用右边线 - 赛道宽度估计 */
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 11  
+  583          /*
+  584           * Mark repaired rows as valid at the same time we overwrite the border.
+  585           * Without this, downstream midline code may ignore the repaired segment.
+  586           */
+  587          static void _set_repaired_point(uint16 *border, uint8 *valid, uint8 row, int16 val)
+  588          {
+  589   1          border[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+  590   1          valid[row] = CIR2_REPAIR_VALID;
+  591   1      }
+  592          
+  593          /*
+  594           * During ENTRY, pull the repaired edge farther inward near the upper anchor.
+  595           * This creates a stronger steering hint than a plain straight bridge.
+  596           */
+  597          static uint8 _calc_entry_pull(uint8 anchor_top, uint8 anchor_bot, uint8 row)
+  598          {
+  599   1          uint8 span = anchor_bot - anchor_top;
+  600   1          uint8 progress = anchor_bot - row;
+  601   1          uint16 offset_range = (uint16)(CIR2_ENTRY_PULL_MAX - CIR2_ENTRY_PULL_MIN);
+  602   1      
+  603   1          if(anchor_bot <= anchor_top)
+  604   1          {
+  605   2              return CIR2_ENTRY_PULL_MIN;
+  606   2          }
+  607   1      
+  608   1          return (uint8)(CIR2_ENTRY_PULL_MIN +
+  609   1              (uint8)((offset_range * progress + (span >> 1)) / span));
+  610   1      }
+  611          
+  612          static void _repair_approach(uint16 *l, uint16 *r, Circle2Feature *f)
+  613          {
+  614   1          int16 row;
+  615   1          uint8 break_row = 0;
+  616   1          uint16 *border = 0;
+  617   1          uint8 *valid = 0;
+  618   1          float k = 0;
+  619   1          float b = 0;
+  620   1          int16 stop_row;
+  621   1      
+  622   1          if (cir2_dir == CIR2_LEFT)
+  623   1          {
+  624   2              break_row = f->l_break_row;
+  625   2              border = l;
+  626   2              valid = l_border_valid;
+  627   2          }
+  628   1          else if (cir2_dir == CIR2_RIGHT)
+  629   1          {
+  630   2              break_row = f->r_break_row;
+  631   2              border = r;
+  632   2              valid = r_border_valid;
+  633   2          }
+  634   1          else
+  635   1          {
+  636   2              return;
+  637   2          }
+  638   1      
+  639   1          if (break_row <= CIR2_SCAN_TOP + 1)
+  640   1              return;
+  641   1      
+  642   1          _calc_slope(border, break_row, &k, &b);
+  643   1      
+  644   1          stop_row = (int16)break_row - CIR2_APPROACH_REPAIR_LEN;
+  645   1          if (stop_row < CIR2_SCAN_TOP)
+  646   1              stop_row = CIR2_SCAN_TOP;
+  647   1      
+  648   1          for (row = (int16)break_row; row >= stop_row; row--)
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 11  
 
-  649   2              uint16 est_width = f->width_bottom;
-  650   2              if (est_width < CIR2_WIDTH_NARROW) est_width = CIR2_WIDTH_NARROW;
-  651   2      
-  652   2              for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
-  653   2              {
-  654   3                  if (l[row] <= BORDER_MIN + 1)
-  655   3                  {
-  656   4                      int16 val = (int16)r[row] - (int16)est_width;
-  657   4                      l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
-  658   4                  }
-  659   3              }
-  660   2              return;
-  661   2          }
-  662   1      
-  663   1          /* ENTRY / EXIT 阶段: 断口区域线性插值 */
-  664   1          if (f->l_break_row == 0) return;
-  665   1      
-  666   1          /* 上锚点: 拐点 或 断口往上第一个非丢线行 */
-  667   1          if (f->l_inflect_row > 0 && f->l_inflect_row < f->l_break_row)
-  668   1          {
-  669   2              anchor_top = f->l_inflect_row;
-  670   2          }
-  671   1          else
-  672   1          {
-  673   2              for (row = f->l_break_row; row > CIR2_SCAN_TOP; row--)
-  674   2              {
-  675   3                  if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1)
-  676   3                  {
-  677   4                      anchor_top = row;
-  678   4                      break;
-  679   4                  }
-  680   3              }
-  681   2          }
-  682   1      
-  683   1          /* 下锚点: 断口下方（靠底部方向）的正常点 */
-  684   1          for (row = f->l_break_row; row <= CIR2_SCAN_BOT; row++)
-  685   1          {
-  686   2              if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1)
-  687   2              {
-  688   3                  anchor_bot = row;
-  689   3                  break;
-  690   3              }
-  691   2          }
-  692   1      
-  693   1          /* 如果只找到一个锚点，用底部边界值 */
-  694   1          if (!anchor_bot) anchor_bot = CIR2_SCAN_BOT;
-  695   1          if (!anchor_top) anchor_top = CIR2_SCAN_TOP;
-  696   1          if (anchor_top >= anchor_bot) return;
-  697   1      
-  698   1          /* 线性插值 */
-  699   1          k = (float)((int16)l[anchor_bot] - (int16)l[anchor_top])
-  700   1              / (float)(anchor_bot - anchor_top);
-  701   1          b = (float)l[anchor_top] - k * anchor_top;
-  702   1      
-  703   1          for (row = anchor_top; row <= anchor_bot; row++)
-  704   1          {
-  705   2              int16 val = (int16)(k * row + b);
-  706   2              l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
-  707   2          }
-  708   1      }
-  709          
-  710          /*--------------------------------------------------------------------------
-  711           * _repair_right - 右圆环补线（左右镜像逻辑）
-  712           *--------------------------------------------------------------------------*/
-  713          static void _repair_right(uint16 *l, uint16 *r, Circle2Feature *f)
-  714          {
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 12  
+  649   1          {
+  650   2              int16 val = (int16)(k * row + b);
+  651   2              _set_repaired_point(border, valid, (uint8)row, val);
+  652   2          }
+  653   1      }
+  654          
+  655          /*============================================================================
+  656           *                         内部: 状态判断函数
+  657           *============================================================================*/
+  658          
+  659          /*------------------------------------------------------------------
+  660           * _check_entry - IDLE→ENTRY 条件
+  661           *-----------------------------------------------------------------*/
+  662          static uint8 _check_entry(Circle2Feature *f)
+  663          {
+  664   1          uint8 left_score = 0;
+  665   1          uint8 right_score = 0;
+  666   1      
+  667   1          uint8 left_asym = 0;//主左侧断口强度
+  668   1          uint8 right_asym = 0;//主右侧断口强度
+  669   1          uint8 width_open = 0;//宽度过大
+  670   1          uint8 left_break = 0;
+  671   1          uint8 right_break = 0;
+  672   1      
+  673   1          if (f->width_diff >= CIR2_WIDTH_DIFF_MIN)
+  674   1          {
+  675   2              width_open = 1;
+  676   2          }
+  677   1      
+  678   1          if (f->r_break_row == 0 ||
+  679   1              f->l_break_delta >= f->r_break_delta + CIR2_BREAK_DELTA_MARGIN)
+  680   1          {
+  681   2              left_asym = 1;
+  682   2          }
+  683   1      
+  684   1          if (f->l_break_row == 0 ||
+  685   1              f->r_break_delta >= f->l_break_delta + CIR2_BREAK_DELTA_MARGIN)
+  686   1          {
+  687   2              right_asym = 1;
+  688   2          }
+  689   1      
+  690   1          left_break = (f->l_break_row > CIR2_BREAK_MIN_ROW) ? 1 : 0;
+  691   1          right_break = (f->r_break_row > CIR2_BREAK_MIN_ROW) ? 1 : 0;
+  692   1          //判定圆环打分
+  693   1          if (left_break)                          left_score += 2;
+  694   1          if (f->l_inflect_row > 0)                left_score += 2;
+  695   1          if (left_asym)                           left_score += 1;
+  696   1          if (width_open)                          left_score += 1;
+  697   1          if (left_break && f->l_lost_cnt >= CIR2_LOST_THRESH) left_score += 1;
+  698   1          if (f->l_rebound_trend)                              left_score += 1;
+  699   1      
+  700   1          if (right_break)                         right_score += 2;
+  701   1          if (f->r_inflect_row > 0)                right_score += 2;
+  702   1          if (right_asym)                          right_score += 1;
+  703   1          if (width_open)                          right_score += 1;
+  704   1          if (right_break && f->r_lost_cnt >= CIR2_LOST_THRESH) right_score += 1;
+  705   1          if (f->r_rebound_trend)                              right_score += 1;
+  706   1      
+  707   1          if (left_score >= CIR2_ENTRY_SCORE_MIN &&
+  708   1              right_score >= CIR2_ENTRY_SCORE_MIN &&
+  709   1              ABS_DIFF(f->l_break_delta, f->r_break_delta) < CIR2_BREAK_DELTA_MARGIN)
+  710   1          {
+  711   2              return 0;
+  712   2          }
+  713   1      
+  714   1          return (left_score >= CIR2_ENTRY_SCORE_MIN ||
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 12  
 
-  715   1          uint8 row;
-  716   1          uint8 anchor_top = 0;
-  717   1          uint8 anchor_bot = 0;
-  718   1          float k;
-  719   1          float b;
-  720   1      
-  721   1          if (cir2_state == CIR2_INSIDE)
-  722   1          {
-  723   2              uint16 est_width = f->width_bottom;
-  724   2              if (est_width < CIR2_WIDTH_NARROW) est_width = CIR2_WIDTH_NARROW;
-  725   2      
-  726   2              for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
-  727   2              {
-  728   3                  if (r[row] >= BORDER_MAX - 1)
-  729   3                  {
-  730   4                      int16 val = (int16)l[row] + (int16)est_width;
-  731   4                      r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
-  732   4                  }
-  733   3              }
-  734   2              return;
-  735   2          }
-  736   1      
-  737   1          if (f->r_break_row == 0) return;
-  738   1      
-  739   1          if (f->r_inflect_row > 0 && f->r_inflect_row < f->r_break_row)
-  740   1          {
-  741   2              anchor_top = f->r_inflect_row;
-  742   2          }
-  743   1          else
-  744   1          {
-  745   2              for (row = f->r_break_row; row > CIR2_SCAN_TOP; row--)
-  746   2              {
-  747   3                  if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1)
-  748   3                  {
-  749   4                      anchor_top = row;
-  750   4                      break;
-  751   4                  }
-  752   3              }
-  753   2          }
-  754   1      
-  755   1          for (row = f->r_break_row; row <= CIR2_SCAN_BOT; row++)
-  756   1          {
-  757   2              if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1)
-  758   2              {
-  759   3                  anchor_bot = row;
-  760   3                  break;
-  761   3              }
-  762   2          }
-  763   1      
-  764   1          if (!anchor_bot) anchor_bot = CIR2_SCAN_BOT;
-  765   1          if (!anchor_top) anchor_top = CIR2_SCAN_TOP;
-  766   1          if (anchor_top >= anchor_bot) return;
-  767   1      
-  768   1          k = (float)((int16)r[anchor_bot] - (int16)r[anchor_top])
-  769   1              / (float)(anchor_bot - anchor_top);
-  770   1          b = (float)r[anchor_top] - k * anchor_top;
-  771   1      
-  772   1          for (row = anchor_top; row <= anchor_bot; row++)
-  773   1          {
-  774   2              int16 val = (int16)(k * row + b);
-  775   2              r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
-  776   2          }
-  777   1      }
-  778          
-  779          /*--------------------------------------------------------------------------
-  780           * _recalc_midline - 修复后重算中线（感知 valid 标记）
-C251 COMPILER V5.60.0,  circle2                                                            14/06/26  04:39:36  PAGE 13  
+  715   1                  right_score >= CIR2_ENTRY_SCORE_MIN) ? 1 : 0;
+  716   1      }
+  717          /*第二入口检测，下方角点恢复黑色且断口消失*/
+  718          static uint8 _check_entry2(Circle2Feature *f)
+  719          {
+  720   1          if(f->corner_bl == BLACK_PIXEL && f->corner_br == BLACK_PIXEL&&f->l_lost_cnt <= CIR2_LOST_THRESH && f
+             -->r_lost_cnt <= CIR2_LOST_THRESH)
+  721   1          {
+  722   2              return 1;
+  723   2          }
+  724   1          return 0;
+  725   1      }
+  726          
+  727          /*--------------------------------------------------------------------------
+  728           * _check_inside - ENTRY→INSIDE 条件
+  729           *
+  730           * 进入内部的标志:
+  731           *   - 左圆环: 底部左下角变黑（车辆已经偏离原赛道进入圆环内侧）
+  732           *             且断口侧大面积丢线
+  733           *   - 右圆环: 底部右下角变黑
+  734           *--------------------------------------------------------------------------*/
+  735          static uint8 _check_inside(Circle2Feature *f)
+  736          {
+  737   1          if (cir2_dir == CIR2_LEFT)
+  738   1          {
+  739   2              /* 左圆环: 左下角变黑 + 左侧大面积丢线 */
+  740   2              if (f->corner_bl == BLACK_PIXEL && f->l_lost_cnt >= CIR2_LOST_THRESH)
+  741   2                  return 1;
+  742   2              /* 或者：两侧都丢线严重（已完全在圆环内） */
+  743   2              if (f->l_lost_cnt >= CIR2_LOST_THRESH && f->r_lost_cnt >= CIR2_LOST_THRESH)
+  744   2                  return 1;
+  745   2          }
+  746   1          else if (cir2_dir == CIR2_RIGHT)
+  747   1          {
+  748   2              if (f->corner_br == BLACK_PIXEL && f->r_lost_cnt >= CIR2_LOST_THRESH)
+  749   2                  return 1;
+  750   2              if (f->l_lost_cnt >= CIR2_LOST_THRESH && f->r_lost_cnt >= CIR2_LOST_THRESH)
+  751   2                  return 1;
+  752   2          }
+  753   1          return 0;
+  754   1      }
+  755          
+  756          /*--------------------------------------------------------------------------
+  757           * _check_exit - INSIDE→EXIT 条件
+  758           *
+  759           * 出口特征:
+  760           *   - 对侧角落重新变白（恢复正常赛道边界）
+  761           *   - 断口侧丢线减少
+  762           *   - 或者出现新的断口但方向反转
+  763           *--------------------------------------------------------------------------*/
+  764          static uint8 _check_exit(Circle2Feature *f)
+  765          {
+  766   1          if (cir2_dir == CIR2_LEFT)
+  767   1          {
+  768   2              /* 左圆环出口: 右下角白+左下角白，且左侧丢线开始恢复 */
+  769   2              if (f->corner_bl == WHITE_PIXEL &&
+  770   2                  f->corner_br == WHITE_PIXEL &&
+  771   2                  f->l_lost_cnt < CIR2_LOST_THRESH)
+  772   2              {
+  773   3                  return 1;
+  774   3              }
+  775   2              /* 或：右侧出现新断口（出口第二断口特征） */
+  776   2              if (f->r_break_row > 0 && f->l_lost_cnt < CIR2_LOST_THRESH)
+  777   2              {
+  778   3                  return 1;
+  779   3              }
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 13  
 
-  781           *--------------------------------------------------------------------------*/
-  782          static void _recalc_midline(uint16 *l, uint16 *r)
-  783          {
-  784   1          uint8 row;
-  785   1          int last_good = MT9V03X_W / 2;
-  786   1          for (row = 0; row < MT9V03X_H; row++)
-  787   1          {
-  788   2              if (l_border_valid[row] && r_border_valid[row]) {
-  789   3                  midline[row]   = (int)(l[row] + r[row]) / 2;
-  790   3                  last_good      = midline[row];
-  791   3              } else {
-  792   3                  midline[row]   = last_good;
-  793   3              }
-  794   2              leftline[row]  = (int)l[row];
-  795   2              rightline[row] = (int)r[row];
-  796   2          }
-  797   1      }
+  780   2          }
+  781   1          else if (cir2_dir == CIR2_RIGHT)
+  782   1          {
+  783   2              if (f->corner_bl == WHITE_PIXEL &&
+  784   2                  f->corner_br == WHITE_PIXEL &&
+  785   2                  f->r_lost_cnt < CIR2_LOST_THRESH)
+  786   2              {
+  787   3                  return 1;
+  788   3              }
+  789   2              if (f->l_break_row > 0 && f->r_lost_cnt < CIR2_LOST_THRESH)
+  790   2              {
+  791   3                  return 1;
+  792   3              }
+  793   2          }
+  794   1          return 0;
+  795   1      }
+  796          
+  797          /*============================================================================
+  798           *                         内部: 边线修复函数
+  799           *============================================================================*/
+  800          
+  801          /*--------------------------------------------------------------------------
+  802           * _repair_left - 左圆环补线
+  803           *
+  804           * 策略: 左侧断口区域用线性插值修复左边线
+  805           *   - 如果找到拐点: 从拐点到断口做线性插值
+  806           *   - 如果没有拐点: 用对侧(右)边线偏移来推测左边线
+  807           *   - 大面积丢线(INSIDE): 左边线设为 BORDER_MIN，用右边线 - 固定宽度
+  808           *--------------------------------------------------------------------------*/
+  809          static void _repair_left(uint16 *l, uint16 *r, Circle2Feature *f)
+  810          {
+  811   1          {
+  812   2              uint8 row;
+  813   2              uint8 anchor_top = 0;
+  814   2              uint8 anchor_bot = 0;
+  815   2              float k;
+  816   2              float b;
+  817   2      
+  818   2              /*
+  819   2               * Reworked repair path:
+  820   2               * - repaired rows become valid immediately
+  821   2               * - ENTRY can hold the previous anchors for a few frames
+  822   2               * - ENTRY adds an inward pull so the midline commits to the circle
+  823   2               */
+  824   2              if (cir2_state == CIR2_INSIDE)
+  825   2              {
+  826   3                  uint16 est_width = f->width_bottom;
+  827   3                  if (est_width < CIR2_WIDTH_NARROW) est_width = CIR2_WIDTH_NARROW;
+  828   3      
+  829   3                  for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
+  830   3                  {
+  831   4                      if (l[row] <= BORDER_MIN + 1)
+  832   4                      {
+  833   5                          int16 val = (int16)r[row] - (int16)est_width;
+  834   5                          _set_repaired_point(l, l_border_valid, row, val);
+  835   5                      }
+  836   4                  }
+  837   3                  return;
+  838   3              }
+  839   2      
+  840   2              if (f->l_break_row == 0)
+  841   2              {
+  842   3                  if (cir2_state == CIR2_ENTRY &&
+  843   3                      cir2_entry_hold_cnt < CIR2_ENTRY_HOLD_FRAMES &&
+  844   3                      cir2_cached_anchor_top > 0 &&
+  845   3                      cir2_cached_anchor_bot > cir2_cached_anchor_top)
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 14  
+
+  846   3                  {
+  847   4                      anchor_top = cir2_cached_anchor_top;
+  848   4                      anchor_bot = cir2_cached_anchor_bot;
+  849   4                      cir2_entry_hold_cnt++;
+  850   4                  }
+  851   3                  else
+  852   3                  {
+  853   4                      return;
+  854   4                  }
+  855   3              }
+  856   2              else
+  857   2              {
+  858   3                  if (f->l_inflect_row > 0 && f->l_inflect_row < f->l_break_row)
+  859   3                  {
+  860   4                      anchor_top = f->l_inflect_row;
+  861   4                  }
+  862   3                  else
+  863   3                  {
+  864   4                      for (row = f->l_break_row; row > CIR2_SCAN_TOP; row--)
+  865   4                      {
+  866   5                          if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1)
+  867   5                          {
+  868   6                              anchor_top = row;
+  869   6                              break;
+  870   6                          }
+  871   5                      }
+  872   4                  }
+  873   3      
+  874   3                  for (row = f->l_break_row; row <= CIR2_SCAN_BOT; row++)
+  875   3                  {
+  876   4                      if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1)
+  877   4                      {
+  878   5                          anchor_bot = row;
+  879   5                          break;
+  880   5                      }
+  881   4                  }
+  882   3      
+  883   3                  if (!anchor_bot) anchor_bot = CIR2_SCAN_BOT;
+  884   3                  if (!anchor_top) anchor_top = CIR2_SCAN_TOP;
+  885   3                  if (anchor_top >= anchor_bot) return;
+  886   3      
+  887   3                  if (cir2_state == CIR2_ENTRY)
+  888   3                  {
+  889   4                      cir2_cached_anchor_top = anchor_top;
+  890   4                      cir2_cached_anchor_bot = anchor_bot;
+  891   4                      cir2_entry_hold_cnt = 0;
+  892   4                  }
+  893   3              }
+  894   2      
+  895   2              if (anchor_top >= anchor_bot) return;
+  896   2      
+  897   2              k = (float)((int16)l[anchor_bot] - (int16)l[anchor_top])
+  898   2                  / (float)(anchor_bot - anchor_top);
+  899   2              b = (float)l[anchor_top] - k * anchor_top;
+  900   2      
+  901   2              for (row = anchor_top; row <= anchor_bot; row++)
+  902   2              {
+  903   3                  int16 val = (int16)(k * row + b);
+  904   3      
+  905   3                  if (cir2_state == CIR2_ENTRY)
+  906   3                  {
+  907   4                      val -= (int16)_calc_entry_pull(anchor_top, anchor_bot, row);
+  908   4                  }
+  909   3      
+  910   3                  _set_repaired_point(l, l_border_valid, row, val);
+  911   3              }
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 15  
+
+  912   2              return;
+  913   2          }
+  914   1      
+  915   1      #if 0
+                   uint8 row;
+                   uint8 anchor_top = 0;   /* 断口上方的正常点 */
+                   uint8 anchor_bot = 0;   /* 断口下方的正常点 */
+                   float k;
+                   float b;
+               
+                   if (cir2_state == CIR2_INSIDE)
+                   {
+                       /* 内部阶段: 左侧全丢线，用右边线 - 赛道宽度估计 */
+                       uint16 est_width = f->width_bottom;
+                       if (est_width < CIR2_WIDTH_NARROW) est_width = CIR2_WIDTH_NARROW;
+               
+                       for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
+                       {
+                           if (l[row] <= BORDER_MIN + 1)
+                           {
+                               int16 val = (int16)r[row] - (int16)est_width;
+                               l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                           }
+                       }
+                       return;
+                   }
+               
+                   /* ENTRY / EXIT 阶段: 断口区域线性插值 */
+                   if (f->l_break_row == 0) return;
+               
+                   /* 上锚点: 拐点 或 断口往上第一个非丢线行 */
+                   if (f->l_inflect_row > 0 && f->l_inflect_row < f->l_break_row)
+                   {
+                       anchor_top = f->l_inflect_row;
+                   }
+                   else
+                   {
+                       for (row = f->l_break_row; row > CIR2_SCAN_TOP; row--)
+                       {
+                           if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1)
+                           {
+                               anchor_top = row;
+                               break;
+                           }
+                       }
+                   }
+               
+                   /* 下锚点: 断口下方（靠底部方向）的正常点 */
+                   for (row = f->l_break_row; row <= CIR2_SCAN_BOT; row++)
+                   {
+                       if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1)
+                       {
+                           anchor_bot = row;
+                           break;
+                       }
+                   }
+               
+                   /* 如果只找到一个锚点，用底部边界值 */
+                   if (!anchor_bot) anchor_bot = CIR2_SCAN_BOT;
+                   if (!anchor_top) anchor_top = CIR2_SCAN_TOP;
+                   if (anchor_top >= anchor_bot) return;
+               
+                   /* 线性插值 */
+                   k = (float)((int16)l[anchor_bot] - (int16)l[anchor_top])
+                       / (float)(anchor_bot - anchor_top);
+                   b = (float)l[anchor_top] - k * anchor_top;
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 16  
+
+               
+                   for (row = anchor_top; row <= anchor_bot; row++)
+                   {
+                       int16 val = (int16)(k * row + b);
+                       l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                   }
+               #endif
+  985   1      }
+  986          
+  987          /*--------------------------------------------------------------------------
+  988           * _repair_right - 右圆环补线（左右镜像逻辑）
+  989           *--------------------------------------------------------------------------*/
+  990          static void _repair_right(uint16 *l, uint16 *r, Circle2Feature *f)
+  991          {
+  992   1          {
+  993   2              uint8 row;
+  994   2              uint8 anchor_top = 0;
+  995   2              uint8 anchor_bot = 0;
+  996   2              float k;
+  997   2              float b;
+  998   2      
+  999   2              if (cir2_state == CIR2_INSIDE)
+ 1000   2              {
+ 1001   3                  uint16 est_width = f->width_bottom;
+ 1002   3                  if (est_width < CIR2_WIDTH_NARROW) est_width = CIR2_WIDTH_NARROW;
+ 1003   3      
+ 1004   3                  for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
+ 1005   3                  {
+ 1006   4                      if (r[row] >= BORDER_MAX - 1)
+ 1007   4                      {
+ 1008   5                          int16 val = (int16)l[row] + (int16)est_width;
+ 1009   5                          _set_repaired_point(r, r_border_valid, row, val);
+ 1010   5                      }
+ 1011   4                  }
+ 1012   3                  return;
+ 1013   3              }
+ 1014   2      
+ 1015   2              if (f->r_break_row == 0)
+ 1016   2              {
+ 1017   3                  if (cir2_state == CIR2_ENTRY &&
+ 1018   3                      cir2_entry_hold_cnt < CIR2_ENTRY_HOLD_FRAMES &&
+ 1019   3                      cir2_cached_anchor_top > 0 &&
+ 1020   3                      cir2_cached_anchor_bot > cir2_cached_anchor_top)
+ 1021   3                  {
+ 1022   4                      anchor_top = cir2_cached_anchor_top;
+ 1023   4                      anchor_bot = cir2_cached_anchor_bot;
+ 1024   4                      cir2_entry_hold_cnt++;
+ 1025   4                  }
+ 1026   3                  else
+ 1027   3                  {
+ 1028   4                      return;
+ 1029   4                  }
+ 1030   3              }
+ 1031   2              else
+ 1032   2              {
+ 1033   3                  if (f->r_inflect_row > 0 && f->r_inflect_row < f->r_break_row)
+ 1034   3                  {
+ 1035   4                      anchor_top = f->r_inflect_row;
+ 1036   4                  }
+ 1037   3                  else
+ 1038   3                  {
+ 1039   4                      for (row = f->r_break_row; row > CIR2_SCAN_TOP; row--)
+ 1040   4                      {
+ 1041   5                          if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1)
+ 1042   5                          {
+ 1043   6                              anchor_top = row;
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 17  
+
+ 1044   6                              break;
+ 1045   6                          }
+ 1046   5                      }
+ 1047   4                  }
+ 1048   3      
+ 1049   3                  for (row = f->r_break_row; row <= CIR2_SCAN_BOT; row++)
+ 1050   3                  {
+ 1051   4                      if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1)
+ 1052   4                      {
+ 1053   5                          anchor_bot = row;
+ 1054   5                          break;
+ 1055   5                      }
+ 1056   4                  }
+ 1057   3      
+ 1058   3                  if (!anchor_bot) anchor_bot = CIR2_SCAN_BOT;
+ 1059   3                  if (!anchor_top) anchor_top = CIR2_SCAN_TOP;
+ 1060   3                  if (anchor_top >= anchor_bot) return;
+ 1061   3      
+ 1062   3                  if (cir2_state == CIR2_ENTRY)
+ 1063   3                  {
+ 1064   4                      cir2_cached_anchor_top = anchor_top;
+ 1065   4                      cir2_cached_anchor_bot = anchor_bot;
+ 1066   4                      cir2_entry_hold_cnt = 0;
+ 1067   4                  }
+ 1068   3              }
+ 1069   2      
+ 1070   2              if (anchor_top >= anchor_bot) return;
+ 1071   2      
+ 1072   2              k = (float)((int16)r[anchor_bot] - (int16)r[anchor_top])
+ 1073   2                  / (float)(anchor_bot - anchor_top);
+ 1074   2              b = (float)r[anchor_top] - k * anchor_top;
+ 1075   2      
+ 1076   2              for (row = anchor_top; row <= anchor_bot; row++)
+ 1077   2              {
+ 1078   3                  int16 val = (int16)(k * row + b);
+ 1079   3      
+ 1080   3                  if (cir2_state == CIR2_ENTRY)
+ 1081   3                  {
+ 1082   4                      val += (int16)_calc_entry_pull(anchor_top, anchor_bot, row);
+ 1083   4                  }
+ 1084   3      
+ 1085   3                  _set_repaired_point(r, r_border_valid, row, val);
+ 1086   3              }
+ 1087   2              return;
+ 1088   2          }
+ 1089   1      
+ 1090   1      #if 0
+                   uint8 row;
+                   uint8 anchor_top = 0;
+                   uint8 anchor_bot = 0;
+                   float k;
+                   float b;
+               
+                   if (cir2_state == CIR2_INSIDE)
+                   {
+                       uint16 est_width = f->width_bottom;
+                       if (est_width < CIR2_WIDTH_NARROW) est_width = CIR2_WIDTH_NARROW;
+               
+                       for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
+                       {
+                           if (r[row] >= BORDER_MAX - 1)
+                           {
+                               int16 val = (int16)l[row] + (int16)est_width;
+                               r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                           }
+                       }
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 18  
+
+                       return;
+                   }
+               
+                   if (f->r_break_row == 0) return;
+               
+                   if (f->r_inflect_row > 0 && f->r_inflect_row < f->r_break_row)
+                   {
+                       anchor_top = f->r_inflect_row;
+                   }
+                   else
+                   {
+                       for (row = f->r_break_row; row > CIR2_SCAN_TOP; row--)
+                       {
+                           if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1)
+                           {
+                               anchor_top = row;
+                               break;
+                           }
+                       }
+                   }
+               
+                   for (row = f->r_break_row; row <= CIR2_SCAN_BOT; row++)
+                   {
+                       if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1)
+                       {
+                           anchor_bot = row;
+                           break;
+                       }
+                   }
+               
+                   if (!anchor_bot) anchor_bot = CIR2_SCAN_BOT;
+                   if (!anchor_top) anchor_top = CIR2_SCAN_TOP;
+                   if (anchor_top >= anchor_bot) return;
+               
+                   k = (float)((int16)r[anchor_bot] - (int16)r[anchor_top])
+                       / (float)(anchor_bot - anchor_top);
+                   b = (float)r[anchor_top] - k * anchor_top;
+               
+                   for (row = anchor_top; row <= anchor_bot; row++)
+                   {
+                       int16 val = (int16)(k * row + b);
+                       r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                   }
+               #endif
+ 1154   1      }
+ 1155          /*
+ 1156           * 第一入口消失阶段补线
+ 1157           * Left circle: find the right-most local peak of the left arc in ROI row 10~40,
+ 1158           * then draw a straight repaired left border from the image lower-left to it.
+ 1159           * Right circle mirrors this by finding the left-most local valley of the right
+ 1160           * arc and drawing a straight repaired right border from the image lower-right.
+ 1161           */
+ 1162          static uint8 _repair_approach_end(uint16 *l, uint16 *r, Circle2Feature *f)
+ 1163          {
+ 1164   1          uint8 row;
+ 1165   1          uint8 bulge_row = 0;
+ 1166   1          uint16 bulge_x;
+ 1167   1          uint16 *border;
+ 1168   1          uint8 *valid;
+ 1169   1          uint8 roi_top = 10;
+ 1170   1          uint8 roi_bot = 40;
+ 1171   1          uint8 bottom_row = CIR2_SCAN_BOT;
+ 1172   1          int16 bottom_x;
+ 1173   1          int16 dy;
+ 1174   1      
+ 1175   1          (void)f;
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 19  
+
+*** WARNING C138 IN LINE 1175 OF ..\code\Camera\Circle\circle2.c: expression with possibly no effect
+ 1176   1      
+ 1177   1          if (cir2_dir == CIR2_LEFT)
+ 1178   1          {
+ 1179   2              bulge_x = BORDER_MIN;
+ 1180   2              border = l;
+ 1181   2              valid = l_border_valid;
+ 1182   2              bottom_x = BORDER_MIN;
+ 1183   2          }
+ 1184   1          else if (cir2_dir == CIR2_RIGHT)
+ 1185   1          {
+ 1186   2              bulge_x = BORDER_MAX;
+ 1187   2              border = r;
+ 1188   2              valid = r_border_valid;
+ 1189   2              bottom_x = BORDER_MAX;
+ 1190   2          }
+ 1191   1          else
+ 1192   1          {
+ 1193   2              return 0;
+ 1194   2          }
+ 1195   1      
+ 1196   1          if (roi_top < CIR2_SCAN_TOP)
+ 1197   1              roi_top = CIR2_SCAN_TOP;
+ 1198   1          if (roi_bot > CIR2_SCAN_BOT)
+ 1199   1              roi_bot = CIR2_SCAN_BOT;
+ 1200   1          if (roi_bot <= roi_top + 2)
+ 1201   1              return 0;
+ 1202   1      
+ 1203   1          for (row = roi_top + 1; row < roi_bot; row++)
+ 1204   1          {
+ 1205   2              uint16 x = border[row];
+ 1206   2      
+ 1207   2              if (!valid[row])
+ 1208   2                  continue;
+ 1209   2              if (x <= BORDER_MIN + 1 || x >= BORDER_MAX - 1)
+ 1210   2                  continue;
+ 1211   2      
+ 1212   2              if (cir2_dir == CIR2_LEFT)
+ 1213   2              {
+ 1214   3                  if (x >= (MT9V03X_W >> 1))
+ 1215   3                      continue;
+ 1216   3      
+ 1217   3                  if (x >= border[row - 1] && x >= border[row + 1] && x > bulge_x)
+ 1218   3                  {
+ 1219   4                      bulge_x = x;
+ 1220   4                      bulge_row = row;
+ 1221   4                  }
+ 1222   3              }
+ 1223   2              else
+ 1224   2              {
+ 1225   3                  if (x <= (MT9V03X_W >> 1))
+ 1226   3                      continue;
+ 1227   3      
+ 1228   3                  if (x <= border[row - 1] && x <= border[row + 1] && x < bulge_x)
+ 1229   3                  {
+ 1230   4                      bulge_x = x;
+ 1231   4                      bulge_row = row;
+ 1232   4                  }
+ 1233   3              }
+ 1234   2          }
+ 1235   1      
+ 1236   1          if (bulge_row == 0 || bulge_row >= bottom_row)
+ 1237   1              return 0;
+ 1238   1      
+ 1239   1          dy = (int16)bottom_row - (int16)bulge_row;
+ 1240   1          if (dy <= 0)
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 20  
+
+ 1241   1              return 0;
+ 1242   1      
+ 1243   1          for (row = bulge_row; row <= bottom_row; row++)
+ 1244   1          {
+ 1245   2              int16 rel = (int16)bottom_row - (int16)row;
+ 1246   2              int16 val = bottom_x +
+ 1247   2                          (int16)(((int32)((int16)bulge_x - bottom_x) * rel + (dy >> 1)) / dy);
+ 1248   2      
+ 1249   2              _set_repaired_point(border, valid, row, val);
+ 1250   2          }
+ 1251   1      
+ 1252   1          return 1;
+ 1253   1      }
+ 1254          
+ 1255          static uint8 _get_model_width(Circle2Feature *f)
+ 1256          {
+ 1257   1          uint16 width = f->width_bottom;
+ 1258   1      
+ 1259   1          if (width < CIR2_MODEL_WIDTH_MIN) width = CIR2_MODEL_WIDTH_MIN;
+ 1260   1          if (width > CIR2_MODEL_WIDTH_MAX) width = CIR2_MODEL_WIDTH_MAX;
+ 1261   1      
+ 1262   1          return (uint8)width;
+ 1263   1      }
+ 1264          
+ 1265          static uint8 _get_model_ratio_num(void)
+ 1266          {
+ 1267   1          if (cir2_state == CIR2_ENTRY) return CIR2_ENTRY_RATIO_NUM;
+ 1268   1          if (cir2_state == CIR2_EXIT)  return CIR2_EXIT_RATIO_NUM;
+ 1269   1          return CIR2_INSIDE_RATIO_NUM;
+ 1270   1      }
+ 1271          
+ 1272          static uint8 _get_model_ratio_den(void)
+ 1273          {
+ 1274   1          if (cir2_state == CIR2_ENTRY) return CIR2_ENTRY_RATIO_DEN;
+ 1275   1          if (cir2_state == CIR2_EXIT)  return CIR2_EXIT_RATIO_DEN;
+ 1276   1          return CIR2_INSIDE_RATIO_DEN;
+ 1277   1      }
+ 1278          
+ 1279          static void _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f)
+ 1280          {
+ 1281   1          uint8 row;
+ 1282   1          uint8 model_width = _get_model_width(f);
+ 1283   1          uint8 ratio_num = _get_model_ratio_num();
+ 1284   1          uint8 ratio_den = _get_model_ratio_den();
+ 1285   1          int16 offset = (int16)((model_width * ratio_num + (ratio_den >> 1)) / ratio_den);
+ 1286   1          int16 last_good = MT9V03X_W / 2;
+ 1287   1      
+ 1288   1          for (row = 0; row < MT9V03X_H; row++)
+ 1289   1          {
+ 1290   2              int16 mid_val;
+ 1291   2      
+ 1292   2              leftline[row] = (int)l[row];
+ 1293   2              rightline[row] = (int)r[row];
+ 1294   2      
+ 1295   2              if (cir2_dir == CIR2_LEFT)
+ 1296   2              {
+ 1297   3                  if (l_border_valid[row])
+ 1298   3                  {
+ 1299   4                      mid_val = (int16)l[row] + offset;
+ 1300   4                      midline[row] = CLAMP(mid_val, BORDER_MIN, BORDER_MAX);
+ 1301   4                      last_good = midline[row];
+ 1302   4                  }
+ 1303   3                  else
+ 1304   3                  {
+ 1305   4                      midline[row] = last_good;
+ 1306   4                  }
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 21  
+
+ 1307   3              }
+ 1308   2              else if (cir2_dir == CIR2_RIGHT)
+ 1309   2              {
+ 1310   3                  if (r_border_valid[row])
+ 1311   3                  {
+ 1312   4                      mid_val = (int16)r[row] - offset;
+ 1313   4                      midline[row] = CLAMP(mid_val, BORDER_MIN, BORDER_MAX);
+ 1314   4                      last_good = midline[row];
+ 1315   4                  }
+ 1316   3                  else
+ 1317   3                  {
+ 1318   4                      midline[row] = last_good;
+ 1319   4                  }
+ 1320   3              }
+ 1321   2              else if (l_border_valid[row] && r_border_valid[row])
+ 1322   2              {
+ 1323   3                  midline[row] = (int)(l[row] + r[row]) / 2;
+ 1324   3                  last_good = midline[row];
+ 1325   3              }
+ 1326   2              else
+ 1327   2              {
+ 1328   3                  midline[row] = last_good;
+ 1329   3              }
+ 1330   2          }
+ 1331   1      }
+ 1332          
+ 1333          /*--------------------------------------------------------------------------
+ 1334           * _recalc_midline - 修复后重算中线（感知 valid 标记）
+ 1335           *--------------------------------------------------------------------------*/
+ 1336          static void _recalc_midline(uint16 *l, uint16 *r)
+ 1337          {
+ 1338   1          uint8 row;
+ 1339   1          int last_good = MT9V03X_W / 2;
+ 1340   1          for (row = 0; row < MT9V03X_H; row++)
+ 1341   1          {
+ 1342   2              if (l_border_valid[row] && r_border_valid[row]) {
+ 1343   3                  midline[row]   = (int)(l[row] + r[row]) / 2;
+ 1344   3                  last_good      = midline[row];
+ 1345   3              } else {
+ 1346   3                  midline[row]   = last_good;
+ 1347   3              }
+ 1348   2              leftline[row]  = (int)l[row];
+ 1349   2              rightline[row] = (int)r[row];
+ 1350   2          }
+ 1351   1      }
+*** WARNING C174 IN LINE 990 OF ..\code\Camera\Circle\circle2.c: '_repair_right': unreferenced 'static' function
+*** WARNING C174 IN LINE 809 OF ..\code\Camera\Circle\circle2.c: '_repair_left': unreferenced 'static' function
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      8018     ------
+  ecode size           =     12217     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =       285     ------
+  xdata size           =       430     ------
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------
@@ -852,8 +1426,10 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =        26     ------
+  hconst size          =        44     ------
+C251 COMPILER V5.60.0,  circle2                                                            07/07/26  16:38:22  PAGE 22  
+
 End of Module Information.
 
 
-C251 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
+C251 COMPILATION COMPLETE.  4 WARNING(S),  0 ERROR(S)

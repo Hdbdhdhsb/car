@@ -19,62 +19,79 @@ typedef enum
     CIR2_RIGHT
 } Circle2Dir;
 
-/*======================== 特征信息结构体 ========================*/
 typedef struct
 {
-    // --- 边线断口特征 ---
-    uint8  l_break_row;         // 左边线断口行号（0 = 未找到）
-    uint8  r_break_row;         // 右边线断口行号
-    int16  l_break_delta;       // 左断口处左边界跳变量
-    int16  r_break_delta;       // 右断口处右边界跳变量
+    /* 边线断口特征 */
+    uint8  l_break_row;
+    uint8  r_break_row;
+    int16  l_break_delta;
+    int16  r_break_delta;
 
-    // --- 拐点特征 ---
-    uint8  l_inflect_row;       // 左边线上拐点行号
-    uint8  r_inflect_row;       // 右边线上拐点行号
+    /* 边线拐点特征 */
+    uint8  l_inflect_row;
+    uint8  r_inflect_row;
+    uint8  l_rebound_trend;
+    uint8  r_rebound_trend;
 
-    // --- 宽度模型 ---
-    uint8  width_max;           // 最大赛道宽度
-    uint8  width_min;           // 最小赛道宽度
-    uint8  width_bottom;        // 图像底部赛道宽度
-    int16  width_diff;          // 宽度变化率（上 - 下）
+    /* 宽度模型 */
+    uint8  width_max;
+    uint8  width_min;
+    uint8  width_bottom;
+    int16  width_diff;
 
-    // --- 边线丢失统计 ---
-    uint8  l_lost_cnt;          // 左边线丢失行数
-    uint8  r_lost_cnt;          // 右边线丢失行数
+    /* 丢线统计 */
+    uint8  l_lost_cnt;
+    uint8  r_lost_cnt;
 
-    // --- 角点像素检测 ---
-    uint8  corner_bl;           // 左下角像素 (bin_image[H-2][2])
-    uint8  corner_br;           // 右下角像素 (bin_image[H-2][W-3])
-    uint8  corner_tl;           // 左上角近底像素
-    uint8  corner_tr;           // 右上角近底像素
+    /* 角点像素 */
+    uint8  corner_bl;
+    uint8  corner_br;
+    uint8  corner_tl;
+    uint8  corner_tr;
 } Circle2Feature;
 
-/*======================== 全局变量声明 ========================*/
-extern Circle2State  cir2_state;        // 当前圆环状态
-extern Circle2Dir    cir2_dir;          // 当前圆环方向
-extern uint8         cir2_timeout;      // 超时计数器（帧数）
-extern uint8         cir2_entry_cnt;    // 入口计数：第1次入口观察 / 第2次确认入环
+extern Circle2State cir2_state;
+extern Circle2Dir   cir2_dir;
+extern uint8        cir2_timeout;
+extern uint8        cir2_entry_cnt;           //入口数
 
-/*======================== 配置参数（可在 .c 中修改） ========================*/
-#define CIR2_BREAK_THRESH       8       // 边线跳变阈值
-#define CIR2_INFLECT_RANGE      5       // 拐点搜索邻域
-#define CIR2_LOST_THRESH        15      // 丢线阈值（认定为大面积丢线）
-#define CIR2_WIDTH_NARROW       20      // 赛道过窄阈值
-#define CIR2_WIDTH_WIDE         120     // 赛道过宽阈值
-#define CIR2_TIMEOUT_MAX        80      // 超时帧数上限（防卡死）
-#define CIR2_APPROACH_TIMEOUT   25      // 第一入口到第二入口的最大等待帧数
-#define CIR2_SCAN_TOP           5       // 扫描起始行（从上往下）
-#define CIR2_SCAN_BOT           (MT9V03X_H - 5)    // 扫描结束行
-#define CIR2_BREAK_MIN_ROW        30
-#define CIR2_FIT_LEN              10
-#define CIR2_APPROACH_REPAIR_LEN  15
+#define CIR2_BREAK_THRESH           8         //断口判定阈值
+#define CIR2_INFLECT_RANGE          5         //拐点范围
+#define CIR2_LOST_THRESH            15        //丢线阈值
+#define CIR2_WIDTH_NARROW           20        //最小赛道宽度
+#define CIR2_WIDTH_WIDE             120       //最大赛道宽度
+#define CIR2_TIMEOUT_MAX            80        //环岛处理超时
+#define CIR2_APPROACH_TIMEOUT       25        //approach阶段超时
+#define CIR2_SCAN_TOP               5         //扫描顶部
+#define CIR2_SCAN_BOT               (MT9V03X_H - 5) //扫描底部
+#define CIR2_BREAK_MIN_ROW          30        //断口行需 > 30
+#define CIR2_FIT_LEN                10        //拟合长度
+#define CIR2_APPROACH_REPAIR_LEN    15        //approach阶段补线长度
+#define CIR2_INFLECT_TREND_THRESH   6         //拐点趋势阈值
+#define CIR2_REBOUND_TREND_THRESH   4         //突跳后回摆趋势阈值
+#define CIR2_BREAK_DELTA_MARGIN     4         //双断口主次差阈值
+#define CIR2_WIDTH_DIFF_MIN         6         //入口宽度变化阈值
+#define CIR2_ENTRY_SCORE_MIN        5         //入口判定最小得分
+#define CIR2_REPAIR_VALID           2         //补线点标记
+#define CIR2_ENTRY_HOLD_FRAMES      3         //入口锚点保持帧数
+#define CIR2_ENTRY_PULL_MIN         4         //入口补线最小内拉
+#define CIR2_ENTRY_PULL_MAX         18        //入口补线最大内拉
+#define CIR2_MODEL_WIDTH_MIN        24        //宽度模型最小宽度
+#define CIR2_MODEL_WIDTH_MAX        70        //宽度模型最大宽度
+#define CIR2_ENTRY_RATIO_NUM        2         //ENTRY 单侧中线宽度系数分子
+#define CIR2_ENTRY_RATIO_DEN        5         //ENTRY 单侧中线宽度系数分母
+#define CIR2_INSIDE_RATIO_NUM       1         //INSIDE 单侧中线宽度系数分子
+#define CIR2_INSIDE_RATIO_DEN       2         //INSIDE 单侧中线宽度系数分母
+#define CIR2_EXIT_RATIO_NUM         9         //EXIT 单侧中线宽度系数分子
+#define CIR2_EXIT_RATIO_DEN         20        //EXIT 单侧中线宽度系数分母
+#define CIR2_ENTRY_ERR_ROW_A        24        //入口前瞻采样行 A
+#define CIR2_ENTRY_ERR_ROW_B        16        //入口前瞻采样行 B
 
 void circle2_init(void);
 uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W]);
 void circle2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
                              Circle2Feature *feat);
 Circle2State circle2_get_state(void);
-Circle2Dir circle2_get_dir(void);
+Circle2Dir   circle2_get_dir(void);
 
-
-#endif // _CIRCLE2_H_
+#endif

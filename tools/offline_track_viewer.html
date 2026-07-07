@@ -404,6 +404,8 @@
                 <div class="stat"><span class="key">右原始边界</span><span id="inspectRightBorderRaw" class="val">-</span></div>
                 <div class="stat"><span class="key">左break_row</span><span id="inspectLeftBreakRow" class="val">-</span></div>
                 <div class="stat"><span class="key">右break_row</span><span id="inspectRightBreakRow" class="val">-</span></div>
+                <div class="stat"><span class="key">左拐点</span><span id="inspectLeftInflectRow" class="val">-</span></div>
+                <div class="stat"><span class="key">右拐点</span><span id="inspectRightInflectRow" class="val">-</span></div>
                 <div class="stat"><span class="key">左break_row2</span><span id="inspectLeftBreakRow2" class="val">-</span></div>
                 <div class="stat"><span class="key">右break_row2</span><span id="inspectRightBreakRow2" class="val">-</span></div>
                 <div class="stat"><span class="key">左Circle改写</span><span id="inspectLeftCircleRewrite" class="val">-</span></div>
@@ -443,6 +445,8 @@
                 <div class="stat"><span class="key">右原始边界</span><span id="borderInspectRightBorderRaw" class="val">-</span></div>
                 <div class="stat"><span class="key">左break_row</span><span id="borderInspectLeftBreakRow" class="val">-</span></div>
                 <div class="stat"><span class="key">右break_row</span><span id="borderInspectRightBreakRow" class="val">-</span></div>
+                <div class="stat"><span class="key">左拐点</span><span id="borderInspectLeftInflectRow" class="val">-</span></div>
+                <div class="stat"><span class="key">右拐点</span><span id="borderInspectRightInflectRow" class="val">-</span></div>
                 <div class="stat"><span class="key">左break_row2</span><span id="borderInspectLeftBreakRow2" class="val">-</span></div>
                 <div class="stat"><span class="key">右break_row2</span><span id="borderInspectRightBreakRow2" class="val">-</span></div>
                 <div class="stat"><span class="key">左Circle改写</span><span id="borderInspectLeftCircleRewrite" class="val">-</span></div>
@@ -498,6 +502,23 @@
       var CIR2_BREAK_MIN_ROW = 30;
       var CIR2_FIT_LEN = 10;
       var CIR2_APPROACH_REPAIR_LEN = 15;
+      var CIR2_INFLECT_TREND_THRESH = 6;
+      var CIR2_REBOUND_TREND_THRESH = 4;
+      var CIR2_BREAK_DELTA_MARGIN = 4;
+      var CIR2_WIDTH_DIFF_MIN = 6;
+      var CIR2_ENTRY_SCORE_MIN = 5;
+      var CIR2_REPAIR_VALID = 2;
+      var CIR2_ENTRY_HOLD_FRAMES = 4;
+      var CIR2_ENTRY_PULL_MIN = 4;
+      var CIR2_ENTRY_PULL_MAX = 18;
+      var CIR2_MODEL_WIDTH_MIN = 24;
+      var CIR2_MODEL_WIDTH_MAX = 70;
+      var CIR2_ENTRY_RATIO_NUM = 2;
+      var CIR2_ENTRY_RATIO_DEN = 5;
+      var CIR2_INSIDE_RATIO_NUM = 1;
+      var CIR2_INSIDE_RATIO_DEN = 2;
+      var CIR2_EXIT_RATIO_NUM = 9;
+      var CIR2_EXIT_RATIO_DEN = 20;
       var CROSS2_BREAK_THRESH = 6;
       var CROSS2_DIR_UP = 4;
       var CROSS2_DIR_BREAK_UP = 2;
@@ -563,6 +584,8 @@
       var inspectRightBorderRaw = document.getElementById("inspectRightBorderRaw");
       var inspectLeftBreakRow = document.getElementById("inspectLeftBreakRow");
       var inspectRightBreakRow = document.getElementById("inspectRightBreakRow");
+      var inspectLeftInflectRow = document.getElementById("inspectLeftInflectRow");
+      var inspectRightInflectRow = document.getElementById("inspectRightInflectRow");
       var inspectLeftBreakRow2 = document.getElementById("inspectLeftBreakRow2");
       var inspectRightBreakRow2 = document.getElementById("inspectRightBreakRow2");
       var inspectLeftCircleRewrite = document.getElementById("inspectLeftCircleRewrite");
@@ -586,6 +609,8 @@
       var borderInspectRightBorderRaw = document.getElementById("borderInspectRightBorderRaw");
       var borderInspectLeftBreakRow = document.getElementById("borderInspectLeftBreakRow");
       var borderInspectRightBreakRow = document.getElementById("borderInspectRightBreakRow");
+      var borderInspectLeftInflectRow = document.getElementById("borderInspectLeftInflectRow");
+      var borderInspectRightInflectRow = document.getElementById("borderInspectRightInflectRow");
       var borderInspectLeftBreakRow2 = document.getElementById("borderInspectLeftBreakRow2");
       var borderInspectRightBreakRow2 = document.getElementById("borderInspectRightBreakRow2");
       var borderInspectLeftCircleRewrite = document.getElementById("borderInspectLeftCircleRewrite");
@@ -613,6 +638,7 @@
       var currentBinary = null;
       var currentInspectHits = null;
       var currentInspectBorderMeta = null;
+      var currentCircleFeature = null;
       var inspectPixel = null;
       var currentBorderInspectLines = null;
       var borderInspectPixel = null;
@@ -665,7 +691,10 @@
           state: CIR2_IDLE,
           dir: CIR2_NONE,
           entryCnt: 0,
-          timeout: 0
+          timeout: 0,
+          cachedAnchorTop: 0,
+          cachedAnchorBot: 0,
+          entryHoldCnt: 0
         };
 
         if (stateValue === "approach1") {
@@ -779,6 +808,40 @@
         }
       }
 
+      function drawCircleInflectionMarkers(ctx, feat, lines) {
+        var row;
+        var x;
+        var y;
+        var scale = INSPECT_SCALE;
+
+        if (!feat) {
+          return;
+        }
+
+        ctx.lineWidth = 3;
+        if (feat.l_inflect_row > 0) {
+          row = feat.l_inflect_row;
+          x = lines && lines.leftline ? lines.leftline[row] : null;
+          if (x !== null && x !== undefined) {
+            x = limitAB(x, 0, WIDTH - 1) * scale;
+            y = limitAB(row, 0, HEIGHT - 1) * scale;
+            ctx.strokeStyle = "#ff2bd6";
+            ctx.strokeRect(x + 2, y + 2, Math.max(scale - 4, 1), Math.max(scale - 4, 1));
+          }
+        }
+
+        if (feat.r_inflect_row > 0) {
+          row = feat.r_inflect_row;
+          x = lines && lines.rightline ? lines.rightline[row] : null;
+          if (x !== null && x !== undefined) {
+            x = limitAB(x, 0, WIDTH - 1) * scale;
+            y = limitAB(row, 0, HEIGHT - 1) * scale;
+            ctx.strokeStyle = "#4cc9f0";
+            ctx.strokeRect(x + 2, y + 2, Math.max(scale - 4, 1), Math.max(scale - 4, 1));
+          }
+        }
+      }
+
       function drawGrayCanvas(ctx, grayImage) {
         var imageData = ctx.createImageData(WIDTH, HEIGHT);
         var data = imageData.data;
@@ -822,6 +885,8 @@
           inspectRightBorderRaw.textContent = "-";
           inspectLeftBreakRow.textContent = "-";
           inspectRightBreakRow.textContent = "-";
+          inspectLeftInflectRow.textContent = "-";
+          inspectRightInflectRow.textContent = "-";
           inspectLeftBreakRow2.textContent = "-";
           inspectRightBreakRow2.textContent = "-";
           inspectLeftCircleRewrite.textContent = "-";
@@ -849,6 +914,8 @@
           inspectRightBorderRaw.textContent = String(rowMeta.rightBorderRaw);
           inspectLeftBreakRow.textContent = String(rowMeta.leftBreakRow);
           inspectRightBreakRow.textContent = String(rowMeta.rightBreakRow);
+          inspectLeftInflectRow.textContent = String(rowMeta.leftInflectRow);
+          inspectRightInflectRow.textContent = String(rowMeta.rightInflectRow);
           inspectLeftBreakRow2.textContent = String(rowMeta.leftBreakRow2);
           inspectRightBreakRow2.textContent = String(rowMeta.rightBreakRow2);
           inspectLeftCircleRewrite.textContent = rowMeta.leftCircleRewrite;
@@ -868,6 +935,8 @@
           inspectRightBorderRaw.textContent = "-";
           inspectLeftBreakRow.textContent = "-";
           inspectRightBreakRow.textContent = "-";
+          inspectLeftInflectRow.textContent = "-";
+          inspectRightInflectRow.textContent = "-";
           inspectLeftBreakRow2.textContent = "-";
           inspectRightBreakRow2.textContent = "-";
           inspectLeftCircleRewrite.textContent = "-";
@@ -898,6 +967,8 @@
           borderInspectRightBorderRaw.textContent = "-";
           borderInspectLeftBreakRow.textContent = "-";
           borderInspectRightBreakRow.textContent = "-";
+          borderInspectLeftInflectRow.textContent = "-";
+          borderInspectRightInflectRow.textContent = "-";
           borderInspectLeftBreakRow2.textContent = "-";
           borderInspectRightBreakRow2.textContent = "-";
           borderInspectLeftCircleRewrite.textContent = "-";
@@ -925,6 +996,8 @@
           borderInspectRightBorderRaw.textContent = String(rowMeta.rightBorderRaw);
           borderInspectLeftBreakRow.textContent = String(rowMeta.leftBreakRow);
           borderInspectRightBreakRow.textContent = String(rowMeta.rightBreakRow);
+          borderInspectLeftInflectRow.textContent = String(rowMeta.leftInflectRow);
+          borderInspectRightInflectRow.textContent = String(rowMeta.rightInflectRow);
           borderInspectLeftBreakRow2.textContent = String(rowMeta.leftBreakRow2);
           borderInspectRightBreakRow2.textContent = String(rowMeta.rightBreakRow2);
           borderInspectLeftCircleRewrite.textContent = rowMeta.leftCircleRewrite;
@@ -944,6 +1017,8 @@
           borderInspectRightBorderRaw.textContent = "-";
           borderInspectLeftBreakRow.textContent = "-";
           borderInspectRightBreakRow.textContent = "-";
+          borderInspectLeftInflectRow.textContent = "-";
+          borderInspectRightInflectRow.textContent = "-";
           borderInspectLeftBreakRow2.textContent = "-";
           borderInspectRightBreakRow2.textContent = "-";
           borderInspectLeftCircleRewrite.textContent = "-";
@@ -977,6 +1052,7 @@
         }
 
         drawInspectHitPoints(currentInspectHits);
+        drawCircleInflectionMarkers(binaryInspectCtx, currentCircleFeature, currentBorderInspectLines);
 
         binaryInspectCtx.strokeStyle = "rgba(120, 120, 120, 0.35)";
         binaryInspectCtx.lineWidth = 1;
@@ -1070,6 +1146,7 @@
         }
 
         drawBorderInspectLines(currentBorderInspectLines);
+        drawCircleInflectionMarkers(borderInspectCtx, currentCircleFeature, currentBorderInspectLines);
 
         borderInspectCtx.strokeStyle = "rgba(120, 120, 120, 0.35)";
         borderInspectCtx.lineWidth = 1;
@@ -1461,21 +1538,64 @@
         };
       }
 
-      function calcMidline(leftBorder, rightBorder, leftValid, rightValid) {
+      function calcMidline(leftBorder, rightBorder, leftValid, rightValid, circleRuntime) {
         var midline = new Array(HEIGHT);
         var leftline = new Array(HEIGHT);
         var rightline = new Array(HEIGHT);
         var validMask = new Array(HEIGHT);
         var lastGoodMid = Math.floor(WIDTH / 2);
+        var circleState = circleRuntime ? circleRuntime.state : CIR2_IDLE;
+        var circleDir = circleRuntime ? circleRuntime.dir : CIR2_NONE;
+        var useCircleModel = circleState === CIR2_ENTRY || circleState === CIR2_INSIDE || circleState === CIR2_EXIT;
+        var widthBottom = rightBorder[CIR2_SCAN_BOT] > leftBorder[CIR2_SCAN_BOT] ? (rightBorder[CIR2_SCAN_BOT] - leftBorder[CIR2_SCAN_BOT]) : 0;
+        var modelWidth = limitAB(widthBottom, CIR2_MODEL_WIDTH_MIN, CIR2_MODEL_WIDTH_MAX);
+        var ratioNum = CIR2_INSIDE_RATIO_NUM;
+        var ratioDen = CIR2_INSIDE_RATIO_DEN;
+        var offset;
+        var midVal;
         var i;
 
+        if (circleState === CIR2_ENTRY) {
+          ratioNum = CIR2_ENTRY_RATIO_NUM;
+          ratioDen = CIR2_ENTRY_RATIO_DEN;
+        } else if (circleState === CIR2_EXIT) {
+          ratioNum = CIR2_EXIT_RATIO_NUM;
+          ratioDen = CIR2_EXIT_RATIO_DEN;
+        }
+
+        offset = Math.trunc((modelWidth * ratioNum + Math.trunc(ratioDen / 2)) / ratioDen);
+
         for (i = 0; i < HEIGHT; i++) {
-          validMask[i] = leftValid[i] && rightValid[i] ? 1 : 0;
-          if (leftValid[i] && rightValid[i]) {
-            midline[i] = Math.floor((leftBorder[i] + rightBorder[i]) / 2);
-            lastGoodMid = midline[i];
+          if (useCircleModel && circleDir === CIR2_LEFT) {
+            validMask[i] = leftValid[i] ? 1 : 0;
+            if (leftValid[i]) {
+              midVal = leftBorder[i] + offset;
+              midline[i] = limitAB(midVal, BORDER_MIN, BORDER_MAX);
+              lastGoodMid = midline[i];
+            } else {
+              midline[i] = lastGoodMid;
+            }
+          } else if (useCircleModel && circleDir === CIR2_RIGHT) {
+            validMask[i] = rightValid[i] ? 1 : 0;
+            if (rightValid[i]) {
+              midVal = rightBorder[i] - offset;
+              midline[i] = limitAB(midVal, BORDER_MIN, BORDER_MAX);
+              lastGoodMid = midline[i];
+            } else {
+              midline[i] = lastGoodMid;
+            }
           } else {
-            midline[i] = lastGoodMid;
+            validMask[i] = leftValid[i] && rightValid[i] ? 1 : 0;
+            if (leftValid[i] && rightValid[i]) {
+              midline[i] = Math.floor((leftBorder[i] + rightBorder[i]) / 2);
+              lastGoodMid = midline[i];
+            } else {
+              midline[i] = lastGoodMid;
+            }
+          }
+
+          if (!useCircleModel && leftValid[i] && rightValid[i]) {
+            midline[i] = Math.floor((leftBorder[i] + rightBorder[i]) / 2);
           }
 
           leftline[i] = leftBorder[i];
@@ -1504,6 +1624,8 @@
           r_break_delta: 0,
           l_inflect_row: 0,
           r_inflect_row: 0,
+          l_rebound_trend: 0,
+          r_rebound_trend: 0,
           width_max: 0,
           width_min: 255,
           width_bottom: 0,
@@ -1523,7 +1645,7 @@
 
         for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--) {
           delta = l[row] - l[row - 1];
-          if (delta > CIR2_BREAK_THRESH && row >= CIR2_BREAK_MIN_ROW) {
+          if (delta > CIR2_BREAK_THRESH && row > CIR2_BREAK_MIN_ROW) {
             feat.l_break_row = row;
             feat.l_break_delta = delta;
             break;
@@ -1532,12 +1654,90 @@
 
         for (row = CIR2_SCAN_BOT; row > CIR2_SCAN_TOP + 1; row--) {
           delta = r[row - 1] - r[row];
-          if (delta > CIR2_BREAK_THRESH && row >= CIR2_BREAK_MIN_ROW) {
+          if (delta > CIR2_BREAK_THRESH && row > CIR2_BREAK_MIN_ROW) {
             feat.r_break_row = row;
             feat.r_break_delta = delta;
             break;
           }
         }
+      }
+
+      function circleCheckLeftInflectTrend(l, row) {
+        var i;
+        var riseSum = 0;
+        var fallSum = 0;
+
+        for (i = 1; i <= CIR2_INFLECT_RANGE; i++) {
+          if (l[row - i] <= BORDER_MIN + 1 || l[row + i] <= BORDER_MIN + 1) {
+            return 0;
+          }
+
+          riseSum += l[row] - l[row - i];
+          fallSum += l[row + i] - l[row];
+        }
+
+        return (riseSum >= CIR2_INFLECT_TREND_THRESH &&
+                fallSum <= -CIR2_INFLECT_TREND_THRESH) ? 1 : 0;
+      }
+
+      function circleCheckRightInflectTrend(r, row) {
+        var i;
+        var riseSum = 0;
+        var fallSum = 0;
+
+        for (i = 1; i <= CIR2_INFLECT_RANGE; i++) {
+          if (r[row - i] >= BORDER_MAX - 1 || r[row + i] >= BORDER_MAX - 1) {
+            return 0;
+          }
+
+          riseSum += r[row] - r[row - i];
+          fallSum += r[row + i] - r[row];
+        }
+
+        return (riseSum <= -CIR2_INFLECT_TREND_THRESH &&
+                fallSum >= CIR2_INFLECT_TREND_THRESH) ? 1 : 0;
+      }
+
+      function circleCheckLeftReboundTrend(l, feat) {
+        var row = feat.l_break_row;
+        var breakDelta;
+        var reboundDelta;
+
+        if (row <= CIR2_BREAK_MIN_ROW || row + CIR2_INFLECT_RANGE >= CIR2_SCAN_BOT) {
+          return 0;
+        }
+
+        if (l[row] <= BORDER_MIN + 1 || l[row - 1] <= BORDER_MIN + 1 ||
+            l[row + CIR2_INFLECT_RANGE] <= BORDER_MIN + 1) {
+          return 0;
+        }
+
+        breakDelta = l[row] - l[row - 1];
+        reboundDelta = l[row] - l[row + CIR2_INFLECT_RANGE];
+
+        return (breakDelta > CIR2_BREAK_THRESH &&
+                reboundDelta >= CIR2_REBOUND_TREND_THRESH) ? 1 : 0;
+      }
+
+      function circleCheckRightReboundTrend(r, feat) {
+        var row = feat.r_break_row;
+        var breakDelta;
+        var reboundDelta;
+
+        if (row <= CIR2_BREAK_MIN_ROW || row + CIR2_INFLECT_RANGE >= CIR2_SCAN_BOT) {
+          return 0;
+        }
+
+        if (r[row] >= BORDER_MAX - 1 || r[row - 1] >= BORDER_MAX - 1 ||
+            r[row + CIR2_INFLECT_RANGE] >= BORDER_MAX - 1) {
+          return 0;
+        }
+
+        breakDelta = r[row - 1] - r[row];
+        reboundDelta = r[row + CIR2_INFLECT_RANGE] - r[row];
+
+        return (breakDelta > CIR2_BREAK_THRESH &&
+                reboundDelta >= CIR2_REBOUND_TREND_THRESH) ? 1 : 0;
       }
 
       function circleExtractInflect(l, r, feat) {
@@ -1549,9 +1749,7 @@
           searchEnd = CIR2_SCAN_TOP + CIR2_INFLECT_RANGE;
         }
         for (row = searchEnd; row > CIR2_SCAN_TOP + CIR2_INFLECT_RANGE; row--) {
-          if (l[row] > l[row + CIR2_INFLECT_RANGE] &&
-              l[row] > l[row - CIR2_INFLECT_RANGE] &&
-              l[row - CIR2_INFLECT_RANGE] !== BORDER_MIN) {
+          if (circleCheckLeftInflectTrend(l, row)) {
             feat.l_inflect_row = row;
             break;
           }
@@ -1562,9 +1760,7 @@
           searchEnd = CIR2_SCAN_TOP + CIR2_INFLECT_RANGE;
         }
         for (row = searchEnd; row > CIR2_SCAN_TOP + CIR2_INFLECT_RANGE; row--) {
-          if (r[row] < r[row + CIR2_INFLECT_RANGE] &&
-              r[row] < r[row - CIR2_INFLECT_RANGE] &&
-              r[row - CIR2_INFLECT_RANGE] !== BORDER_MAX) {
+          if (circleCheckRightInflectTrend(r, row)) {
             feat.r_inflect_row = row;
             break;
           }
@@ -1618,6 +1814,8 @@
         var feat = createCircleFeature();
 
         circleExtractBreak(l, r, feat);
+        feat.l_rebound_trend = circleCheckLeftReboundTrend(l, feat);
+        feat.r_rebound_trend = circleCheckRightReboundTrend(r, feat);
         circleExtractInflect(l, r, feat);
         circleExtractWidth(l, r, feat);
         circleExtractLost(l, r, feat);
@@ -1626,23 +1824,87 @@
         return feat;
       }
 
+      function circleGetEntryScores(feat) {
+        var leftScore = 0;
+        var rightScore = 0;
+        var leftAsym = 0;
+        var rightAsym = 0;
+        var widthOpen = 0;
+        var leftBreak = 0;
+        var rightBreak = 0;
+
+        if (feat.width_diff >= CIR2_WIDTH_DIFF_MIN) {
+          widthOpen = 1;
+        }
+
+        if (feat.r_break_row === 0 ||
+            feat.l_break_delta >= feat.r_break_delta + CIR2_BREAK_DELTA_MARGIN) {
+          leftAsym = 1;
+        }
+
+        if (feat.l_break_row === 0 ||
+            feat.r_break_delta >= feat.l_break_delta + CIR2_BREAK_DELTA_MARGIN) {
+          rightAsym = 1;
+        }
+
+        leftBreak = feat.l_break_row > CIR2_BREAK_MIN_ROW ? 1 : 0;
+        rightBreak = feat.r_break_row > CIR2_BREAK_MIN_ROW ? 1 : 0;
+
+        if (leftBreak) {
+          leftScore += 2;
+        }
+        if (feat.l_inflect_row > 0) {
+          leftScore += 2;
+        }
+        if (leftAsym) {
+          leftScore += 1;
+        }
+        if (widthOpen) {
+          leftScore += 1;
+        }
+        if (leftBreak && feat.l_lost_cnt >= CIR2_LOST_THRESH) {
+          leftScore += 1;
+        }
+        if (feat.l_rebound_trend) {
+          leftScore += 1;
+        }
+
+        if (rightBreak) {
+          rightScore += 2;
+        }
+        if (feat.r_inflect_row > 0) {
+          rightScore += 2;
+        }
+        if (rightAsym) {
+          rightScore += 1;
+        }
+        if (widthOpen) {
+          rightScore += 1;
+        }
+        if (rightBreak && feat.r_lost_cnt >= CIR2_LOST_THRESH) {
+          rightScore += 1;
+        }
+        if (feat.r_rebound_trend) {
+          rightScore += 1;
+        }
+
+        return {
+          leftScore: leftScore,
+          rightScore: rightScore
+        };
+      }
+
       function circleCheckEntry(feat) {
-        var leftEntry = 0;
-        var rightEntry = 0;
+        var scores = circleGetEntryScores(feat);
 
-        if (feat.l_break_row > 0 &&
-            feat.r_break_row === 0 &&
-            feat.l_inflect_row > 0) {
-          leftEntry = 1;
+        if (scores.leftScore >= CIR2_ENTRY_SCORE_MIN &&
+            scores.rightScore >= CIR2_ENTRY_SCORE_MIN &&
+            myAbs(feat.l_break_delta - feat.r_break_delta) < CIR2_BREAK_DELTA_MARGIN) {
+          return 0;
         }
 
-        if (feat.r_break_row > 0 &&
-            feat.l_break_row === 0 &&
-            feat.r_inflect_row > 0) {
-          rightEntry = 1;
-        }
-
-        return leftEntry || rightEntry ? 1 : 0;
+        return (scores.leftScore >= CIR2_ENTRY_SCORE_MIN ||
+                scores.rightScore >= CIR2_ENTRY_SCORE_MIN) ? 1 : 0;
       }
 
       function circleCheckInside(feat, dir) {
@@ -1688,15 +1950,18 @@
       }
 
       function circleCheckDebug(feat) {
-        var leftEntry = feat.l_break_row > 0 &&
-                        feat.r_break_row === 0 &&
-                        feat.l_inflect_row > 0;
-        var rightEntry = feat.r_break_row > 0 &&
-                         feat.l_break_row === 0 &&
-                         feat.r_inflect_row > 0;
+        var scores = circleGetEntryScores(feat);
+        var leftEntry = scores.leftScore >= CIR2_ENTRY_SCORE_MIN ? 1 : 0;
+        var rightEntry = scores.rightScore >= CIR2_ENTRY_SCORE_MIN ? 1 : 0;
         var side = CIR2_NONE;
 
-        if (leftEntry) {
+        if (leftEntry && rightEntry &&
+            myAbs(feat.l_break_delta - feat.r_break_delta) < CIR2_BREAK_DELTA_MARGIN) {
+          leftEntry = 0;
+          rightEntry = 0;
+        }
+
+        if (leftEntry && (!rightEntry || scores.leftScore > scores.rightScore)) {
           side = CIR2_LEFT;
         } else if (rightEntry) {
           side = CIR2_RIGHT;
@@ -1705,6 +1970,8 @@
         return {
           leftEntry: leftEntry ? 1 : 0,
           rightEntry: rightEntry ? 1 : 0,
+          leftScore: scores.leftScore,
+          rightScore: scores.rightScore,
           side: side,
           sideLabel: getCircleSideLabel(side),
           triggered: (leftEntry || rightEntry) ? 1 : 0
@@ -1747,7 +2014,24 @@
         dbgCircleCond.textContent = "-";
       }
 
-      function circleRepairLeft(l, r, feat, circleState) {
+      function circleSetRepairedPoint(border, valid, row, value) {
+        border[row] = limitAB(value, BORDER_MIN, BORDER_MAX);
+        valid[row] = CIR2_REPAIR_VALID;
+      }
+
+      function circleCalcEntryPull(anchorTop, anchorBot, row) {
+        var span = anchorBot - anchorTop;
+        var progress = anchorBot - row;
+        var offsetRange = CIR2_ENTRY_PULL_MAX - CIR2_ENTRY_PULL_MIN;
+
+        if (anchorBot <= anchorTop) {
+          return CIR2_ENTRY_PULL_MIN;
+        }
+
+        return CIR2_ENTRY_PULL_MIN + Math.trunc((offsetRange * progress + Math.trunc(span / 2)) / span);
+      }
+
+      function circleRepairLeft(l, r, leftValid, feat, circleState, runtime) {
         var row;
         var anchorTop = 0;
         var anchorBot = 0;
@@ -1764,40 +2048,59 @@
           for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++) {
             if (l[row] <= BORDER_MIN + 1) {
               val = r[row] - estWidth;
-              l[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+              circleSetRepairedPoint(l, leftValid, row, val);
             }
           }
           return;
         }
 
         if (feat.l_break_row === 0) {
-          return;
-        }
-
-        if (feat.l_inflect_row > 0 && feat.l_inflect_row < feat.l_break_row) {
-          anchorTop = feat.l_inflect_row;
+          if (circleState === CIR2_ENTRY &&
+              runtime.entryHoldCnt < CIR2_ENTRY_HOLD_FRAMES &&
+              runtime.cachedAnchorTop > 0 &&
+              runtime.cachedAnchorBot > runtime.cachedAnchorTop) {
+            anchorTop = runtime.cachedAnchorTop;
+            anchorBot = runtime.cachedAnchorBot;
+            runtime.entryHoldCnt++;
+          } else {
+            return;
+          }
         } else {
-          for (row = feat.l_break_row; row > CIR2_SCAN_TOP; row--) {
+          if (feat.l_inflect_row > 0 && feat.l_inflect_row < feat.l_break_row) {
+            anchorTop = feat.l_inflect_row;
+          } else {
+            for (row = feat.l_break_row; row > CIR2_SCAN_TOP; row--) {
+              if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1) {
+                anchorTop = row;
+                break;
+              }
+            }
+          }
+
+          for (row = feat.l_break_row; row <= CIR2_SCAN_BOT; row++) {
             if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1) {
-              anchorTop = row;
+              anchorBot = row;
               break;
             }
           }
-        }
 
-        for (row = feat.l_break_row; row <= CIR2_SCAN_BOT; row++) {
-          if (l[row] > BORDER_MIN + 1 && l[row] < BORDER_MAX - 1) {
-            anchorBot = row;
-            break;
+          if (!anchorBot) {
+            anchorBot = CIR2_SCAN_BOT;
+          }
+          if (!anchorTop) {
+            anchorTop = CIR2_SCAN_TOP;
+          }
+          if (anchorTop >= anchorBot) {
+            return;
+          }
+
+          if (circleState === CIR2_ENTRY) {
+            runtime.cachedAnchorTop = anchorTop;
+            runtime.cachedAnchorBot = anchorBot;
+            runtime.entryHoldCnt = 0;
           }
         }
 
-        if (!anchorBot) {
-          anchorBot = CIR2_SCAN_BOT;
-        }
-        if (!anchorTop) {
-          anchorTop = CIR2_SCAN_TOP;
-        }
         if (anchorTop >= anchorBot) {
           return;
         }
@@ -1807,11 +2110,14 @@
 
         for (row = anchorTop; row <= anchorBot; row++) {
           val = Math.trunc(k * row + b);
-          l[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+          if (circleState === CIR2_ENTRY) {
+            val -= circleCalcEntryPull(anchorTop, anchorBot, row);
+          }
+          circleSetRepairedPoint(l, leftValid, row, val);
         }
       }
 
-      function circleRepairRight(l, r, feat, circleState) {
+      function circleRepairRight(l, r, rightValid, feat, circleState, runtime) {
         var row;
         var anchorTop = 0;
         var anchorBot = 0;
@@ -1828,40 +2134,59 @@
           for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++) {
             if (r[row] >= BORDER_MAX - 1) {
               val = l[row] + estWidth;
-              r[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+              circleSetRepairedPoint(r, rightValid, row, val);
             }
           }
           return;
         }
 
         if (feat.r_break_row === 0) {
-          return;
-        }
-
-        if (feat.r_inflect_row > 0 && feat.r_inflect_row < feat.r_break_row) {
-          anchorTop = feat.r_inflect_row;
+          if (circleState === CIR2_ENTRY &&
+              runtime.entryHoldCnt < CIR2_ENTRY_HOLD_FRAMES &&
+              runtime.cachedAnchorTop > 0 &&
+              runtime.cachedAnchorBot > runtime.cachedAnchorTop) {
+            anchorTop = runtime.cachedAnchorTop;
+            anchorBot = runtime.cachedAnchorBot;
+            runtime.entryHoldCnt++;
+          } else {
+            return;
+          }
         } else {
-          for (row = feat.r_break_row; row > CIR2_SCAN_TOP; row--) {
+          if (feat.r_inflect_row > 0 && feat.r_inflect_row < feat.r_break_row) {
+            anchorTop = feat.r_inflect_row;
+          } else {
+            for (row = feat.r_break_row; row > CIR2_SCAN_TOP; row--) {
+              if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1) {
+                anchorTop = row;
+                break;
+              }
+            }
+          }
+
+          for (row = feat.r_break_row; row <= CIR2_SCAN_BOT; row++) {
             if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1) {
-              anchorTop = row;
+              anchorBot = row;
               break;
             }
           }
-        }
 
-        for (row = feat.r_break_row; row <= CIR2_SCAN_BOT; row++) {
-          if (r[row] > BORDER_MIN + 1 && r[row] < BORDER_MAX - 1) {
-            anchorBot = row;
-            break;
+          if (!anchorBot) {
+            anchorBot = CIR2_SCAN_BOT;
+          }
+          if (!anchorTop) {
+            anchorTop = CIR2_SCAN_TOP;
+          }
+          if (anchorTop >= anchorBot) {
+            return;
+          }
+
+          if (circleState === CIR2_ENTRY) {
+            runtime.cachedAnchorTop = anchorTop;
+            runtime.cachedAnchorBot = anchorBot;
+            runtime.entryHoldCnt = 0;
           }
         }
 
-        if (!anchorBot) {
-          anchorBot = CIR2_SCAN_BOT;
-        }
-        if (!anchorTop) {
-          anchorTop = CIR2_SCAN_TOP;
-        }
         if (anchorTop >= anchorBot) {
           return;
         }
@@ -1871,7 +2196,10 @@
 
         for (row = anchorTop; row <= anchorBot; row++) {
           val = Math.trunc(k * row + b);
-          r[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+          if (circleState === CIR2_ENTRY) {
+            val += circleCalcEntryPull(anchorTop, anchorBot, row);
+          }
+          circleSetRepairedPoint(r, rightValid, row, val);
         }
       }
 
@@ -1922,9 +2250,10 @@
         };
       }
 
-      function circleRepairApproach(l, r, feat, dir) {
+      function circleRepairApproach(l, r, leftValid, rightValid, feat, dir) {
         var breakRow = 0;
         var border = null;
+        var valid = null;
         var fit;
         var stopRow;
         var row;
@@ -1933,9 +2262,11 @@
         if (dir === CIR2_LEFT) {
           breakRow = feat.l_break_row;
           border = l;
+          valid = leftValid;
         } else if (dir === CIR2_RIGHT) {
           breakRow = feat.r_break_row;
           border = r;
+          valid = rightValid;
         } else {
           return;
         }
@@ -1952,11 +2283,11 @@
 
         for (row = breakRow; row >= stopRow; row--) {
           val = Math.trunc(fit.slope * row + fit.intercept);
-          border[row] = limitAB(val, BORDER_MIN, BORDER_MAX);
+          circleSetRepairedPoint(border, valid, row, val);
         }
       }
 
-      function circleProcess(l, r, binImage, runtime) {
+      function circleProcess(l, r, leftValid, rightValid, binImage, runtime) {
         var feat = circleExtractFeature(l, r, binImage);
         var dbg = circleCheckDebug(feat);
         var candDir = CIR2_NONE;
@@ -1990,6 +2321,9 @@
               nextState = CIR2_APPROACH;
               nextEntryCnt = 1;
               nextDir = candDir;
+              runtime.cachedAnchorTop = 0;
+              runtime.cachedAnchorBot = 0;
+              runtime.entryHoldCnt = 0;
               active = 1;
             }
             break;
@@ -1998,29 +2332,19 @@
             active = 1;
             if (nextEntryCnt === 1) {
               if (circleCheckEntry(feat) && candDir === nextDir) {
-                circleRepairApproach(l, r, feat, nextDir);
+                circleRepairApproach(l, r, leftValid, rightValid, feat, nextDir);
                 applied = 1;
               } else {
                 nextEntryCnt = 2;
               }
             } else if (circleCheckEntry(feat) && candDir === nextDir) {
               nextState = CIR2_ENTRY;
-              if (nextDir === CIR2_LEFT) {
-                circleRepairLeft(l, r, feat, nextState);
-              } else if (nextDir === CIR2_RIGHT) {
-                circleRepairRight(l, r, feat, nextState);
-              }
               applied = 1;
             }
             break;
 
           case CIR2_ENTRY:
             active = 1;
-            if (nextDir === CIR2_LEFT) {
-              circleRepairLeft(l, r, feat, stateBefore);
-            } else if (nextDir === CIR2_RIGHT) {
-              circleRepairRight(l, r, feat, stateBefore);
-            }
             applied = 1;
             if (circleCheckInside(feat, nextDir)) {
               nextState = CIR2_INSIDE;
@@ -2029,11 +2353,6 @@
 
           case CIR2_INSIDE:
             active = 1;
-            if (nextDir === CIR2_LEFT) {
-              circleRepairLeft(l, r, feat, stateBefore);
-            } else if (nextDir === CIR2_RIGHT) {
-              circleRepairRight(l, r, feat, stateBefore);
-            }
             applied = 1;
             if (circleCheckExit(feat, nextDir)) {
               nextState = CIR2_EXIT;
@@ -2042,11 +2361,6 @@
 
           case CIR2_EXIT:
             active = 1;
-            if (nextDir === CIR2_LEFT) {
-              circleRepairLeft(l, r, feat, stateBefore);
-            } else if (nextDir === CIR2_RIGHT) {
-              circleRepairRight(l, r, feat, stateBefore);
-            }
             applied = 1;
             if (feat.l_lost_cnt < 5 && feat.r_lost_cnt < 5 &&
                 !feat.l_break_row && !feat.r_break_row) {
@@ -2056,6 +2370,9 @@
               nextState = CIR2_IDLE;
               nextDir = CIR2_NONE;
               nextEntryCnt = 0;
+              runtime.cachedAnchorTop = 0;
+              runtime.cachedAnchorBot = 0;
+              runtime.entryHoldCnt = 0;
               active = 0;
             }
             break;
@@ -2360,7 +2677,7 @@
           score++;
         }
 
-        return score >= 1 ? 1 : 0;
+        return score >= 2 ? 1 : 0;
       }
 
       function crossCheckRecover(feat) {
@@ -2733,6 +3050,7 @@
         currentBinary = binImage;
         currentInspectHits = null;
         currentInspectBorderMeta = null;
+        currentCircleFeature = null;
         currentBorderInspectLines = null;
         inspectThreshold.textContent = String(threshold);
         if (!inspectPixel) {
@@ -2765,9 +3083,12 @@
               rightHitsPerRow[searchResult.pointsR[j][1]]++;
             }
           }
-          circleResult = circleProcess(leftResult.border, rightResult.border, binImage, circleRuntime);
+          circleResult = circleProcess(leftResult.border, rightResult.border,
+                                       leftResult.valid, rightResult.valid,
+                                       binImage, circleRuntime);
           circleFeat = circleResult.feat;
           circleDbg = circleResult.dbg;
+          currentCircleFeature = circleFeat;
           circleTriggered = !!circleResult.active;
           circleApplied = !!circleResult.applied;
           updateCircleDebug(circleFeat, circleDbg, circleResult);
@@ -2778,10 +3099,6 @@
           zebraTriggered = false;
           if (circleTriggered) {
             resetCrossDebug();
-          }
-          if (circleApplied) {
-            markCircleRepairedRows(leftBorderRaw, rightBorderRaw, leftResult.border, rightResult.border,
-                                   leftResult.valid, rightResult.valid);
           }
           leftBorderAfterCircle = leftResult.border.slice();
           rightBorderAfterCircle = rightResult.border.slice();
@@ -2799,7 +3116,9 @@
           if (!circleTriggered && !crossTriggered) {
             zebraTriggered = !!detectZebraTrack(binImage, leftResult.border, rightResult.border);
           }
-          midResult = calcMidline(leftResult.border, rightResult.border, leftResult.valid, rightResult.valid);
+          midResult = calcMidline(leftResult.border, rightResult.border,
+                                  leftResult.valid, rightResult.valid,
+                                  circleRuntime);
           if (circleTriggered) {
             statTrackType.textContent = "circle";
           } else if (crossTriggered) {
@@ -2835,6 +3154,8 @@
               rightBorderRaw: rightBorderRaw[row],
               leftBreakRow: circleTriggered ? circleFeat.l_break_row : crossFeat.l_break_row,
               rightBreakRow: circleTriggered ? circleFeat.r_break_row : crossFeat.r_break_row,
+              leftInflectRow: circleFeat.l_inflect_row,
+              rightInflectRow: circleFeat.r_inflect_row,
               leftBreakRow2: circleTriggered ? "-" : crossFeat.l_break_row2,
               rightBreakRow2: circleTriggered ? "-" : crossFeat.r_break_row2,
               leftCircleRewrite: circleApplied && leftBorderRaw[row] !== leftBorderAfterCircle[row] ? "yes" : "no",

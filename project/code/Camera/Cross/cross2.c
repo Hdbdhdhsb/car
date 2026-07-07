@@ -35,6 +35,13 @@ static void   _cr_recalc_midline(uint16 *l, uint16 *r);
 
 /*======================== 辅助宏 ========================*/
 #define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
+#define CROSS2_REPAIR_VALID 2
+
+static void _cr_set_repaired_point(uint16 *border, uint8 *valid, uint8 row, int16 val)
+{
+    border[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+    valid[row] = CROSS2_REPAIR_VALID;
+}
 
 /*******************************************************************************
  * cross2_init - 复位十字状态
@@ -470,12 +477,12 @@ static uint8 _cr_check_entry(Cross2Feature *f)
     uint8 score = 0;
     if (single_side) return 0;
 
-    /* 三选二: 满足两个方案则为圆环 */
+    /* 三选二: 至少满足两个方案才认为是十字 */
     if (both_break) score++;
     if (both_dir)   score++;
     if (width_wide && bottom_ok) score++;
 
-    return (score >= 1) ? 1 : 0;
+    return (score >= 2) ? 1 : 0;
 }
 
 /*--------------------------------------------------------------------------
@@ -561,7 +568,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             for (row = repair_start; row <=CROSS2_SCAN_BOT ; row++)
             {
                 int16 val = (int16)(k * row + b);
-                l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                _cr_set_repaired_point(l, l_border_valid, (uint8)row, val);
             }
         }else{
             /* 从下断点往上补线 */
@@ -570,7 +577,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             for (row = repair_start; row >= repair_stop; row--)
             {
                 int16 val = (int16)(k * row + b);
-                l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                _cr_set_repaired_point(l, l_border_valid, (uint8)row, val);
             }
         }
 
@@ -586,7 +593,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             if (l[row] <= BORDER_MIN + 1)
             {
                 int16 val = (int16)r[row] - (int16)est_w;
-                l[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                _cr_set_repaired_point(l, l_border_valid, (uint8)row, val);
             }
         }
     }
@@ -607,7 +614,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             for (row = repair_start; row <=CROSS2_SCAN_BOT ; row++)
             {
                 int16 val = (int16)(k * row + b);
-                r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                _cr_set_repaired_point(r, r_border_valid, (uint8)row, val);
             }
         }else{
             /* 从下断点往上补线 */
@@ -616,7 +623,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             for (row = repair_start; row >= repair_stop; row--)
             {
                 int16 val = (int16)(k * row + b);
-                r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                _cr_set_repaired_point(r, r_border_valid, (uint8)row, val);
             }
         }
     }
@@ -629,7 +636,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             if (r[row] >= BORDER_MAX - 1)
             {
                 int16 val = (int16)l[row] + (int16)est_w;
-                r[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
+                _cr_set_repaired_point(r, r_border_valid, (uint8)row, val);
             }
         }
     }
