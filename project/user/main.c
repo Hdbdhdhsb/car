@@ -218,7 +218,7 @@ void main(void)
         NULL,
         NULL,
         NULL);
-
+        enable_control(IO_P01); /* 使能下位机 */
     while(1)
     {
         poll_wifi_ctrl_command();
@@ -253,10 +253,9 @@ void main(void)
                     }
                 }
             }
-            if(wifi_ctrl_running)
-            {
-                send_error_data(track_error, 5.0f, DEBUG_DATA_UART);
-            }
+            
+            send_error_data(track_error, 5.0f, DEBUG_DATA_UART);
+            
            
         }
     }

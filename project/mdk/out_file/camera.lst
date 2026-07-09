@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 1   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE camera
@@ -14,7 +14,7 @@ stmt  level    source
     1          #include "camera.h"
     2          #include "main.h"
     3          
-    4          #define threshold 234 /* 二值化阈值 */
+    4          #define threshold 170 /* 二值化阈值 */
     5          
     6          //方案2：detect_track_type 改成隔帧或条件触发
     7          
@@ -66,7 +66,7 @@ stmt  level    source
    52   1          uint8 sample_row = (MT9V03X_H > 14) ? (MT9V03X_H - 14) : (MT9V03X_H - 1);
    53   1          uint8 sample_row2 = (MT9V03X_H > 8) ? (MT9V03X_H - 8) : (MT9V03X_H - 1);
    54   1          int16 screen_center = MT9V03X_W / 2;
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 2   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 2   
 
    55   1          float track_error1;
    56   1          float track_error2;
@@ -134,7 +134,7 @@ stmt  level    source
   116   2          }
   117   1      
   118   1          return (l_found && r_found) ? 1 : 0;
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 3   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 3   
 
   119   1      }
   120          
@@ -202,7 +202,7 @@ stmt  level    source
   182   2              index_l = 0;
   183   2              
   184   2              /* 左边边界判断（指向偏移访问图像） */
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 4   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 4   
 
   185   2              for(i = 0; i < 8; i++) {
   186   3                  next_i = (uint8)((i + 1) & 7);
@@ -270,7 +270,7 @@ stmt  level    source
   245   2              r_data_statics++;
   246   2              
   247   2              index_r = 0;
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 5   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 5   
 
   248   2              
   249   2              /* 右边边界判断（指向偏移访问图像） */
@@ -338,7 +338,7 @@ stmt  level    source
   311   2              if(row >= MT9V03X_H) continue;
   312   2              /* 每行只取第一个命中的点（八邻域由底部向上扫，先到的更靠外侧） */
   313   2              if(l_border_valid[row] == 0) {
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 6   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 6   
 
   314   3                  l_border[row] = points_l[j][0] + 1;
   315   3                  l_index [row] = j;
@@ -406,7 +406,7 @@ stmt  level    source
   376   1          uint8 step = 0;
   377   1          int16 delta = 0;
   378   1          int16 base = 0;
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 7   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 7   
 
   379   1          int16 val = 0;
   380   1          
@@ -474,7 +474,7 @@ stmt  level    source
   442          //     uint32 num = 0;
   443          //     uint16 top = FILTER_ROI_TOP > 1 ? FILTER_ROI_TOP : 1;
   444          //     uint8 *p_prev;
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 8   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 8   
 
   445          //     uint8 *p_curr;
   446          //     uint8 *p_next;
@@ -542,7 +542,7 @@ stmt  level    source
   508   1          
   509   1          /* 扫描指定行及其上一行（指针偏移） */
   510   1          p_row0 = bin_image[row];
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 9   
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 9   
 
   511   1          p_row1 = bin_image[row - 1];
   512   1          for(i = l_border[row]; i < r_border[row] - 3; i++) {
@@ -610,7 +610,7 @@ stmt  level    source
   574   2              if(zebra_detected) {
   575   3                  current_track_type = ZEBRA_TRACK;
   576   3                  return;
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 10  
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 10  
 
   577   3              }
   578   2          }
@@ -678,7 +678,7 @@ stmt  level    source
   640   1          calc_midline();
   641   1          lost_counter = 0;
   642   1          current_state = TRACKING_MODE;
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 11  
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 11  
 
   643   1      }
   644          
@@ -746,7 +746,7 @@ stmt  level    source
   706   1      }
   707          /*======================================================*/
   708          int my_abs(int value) {
-C251 COMPILER V5.60.0,  camera                                                             07/07/26  16:36:00  PAGE 12  
+C251 COMPILER V5.60.0,  camera                                                             09/07/26  22:14:40  PAGE 12  
 
   709   1          return value >= 0 ? value : -value;
   710   1      }

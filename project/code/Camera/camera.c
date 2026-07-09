@@ -1,7 +1,7 @@
 ﻿#include "camera.h"
 #include "main.h"
 
-#define threshold 234 /* 二值化阈值 */
+#define threshold 170 /* 二值化阈值 */
 
 //方案2：detect_track_type 改成隔帧或条件触发
 

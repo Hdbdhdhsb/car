@@ -228,8 +228,8 @@ static void _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f)
     /* 左边线断口: l[row] 突然变小（向画面左侧跳） */
     for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--)
     {
-        int16 delta = (int16)l[row] - (int16)l[row - 1];
-        int16 delta2_1 = (int16)l[row - 1] - (int16)l[row];
+        int16 delta = (int16)l[row] - (int16)l[row - 2];
+        int16 delta2_1 = (int16)l[row - 1] - (int16)l[row+1];
         int16 delta2_2 = (int16)l[row - 2] - (int16)l[row - 1];
         if (delta > CROSS2_BREAK_THRESH)
         {
@@ -247,8 +247,8 @@ static void _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f)
     /* 右边线断口: r[row] 突然变大（向画面右侧跳） */
     for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--)
     {
-        int16 delta = (int16)r[row - 1] - (int16)r[row];
-        int16 delta2_1 = (int16)r[row] - (int16)r[row - 1];
+        int16 delta = (int16)r[row - 2] - (int16)r[row];
+        int16 delta2_1 = (int16)r[row+1] - (int16)r[row - 1];
         int16 delta2_2 = (int16)r[row - 1] - (int16)r[row - 2];
         if (delta > CROSS2_BREAK_THRESH)
         {
@@ -480,7 +480,7 @@ static uint8 _cr_check_entry(Cross2Feature *f)
     /* 三选二: 至少满足两个方案才认为是十字 */
     if (both_break) score++;
     if (both_dir)   score++;
-    if (width_wide && bottom_ok) score++;
+    if (width_wide) score++;
 
     return (score >= 2) ? 1 : 0;
 }

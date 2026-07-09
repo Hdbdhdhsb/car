@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               10/07/26  00:33:06  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -66,7 +66,7 @@ stmt  level    source
    53   1          wifi_spi_send_string("\r\n");
    54   1      }
    55          
-C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 2   
+C251 COMPILER V5.60.0,  main                                                               10/07/26  00:33:06  PAGE 2   
 
    56          static void send_lower_start_frame(void)
    57          {
@@ -134,7 +134,7 @@ stmt  level    source
   119   3              }
   120   2      
   121   2              if(wifi_cmd_line_len < (WIFI_CMD_LINE_SIZE - 1U))
-C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 3   
+C251 COMPILER V5.60.0,  main                                                               10/07/26  00:33:06  PAGE 3   
 
   122   2              {
   123   3                  wifi_cmd_line[wifi_cmd_line_len++] = (char)ch;
@@ -202,7 +202,7 @@ stmt  level    source
   185   2                  WIFI_SPI_LOCAL_PORT))
   186   2              {
   187   3                  printf("\r\n Connect TCP Servers error, try again.");
-C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 4   
+C251 COMPILER V5.60.0,  main                                                               10/07/26  00:33:06  PAGE 4   
 
   188   3                  system_delay_ms(100);
   189   3              }
@@ -237,7 +237,7 @@ stmt  level    source
   218   1              NULL,
   219   1              NULL,
   220   1              NULL);
-  221   1      
+  221   1              enable_control(IO_P01); /* 使能下位机 */
   222   1          while(1)
   223   1          {
   224   2              poll_wifi_ctrl_command();
@@ -270,29 +270,28 @@ stmt  level    source
   251   5                          {
   252   6                              assistant_retry_after_tick = current_tick + 500;
   253   6                          }
-C251 COMPILER V5.60.0,  main                                                               07/07/26  19:58:38  PAGE 5   
+C251 COMPILER V5.60.0,  main                                                               10/07/26  00:33:06  PAGE 5   
 
   254   5                      }
   255   4                  }
-  256   3                  if(wifi_ctrl_running)
-  257   3                  {
-  258   4                      send_error_data(track_error, 5.0f, DEBUG_DATA_UART);
-  259   4                  }
-  260   3                 
-  261   3              }
-  262   2          }
-  263   1      }
-  264          
-  265          void sys_tick_handler(void)
-  266          {
-  267   1          g_sysTick_ms += 1;
-  268   1      }
+  256   3                  
+  257   3                  send_error_data(track_error, 5.0f, DEBUG_DATA_UART);
+  258   3                  
+  259   3                 
+  260   3              }
+  261   2          }
+  262   1      }
+  263          
+  264          void sys_tick_handler(void)
+  265          {
+  266   1          g_sysTick_ms += 1;
+  267   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
   code size            =    ------     ------
-  ecode size           =      1823     ------
+  ecode size           =      1819     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------

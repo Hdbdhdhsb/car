@@ -77,7 +77,7 @@ extern uint8        cross2_timeout;     // 超时计数器（帧数）
 #define CROSS2_DIR_DOWN         0       // 八邻域方向：向下
 #define CROSS2_DIR_BREAK_UP     2       // 链码断点模式中的"向上偏"方向
 #define CROSS2_WIDE_THRESH      100     // 赛道"过宽"阈值（像素）
-#define CROSS2_WIDE_CNT_MIN     8       // 过宽行数阈值（认定为十字）
+#define CROSS2_WIDE_CNT_MIN     5       // 过宽行数阈值（认定为十字）
 #define CROSS2_LOST_THRESH      10      // 丢线行数阈值
 #define CROSS2_TIMEOUT_MAX      40      // 超时帧数上限
 #define CROSS2_SCAN_TOP         5       // 扫描起始行
