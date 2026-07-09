@@ -469,9 +469,6 @@ static uint8 _cr_check_entry(Cross2Feature *f)
     /* 方案C: 宽度模型判据 */
     uint8 width_wide = (f->wide_cnt >= CROSS2_WIDE_CNT_MIN) ? 1 : 0;
 
-    /* 底部角落验证: 十字底部通常是白色（赛道内） */
-    uint8 bottom_ok  = (f->corner_bl == WHITE_PIXEL && f->corner_br == WHITE_PIXEL) ? 1 : 0;
-
     /* 排除单侧断口（那更可能是圆环） */
     uint8 single_side = ((f->l_break_row > 0) ^ (f->r_break_row > 0)) ? 1 : 0;
     uint8 score = 0;

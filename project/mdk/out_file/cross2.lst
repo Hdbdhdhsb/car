@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 1   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE cross2
@@ -66,7 +66,7 @@ stmt  level    source
    50          {
    51   1          cross2_state   = CROSS2_IDLE;
    52   1          cross2_timeout = 0;
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 2   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 2   
 
    53   1      }
    54          
@@ -134,7 +134,7 @@ stmt  level    source
   115   1          status = cross2_extract_feature(l, r, img, &feat);
   116   1      
   117   1          /* 2. 十字状态机 */
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 3   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 3   
 
   118   1          switch (cross2_state)
   119   1          {
@@ -202,7 +202,7 @@ stmt  level    source
   181   4                  cross2_init();
   182   4                  current_track_type = NORMAL_TRACK;
   183   4                  current_state      = SEARCH_MODE;
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 4   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 4   
 
   184   4                  return 0;
   185   4              }
@@ -270,7 +270,7 @@ stmt  level    source
   247   1          /* 右边线断口: r[row] 突然变大（向画面右侧跳） */
   248   1          for (row = CROSS2_SCAN_BOT; row > CROSS2_SCAN_TOP + 1; row--)
   249   1          {
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 5   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 5   
 
   250   2              int16 delta = (int16)r[row - 2] - (int16)r[row];
   251   2              int16 delta2_1 = (int16)r[row+1] - (int16)r[row - 1];
@@ -338,7 +338,7 @@ stmt  level    source
   312          
   313          /*--------------------------------------------------------------------------
   314           * _cr_extract_width - 赛道宽度模型
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 6   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 6   
 
   315           *--------------------------------------------------------------------------*/
   316          static void _cr_extract_width(uint16 *l, uint16 *r, Cross2Feature *f)
@@ -406,7 +406,7 @@ stmt  level    source
   377          {
   378   1          int16  i;
   379   1          int16  ref_row   = (int16)break_row;
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 7   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 7   
 
   380   1          int16  start_row = (int16)break_row + CROSS2_FIT_LEN;
   381   1          int16  end_row   = (int16)break_row + 2;
@@ -474,7 +474,7 @@ stmt  level    source
   442   2              *slope     = 0;
   443   2              *intercept = (float)border[ref_row];
   444   2          }
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 8   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 8   
 
   445   1      }
   446          
@@ -542,7 +542,7 @@ stmt  level    source
   508   1          // if (breaks_gone && width_ok)  return 1;
   509   1          // if (breaks_gone && lost_ok)   return 1;
   510   1          breaks_gone = (f->l_break_row <=  10|| f->r_break_row <=  10) ? 1 : 0;
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 9   
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 9   
 
   511   1          in_break = (f->l_break_row2 > 0 && f->r_break_row2 > 0) ? 1 : 0;
   512   1          if (breaks_gone && in_break)  return 1;
@@ -610,7 +610,7 @@ stmt  level    source
   573   3              }else{
   574   3                  /* 从下断点往上补线 */
   575   3                  repair_start = (l_bp > 0) ? (int16)l_bp : (int16)l_bp2;
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 10  
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 10  
 
   576   3                  repair_stop = (repair_start > CROSS2_FIX_LEN) ? (repair_start - CROSS2_FIX_LEN) : 0;
   577   3                  for (row = repair_start; row >= repair_stop; row--)
@@ -678,7 +678,7 @@ stmt  level    source
   639   4                      _cr_set_repaired_point(r, r_border_valid, (uint8)row, val);
   640   4                  }
   641   3              }
-C251 COMPILER V5.60.0,  cross2                                                             09/07/26  22:14:40  PAGE 11  
+C251 COMPILER V5.60.0,  cross2                                                             10/07/26  02:31:10  PAGE 11  
 
   642   2          }
   643   1      }

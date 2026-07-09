@@ -90,6 +90,7 @@ extern uint8        cir2_entry_cnt;           //入口数
 #define CIR2_ENTRY_ERR_ROW_A        24        //入口前瞻采样行 A
 #define CIR2_ENTRY_ERR_ROW_B        16        //入口前瞻采样行 B
 
+#define CIR2_EXIT_CHECK_FRAMES      2
 #define CIR2_EXIT_ANCHOR_X          0
 #define CIR2_EXIT_ANCHOR_Y          CIR2_SCAN_TOP
 #define CIR2_EXIT_MIN_FRAMES        1

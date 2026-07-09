@@ -25,6 +25,7 @@ uint8         cir2_timeout = 0;
 uint8         cir2_entry_cnt = 0;
 static uint8  cir2_exit_phase_cnt = 0;
 static int16  cir2_exit_bottom_mid_x = MT9V03X_W / 2;
+static uint8  cir2_exit_check_cnt = 0;
 static uint8  cir2_cached_anchor_top = 0;//上描�?
 static uint8  cir2_cached_anchor_bot = 0;//下描�?
 static uint8  cir2_entry_hold_cnt = 0;//入口计数
@@ -81,6 +82,7 @@ void circle2_init(void)
     cir2_entry_cnt = 0;
     cir2_exit_phase_cnt = 0;
     cir2_exit_bottom_mid_x = MT9V03X_W / 2;
+    cir2_exit_check_cnt = 0;
     cir2_cached_anchor_top = 0;
     cir2_cached_anchor_bot = 0;
     cir2_entry_hold_cnt = 0;
@@ -208,6 +210,7 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     /*---------- ENTRY: 正在进入圆环 ----------*/
     case CIR2_ENTRY:
     {
+
         _recalc_circle_midline(l, r, &feat);
 
         /* 判断是否已完全进入圆环内�?*/
@@ -222,7 +225,7 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     /*---------- INSIDE: 行驶在圆环内�?----------*/
     case CIR2_INSIDE:
     {
-        _recalc_circle_midline(l, r, &feat);
+        _recalc_midline(l, r);
 
         /* 判断是否进入出口阶段 */
         if (_check_exit(&feat))
@@ -230,6 +233,11 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
             cir2_state = CIR2_EXIT;
             cir2_timeout = 0;
             cir2_exit_phase_cnt = 0;
+            cir2_exit_check_cnt = 0;
+        }
+        else
+        {
+            cir2_exit_check_cnt = 0;
         }
         cir2_timeout++;
         break;
@@ -238,24 +246,11 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     /*---------- EXIT: 正在驶出圆环 ----------*/
     case CIR2_EXIT:
     {
-        _repair_right_to_left_anchor(r, &feat);
-        _recalc_midline(l, r);
-
-        cir2_exit_phase_cnt++;
-        if (cir2_exit_phase_cnt >= CIR2_EXIT_MIN_FRAMES)
+        if (_check_exit_end(&feat))
         {
-            cir2_exit_bottom_mid_x = (int16)midline[CIR2_SCAN_BOT];
-            cir2_state = CIR2_EXITING;
-            cir2_exit_phase_cnt = 0;
-        }
-
-        cir2_timeout++;
-        if (cir2_timeout > CIR2_TIMEOUT_MAX)
-        {
-            circle2_init();
-            current_track_type = NORMAL_TRACK;
-            current_state      = SEARCH_MODE;
-            return 0;
+            cir2_state = CIR2_EXIT_END;
+        }else{
+            _recalc_circle_midline(l, r, &feat);
         }
         break;
     }
@@ -516,9 +511,6 @@ static void _extract_width(uint16 *l, uint16 *r, Circle2Feature *f)
         else
             w = 0;
 
-        if (w > f->width_max) f->width_max = w;
-        if (w < f->width_min) f->width_min = w;
-
         if (row == CIR2_SCAN_TOP + 10)
             w_top = w;
     }
@@ -708,18 +700,11 @@ static uint8 _check_approach(Circle2Feature *f)
     right_break = (f->r_break_row > CIR2_BREAK_MIN_ROW) ? 1 : 0;
     //判定圆环打分
     if (left_break)                          left_score += 2;
-    if(!right_break)                         left_score += 2;
+    if(left_break&&!right_break)             left_score += 2;
     if (f->l_inflect_row > 0)                left_score += 2;
     if (left_asym)                           left_score += 1;
     if (width_open)                          left_score += 1;
     if (f->l_rebound_trend)                              left_score += 1;
-
-    if (right_break)                         right_score += 2;
-    if(!left_break)                          right_score += 2;
-    if (f->r_inflect_row > 0)                right_score += 2;
-    if (right_asym)                          right_score += 1;
-    if (width_open)                          right_score += 1;
-    if (f->r_rebound_trend)                              right_score += 1;
 
     if (left_score >= CIR2_ENTRY_SCORE_MIN &&
         right_score >= CIR2_ENTRY_SCORE_MIN &&
@@ -868,10 +853,10 @@ static uint8 _check_inside(Circle2Feature *f)
     if (cir2_dir == CIR2_LEFT)
     {
         /* 左圆�? 左下角变�?+ 左侧大面积丢�?*/
-        if (f->corner_bl == BLACK_PIXEL && f->l_lost_cnt >= CIR2_LOST_THRESH)
+        if (f->corner_bl == BLACK_PIXEL && f->l_lost_cnt >= CIR2_LOST_THRESH&& f->r_lost_cnt <= 40)
             return 1;
         /* 或者：两侧都丢线严重（已完全在圆环内） */
-        if (f->l_lost_cnt >= CIR2_LOST_THRESH && f->r_lost_cnt >= CIR2_LOST_THRESH)
+        if (f->l_lost_cnt >= CIR2_LOST_THRESH && f->r_lost_cnt <= 30)
             return 1;
     }
     else if (cir2_dir == CIR2_RIGHT)
@@ -888,46 +873,79 @@ static uint8 _check_inside(Circle2Feature *f)
  * _check_exit - INSIDE→EXIT 条件
  *
  * 出口特征:
- *   - 对侧角落重新变白（恢复正常赛道边界）
- *   - 断口侧丢线减�?
- *   - 或者出现新的断口但方向反转
+ *   - 大面积丢线
  *--------------------------------------------------------------------------*/
 static uint8 _check_exit(Circle2Feature *f)
 {
+    uint8 row;
+    uint8 roi_top = 2;
+    uint8 roi_bot = 55;
+    uint8 lost_cnt = 0;
+    uint8 lost = 0;
+    uint16 bulge_x;
+    uint16 x;
     if (cir2_dir == CIR2_LEFT)
     {
-        /* 左圆环出�? 右下角白+左下角白，且左侧丢线开始恢�?*/
-        if (f->corner_bl == WHITE_PIXEL &&
-            f->corner_br == WHITE_PIXEL &&
-            f->l_lost_cnt < CIR2_LOST_THRESH)
+        bulge_x = BORDER_MIN;
+
+        for (row = roi_top; row <= roi_bot; row++)
         {
-            return 1;
+            x = r_border[row];
+            if ( x >= BORDER_MAX - 1 )
+            {
+                lost_cnt++;
+                continue;
+            }
         }
-        /* 或：右侧出现新断口 */
-        if (f->r_break_row > 0 )
+
+        if (lost_cnt >= 40)
         {
-            return 1;
+            lost = 1;
         }
+        
     }
-    else if (cir2_dir == CIR2_RIGHT)
+    
+    if(lost == 1)
     {
-        if (f->corner_bl == WHITE_PIXEL &&
-            f->corner_br == WHITE_PIXEL &&
-            f->r_lost_cnt < CIR2_LOST_THRESH)
-        {
-            return 1;
-        }
-        if (f->l_break_row > 0 && f->r_lost_cnt < CIR2_LOST_THRESH)
-        {
-            return 1;
-        }
+        return 1;
     }
     return 0;
 }
+/*丢线减少*/
 static uint8 _check_exit_end(Circle2Feature *f)
 {
-    return (f->l_lost_cnt >= CIR2_EXIT_END_LEFT_LOST &&
-            f->r_lost_cnt <= CIR2_EXIT_END_RIGHT_OK) ? 1 : 0;
+    uint8 row;
+    uint8 roi_top = 2;
+    uint8 roi_bot = 30;
+    uint8 lost_cnt = 0;
+    uint8 lost = 0;
+    uint16 bulge_x;
+    uint16 x;
+    if (cir2_dir == CIR2_LEFT)
+    {
+        bulge_x = BORDER_MIN;
+
+        for (row = roi_top; row <= roi_bot; row++)
+        {
+            x = r_border[row];
+            if ( x >= BORDER_MAX - 1 )
+            {
+                lost_cnt++;
+                continue;
+            }
+        }
+
+        if (lost_cnt <= 5)
+        {
+            lost = 1;
+        }
+    }
+    
+    if(lost == 1)
+    {
+    return 1;
+    }
+    return 0;
 }
 
 static uint8 _check_exit_recovered(Circle2Feature *f)
@@ -1423,6 +1441,7 @@ static void _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f)
     uint8 ratio_num = _get_model_ratio_num();
     uint8 ratio_den = _get_model_ratio_den();
     int16 offset = (int16)((model_width * ratio_num + (ratio_den >> 1)) / ratio_den);
+    int16 right_bias = 2;
     int16 last_good = MT9V03X_W / 2;
 
     for (row = 0; row < MT9V03X_H; row++)
@@ -1436,7 +1455,7 @@ static void _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f)
         {
             if (l_border_valid[row])
             {
-                mid_val = (int16)l[row] + offset;
+                mid_val = (int16)l[row] + offset + right_bias;
                 midline[row] = CLAMP(mid_val, BORDER_MIN, BORDER_MAX);
                 last_good = midline[row];
             }
@@ -1449,7 +1468,7 @@ static void _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f)
         {
             if (r_border_valid[row])
             {
-                mid_val = (int16)r[row] - offset;
+                mid_val = (int16)r[row] - offset + right_bias;
                 midline[row] = CLAMP(mid_val, BORDER_MIN, BORDER_MAX);
                 last_good = midline[row];
             }
