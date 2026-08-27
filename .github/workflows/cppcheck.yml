@@ -1,0 +1,102 @@
+# 嵌入式 C 静态分析（cppcheck）
+#
+# 目标：Keil C251（8051/251 内核）工程。只检测【用户代码】，
+# 刻意不加 libraries/ 的 include 路径 —— 因为 zf 库满是 sbit/sfr/interrupt/using
+# 这类 cppcheck 不认识的 8051 扩展，加了会满屏误报。
+# 用 -D 补上 zf 派生的基本类型，让用户代码能正确类型检查。
+#
+# ⚠️ 首跑 = report-only（continue-on-error: true）：发现问题只标记/上传报告，不阻塞合并。
+#    审完 cppcheck.log 后，把 cppcheck step 的 continue-on-error 改为 false 即变成硬门禁。
+name: Static Analysis (cppcheck)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+concurrency:
+  group: cppcheck-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cppcheck:
+    name: cppcheck (user code)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install cppcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cppcheck
+          cppcheck --version
+
+      - name: Run cppcheck
+        id: cppcheck
+        # 首跑只标记不阻塞；要硬门禁就改成 false。
+        continue-on-error: true
+        shell: bash
+        # 本地 WSL2 cppcheck 2.13.0 实测：user code 无 error 级别问题。
+        # 抑制项说明 —— 只压「纯风格、永不可动」的两类：
+        #   variableScope          变量声明作用域（内嵌化，纯审美）
+        #   constParameterPointer  参数可加 const（此处多为会被修改的引用，不适用）
+        # 其余（knownConditionTrueFalse / unreadVariable / oppositeInnerCondition /
+        # performance / portability）全保留 —— 这些可能是真 bug，得让人看见。
+        run: |
+          set -o pipefail
+          cppcheck \
+            --enable=warning,style,performance,portability \
+            --error-exitcode=1 \
+            --inline-suppr \
+            --suppress=missingInclude \
+            --suppress=missingIncludeSystem \
+            --suppress=unknownMacro \
+            --suppress=unmatchedSuppression \
+            --suppress=variableScope \
+            --suppress=constParameterPointer \
+            --std=c99 \
+            --language=c \
+            -I project/code \
+            -I project/code/Camera \
+            -I project/code/PID \
+            -I project/code/Contact_master \
+            -I project/user \
+            -DMT9V03X_W=160 \
+            -DMT9V03X_H=120 \
+            -DBORDER_MIN=0 \
+            -DBORDER_MAX=159 \
+            -Duint8=unsigned\ char \
+            -Duint16=unsigned\ short \
+            -Duint32=unsigned\ long \
+            -Dint8=signed\ char \
+            -Dint16=short \
+            -Dint32=long \
+            -Duint=unsigned\ int \
+            project/code project/user 2>&1 | tee cppcheck.log
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          errors=$(grep -c 'severity="error"' cppcheck.log || true)
+          warnings=$(grep -c 'severity="warning"' cppcheck.log || true)
+          styles=$(grep -c 'severity="style"' cppcheck.log || true)
+          echo "cppcheck results this run:"
+          echo "  error:   $errors"
+          echo "  warning: $warnings"
+          echo "  style:   $styles"
+          if [ "$errors" -gt 0 ]; then
+            echo "::warning::cppcheck found $errors error-severity issue(s). Download the cppcheck-report artifact and review before enabling the hard gate."
+          else
+            echo "No error-severity issues in user code."
+          fi
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cppcheck-report
+          path: cppcheck.log
