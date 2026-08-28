@@ -1,6 +1,13 @@
 
 #include "contact_master.h"
-
+/* NaN->0、Inf/越界->夹边界，防止脏浮点进入发送帧 */
+static float sanitize_float(float v, float lo, float hi) {
+    if (v != v)  return 0.0f;    /* NaN */
+    if (v < lo)  return lo;
+    if (v > hi)  return hi;      /* 同时覆盖 ±Inf */
+    return v;
+}
+/* CRC8-DVB-S2查表 */
 static const uint8 crc8_table[256] = {
     0x00, 0xD5, 0x7F, 0xAA, 0xFE, 0x2B, 0x81, 0x54,
     0x29, 0xFC, 0x56, 0x83, 0xD7, 0x02, 0xA8, 0x7D,
@@ -35,7 +42,13 @@ static const uint8 crc8_table[256] = {
     0x84, 0x51, 0xFB, 0x2E, 0x7A, 0xAF, 0x05, 0xD0,
     0xAD, 0x78, 0xD2, 0x07, 0x53, 0x86, 0x2C, 0xF9
 };
-
+/**
+ * CRC8-DVB-S2计算函数
+ * @brief 计算CRC8-DVB-S2校验码
+ * @param dat: 数据指针
+ * @param len: 数据长度
+ * @return CRC8校验码
+ */
 static uint8 crc8_dvb_s2(uint8 *dat, uint8  len) {
     uint8  crc = 0x00;
     while (len--) {
@@ -44,11 +57,19 @@ static uint8 crc8_dvb_s2(uint8 *dat, uint8  len) {
     return crc;
 }
 
-
+/**
+ * 发送错误数据
+ * @brief 发送错误数据到指定的UART接口
+ * @param error_input: 错误输入值
+ * @param target_speed: 目标速度
+ * @param uart: UART接口索引
+ */
 void send_error_data(float error_input, float target_speed, uart_index_enum uart) {
     uint8  crc = 0;
     uint8  buf[MAX_TX_BUF_SIZE];
     uint8  payload_len = 1 + 2 * sizeof(float);
+    error_input  = sanitize_float(error_input,  -CTRL_ERROR_MAX, CTRL_ERROR_MAX);
+    target_speed = sanitize_float(target_speed,  CTRL_SPEED_MIN, CTRL_SPEED_MAX);
     buf[0] = FRAME_HEAD;
     buf[1] = payload_len;
     buf[2] = CMD_ERROR_IN;
@@ -59,10 +80,22 @@ void send_error_data(float error_input, float target_speed, uart_index_enum uart
     uart_write_buffer(uart, buf, 1 + 1 + payload_len + FRAME_CRC_LEN);
 }
 
+/**
+ * 发送控制数据
+ * @brief 发送控制数据到指定的UART接口
+ * @param target_speed0: 目标速度0
+ * @param target_speed1: 目标速度1
+ * @param target_turn: 目标转向
+ * @param uart: UART接口索引
+ */
 void send_ctrl_data(float target_speed0, float target_speed1, float target_turn, uart_index_enum uart) {
     uint8  crc = 0;
     uint8  buf[MAX_TX_BUF_SIZE];
     uint8  payload_len = 1 + 3 * sizeof(float);   // 命令 + 三个float
+
+    target_speed0 = sanitize_float(target_speed0, CTRL_SPEED_MIN, CTRL_SPEED_MAX);
+    target_speed1 = sanitize_float(target_speed1, CTRL_SPEED_MIN, CTRL_SPEED_MAX);
+    target_turn   = sanitize_float(target_turn,   CTRL_TURN_MIN,  CTRL_TURN_MAX);
 
     buf[0] = FRAME_HEAD;
     buf[1] = payload_len;
@@ -78,6 +111,13 @@ void send_ctrl_data(float target_speed0, float target_speed1, float target_turn,
     uart_write_buffer(uart, buf, 1 + 1 + payload_len + FRAME_CRC_LEN);
 }
 
+/**
+ * 发送PID调试数据
+ * @brief 发送PID调试数据到指定的UART接口
+ * @param type: 调试类型
+ * @param param: PID控制参数指针
+ * @param uart: UART接口索引
+ */
 void send_pid_debug_data(pid_debug_type_t type, const pid_ctrl_parameter_t *param, uart_index_enum uart) {
     uint8 crc = 0;
     uint8 buf[MAX_TX_BUF_SIZE];
@@ -91,6 +131,12 @@ void send_pid_debug_data(pid_debug_type_t type, const pid_ctrl_parameter_t *para
     buf[payload_len + 2] = crc;
     uart_write_buffer(uart, buf, 1 + 1 + payload_len + FRAME_CRC_LEN);
 }
+
+/**
+ * 启用控制
+ * @brief 启用指定的控制引脚
+ * @param ctrl_pin: 控制引脚索引
+ */
 void enable_control(gpio_pin_enum ctrl_pin) {
     gpio_init(ctrl_pin, GPO, 0, GPO_PUSH_PULL); // 初始化控制引脚，初始输出高
 }

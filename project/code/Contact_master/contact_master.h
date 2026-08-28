@@ -8,6 +8,13 @@
 #define RX_BUF_SIZE      128               /* 最大数据长度 */
 #define FRAME_CRC_LEN    1                /* CRC8 宽度 */
 
+/* 发送前防御钳制：NaN/Inf 归 0，越界夹到边界，防止脏浮点下发到下位机 */
+#define CTRL_SPEED_MIN      (-10.0f)
+#define CTRL_SPEED_MAX      (10.0f)
+#define CTRL_TURN_MIN       (-90.0f)
+#define CTRL_TURN_MAX       (90.0f)
+#define CTRL_ERROR_MAX      (500.0f)
+
 /* 发送缓冲区最大尺寸 */
 #define MAX_PAYLOAD_LEN  (1 + 2 * sizeof(pid_ctrl_parameter_t))  /* 载荷最大长度 */
 #define MAX_TX_BUF_SIZE  (1 + 1 + MAX_PAYLOAD_LEN + FRAME_CRC_LEN)
