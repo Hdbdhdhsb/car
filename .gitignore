@@ -1,0 +1,42 @@
+# 雁过留痕 STC_Core —— Keil C251 工程 .gitignore
+
+# ===== Keil uVision 编译 / 链接产物 =====
+*.obj
+*.crf
+*.lst
+*.__i
+*.map
+*.lnp
+*.hex
+*.dep
+*.d
+*.build_log
+*.build_log.htm
+
+# 无扩展名的链接映像产物（linker 输出）
+SEEKFREE
+
+# Keil 工程界面 / 选项状态文件（只需保留 seekfree.uvproj）
+*.uvopt*
+*.uvgui*
+*.uvguix*
+
+# 构建输出目录（若被配置到 out_file/）
+out_file/
+
+# ===== 日志 / 备份 / 临时 =====
+codex_build.log
+MDK删除临时文件.bat
+*.bak
+*~
+
+# ===== Python（tools/ 下的工具脚本） =====
+__pycache__/
+*.py[cod]
+
+# ===== 编辑器本地配置（各机器 Keil/编译器路径不同，不共享） =====
+.vscode/
+
+# ===== 操作系统 =====
+Thumbs.db
+.DS_Store
