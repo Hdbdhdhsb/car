@@ -1,0 +1,10 @@
+# Python 虚拟环境（本目录独立 venv）
+.venv/**
+
+# Python 字节码缓存
+__pycache__/
+*.py[cod]
+
+# viewer.py --save 生成的 overlay 输出（人为产物，不入库）
+overlay_*.png
+out*.png
