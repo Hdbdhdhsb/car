@@ -58,9 +58,9 @@ static uint8 crc8_dvb_s2(uint8 *dat, uint8  len) {
 }
 
 /**
- * 发送错误数据
- * @brief 发送错误数据到指定的UART接口
- * @param error_input: 错误输入值
+ * 发送误差数据
+ * @brief 发送误差数据到指定的UART接口
+ * @param error_input: 当前误差值
  * @param target_speed: 目标速度
  * @param uart: UART接口索引
  */

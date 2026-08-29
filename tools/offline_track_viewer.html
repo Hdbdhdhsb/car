@@ -169,7 +169,7 @@
     .inspect-grid {
       display: grid;
       gap: 12px;
-      grid-template-columns: minmax(0, 1fr) 220px;
+      grid-template-columns: 1fr;
       align-items: start;
     }
 
@@ -217,7 +217,9 @@
 
     .inspect-meta {
       display: grid;
-      gap: 10px;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      align-items: start;
     }
 
     .inspect-note {
@@ -265,7 +267,93 @@
       .canvas-grid {
         grid-template-columns: 1fr;
       }
+
+      .inspect-grid {
+        grid-template-columns: 1fr;
+      }
     }
+
+    /* ---------- 分组 / 视觉层级（全部面板保留） ---------- */
+    .group { display: grid; gap: 12px; padding: 4px 0; }
+    .group + .group { margin-top: 18px; border-top: 1px dashed var(--border); padding-top: 18px; }
+
+    .group-label,
+    .subgroup-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+    }
+    .group-label::before,
+    .subgroup-label::before {
+      content: "";
+      width: 4px;
+      height: 14px;
+      border-radius: 4px;
+      background: var(--accent);
+    }
+    .subgroup-label { font-weight: 600; color: var(--muted); margin: 6px 0 2px; }
+    .subgroup-label:first-child { margin-top: 0; }
+
+    /* 主视图突出：叠加图 / 线条结果 */
+    .canvas-wrap { position: relative; }
+    .canvas-wrap.primary {
+      border-color: rgba(207, 91, 46, 0.40);
+      background: linear-gradient(160deg, rgba(207, 91, 46, 0.08), rgba(24, 33, 38, 0.03));
+    }
+    .canvas-wrap.primary h2 { color: var(--ink); font-weight: 700; }
+    .canvas-wrap.primary h2::after {
+      content: "主视图";
+      margin-left: 8px;
+      padding: 2px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+
+    /* 调试数据：可折叠 */
+    .debug-group {
+      margin-top: 20px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(24, 33, 38, 0.025);
+    }
+    .debug-group summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--ink);
+      user-select: none;
+      list-style: none;
+    }
+    .debug-group summary::-webkit-details-marker { display: none; }
+    .debug-group summary::before { content: "▸"; color: var(--accent); transition: transform 0.15s; }
+    .debug-group[open] summary::before { transform: rotate(90deg); }
+    .debug-group .stats { margin-top: 12px; }
+
+    /* 总览卡 */
+    .summary-stats { gap: 8px; }
+    .summary-stats .stat { font-size: 14px; }
+
+    /* 检查器读数更易扫读 */
+    .inspect-meta .stat { padding: 8px 10px; font-size: 13px; }
+
+    /* 检查器独占整行，画布全宽，读数/调参区置于画布下方 */
+    .canvas-wrap.inspector { grid-column: 1 / -1; }
+    .inspect-meta .subgroup-label { grid-column: 1 / -1; }
+
+    /* 限制黑格子的高度，避免独占整行后画布拉得过长 */
+    .inspect-scroll { max-height: 72vh; }
   </style>
 </head>
 <body>
@@ -278,12 +366,17 @@
     <section class="grid">
       <aside class="card">
         <h2 class="panel-title">控制面板</h2>
-        <div class="controls">
+
+        <div class="group">
+          <div class="group-label">数据源</div>
           <div class="field">
             <label for="fileInput">上传图片</label>
             <input id="fileInput" type="file" accept="image/*">
           </div>
+        </div>
 
+        <div class="group">
+          <div class="group-label">处理参数</div>
           <div class="field">
             <label for="thresholdInput">二值化阈值</label>
             <div class="range-line">
@@ -300,47 +393,51 @@
               <option value="8">8x</option>
             </select>
           </div>
+        </div>
 
+        <div class="group">
+          <div class="group-label">场景状态机</div>
           <div class="field">
-            <label for="circleStateSelect">Circle state</label>
+            <label for="circleStateSelect">环岛状态 Circle state</label>
             <select id="circleStateSelect">
-              <option value="idle" selected>idle</option>
-              <option value="approach1">approach-1</option>
-              <option value="approach2">approach-2</option>
-              <option value="entry">entry</option>
-              <option value="inside">inside</option>
-              <option value="exit">exit</option>
+              <option value="idle" selected>空闲 idle</option>
+              <option value="approach1">进环-1 approach</option>
+              <option value="approach2">进环-2 approach</option>
+              <option value="entry">入环 entry</option>
+              <option value="inside">环内 inside</option>
+              <option value="exit">出环 exit</option>
             </select>
           </div>
 
           <div class="field">
-            <label for="circleDirSelect">Circle dir</label>
+            <label for="circleDirSelect">环岛方向 Circle dir</label>
             <select id="circleDirSelect">
-              <option value="auto" selected>auto</option>
-              <option value="left">left</option>
-              <option value="right">right</option>
+              <option value="auto" selected>自动 auto</option>
+              <option value="left">左 left</option>
+              <option value="right">右 right</option>
             </select>
           </div>
 
           <div class="field">
-            <label for="crossStateSelect">Cross state</label>
+            <label for="crossStateSelect">十字状态 Cross state</label>
             <select id="crossStateSelect">
-              <option value="idle" selected>idle</option>
-              <option value="crossing">crossing</option>
-              <option value="recover">recover</option>
+              <option value="idle" selected>空闲 idle</option>
+              <option value="crossing">穿越 crossing</option>
+              <option value="recover">恢复 recover</option>
             </select>
           </div>
         </div>
 
-        <div class="stats">
+        <div class="stats summary-stats">
+          <div class="group-label">当前帧总览</div>
           <div class="stat"><span class="key">图像尺寸</span><span class="val">120 x 60</span></div>
           <div class="stat"><span class="key">当前帧判断</span><span id="statTrackType" class="val">idle</span></div>
           <div class="stat"><span class="key">起点状态</span><span id="statStart" class="val">idle</span></div>
           <div class="stat"><span class="key">左边点数</span><span id="statLeft" class="val">0</span></div>
           <div class="stat"><span class="key">右边点数</span><span id="statRight" class="val">0</span></div>
           <div class="stat"><span class="key">边界提取</span><span id="statBorder" class="val">idle</span></div>
-          <div class="stat"><span class="key">Circle repair</span><span id="statCircle" class="val">off</span></div>
-          <div class="stat"><span class="key">Cross repair</span><span id="statCross" class="val">off</span></div>
+          <div class="stat"><span class="key">环岛修复</span><span id="statCircle" class="val">off</span></div>
+          <div class="stat"><span class="key">十字修复</span><span id="statCross" class="val">off</span></div>
           <div class="stat"><span class="key">底部中线</span><span id="statMid" class="val">-</span></div>
         </div>
 
@@ -350,19 +447,22 @@
           <span class="r">右线</span>
         </div>
 
-        <div class="stats">
-          <div class="stat"><span class="key">circle l_break</span><span id="dbgCircleLBreak" class="val">-</span></div>
-          <div class="stat"><span class="key">circle r_break</span><span id="dbgCircleRBreak" class="val">-</span></div>
-          <div class="stat"><span class="key">circle l_inflect</span><span id="dbgCircleLInflect" class="val">-</span></div>
-          <div class="stat"><span class="key">circle r_inflect</span><span id="dbgCircleRInflect" class="val">-</span></div>
-          <div class="stat"><span class="key">circle cond</span><span id="dbgCircleCond" class="val">-</span></div>
-          <div class="stat"><span class="key">cross l_break</span><span id="dbgLBreak" class="val">-</span></div>
-          <div class="stat"><span class="key">cross r_break</span><span id="dbgRBreak" class="val">-</span></div>
-          <div class="stat"><span class="key">cross l_dir</span><span id="dbgLDir" class="val">-</span></div>
-          <div class="stat"><span class="key">cross r_dir</span><span id="dbgRDir" class="val">-</span></div>
-          <div class="stat"><span class="key">cross wide_cnt</span><span id="dbgWide" class="val">-</span></div>
-          <div class="stat"><span class="key">cross score</span><span id="dbgScore" class="val">-</span></div>
-        </div>
+        <details class="debug-group">
+          <summary>调试数据 · 环岛 / 十字特征</summary>
+          <div class="stats">
+            <div class="stat"><span class="key">环岛 l_break</span><span id="dbgCircleLBreak" class="val">-</span></div>
+            <div class="stat"><span class="key">环岛 r_break</span><span id="dbgCircleRBreak" class="val">-</span></div>
+            <div class="stat"><span class="key">环岛 l_inflect</span><span id="dbgCircleLInflect" class="val">-</span></div>
+            <div class="stat"><span class="key">环岛 r_inflect</span><span id="dbgCircleRInflect" class="val">-</span></div>
+            <div class="stat"><span class="key">环岛 cond</span><span id="dbgCircleCond" class="val">-</span></div>
+            <div class="stat"><span class="key">十字 l_break</span><span id="dbgLBreak" class="val">-</span></div>
+            <div class="stat"><span class="key">十字 r_break</span><span id="dbgRBreak" class="val">-</span></div>
+            <div class="stat"><span class="key">十字 l_dir</span><span id="dbgLDir" class="val">-</span></div>
+            <div class="stat"><span class="key">十字 r_dir</span><span id="dbgRDir" class="val">-</span></div>
+            <div class="stat"><span class="key">十字 wide_cnt</span><span id="dbgWide" class="val">-</span></div>
+            <div class="stat"><span class="key">十字 score</span><span id="dbgScore" class="val">-</span></div>
+          </div>
+        </details>
 
         <p class="hint">说明：这里复现的是当前 <code>camera.c</code> 的赛道线提取主流程，不包含逐飞助手通信，也不把十字、环岛、斑马线状态机作为离线工具的主要输出。</p>
       </aside>
@@ -370,6 +470,16 @@
       <main class="card">
         <h2 class="panel-title">处理结果</h2>
         <div class="canvas-grid">
+
+          <div class="canvas-wrap primary">
+            <h2>赛道线叠加图</h2>
+            <canvas id="overlayCanvas" width="120" height="60"></canvas>
+          </div>
+          <div class="canvas-wrap primary">
+            <h2>仅线条结果</h2>
+            <canvas id="lineCanvas" width="120" height="60"></canvas>
+          </div>
+
           <div class="canvas-wrap">
             <h2>原图缩放到 120 x 60</h2>
             <canvas id="sourceCanvas" width="120" height="60"></canvas>
@@ -378,7 +488,8 @@
             <h2>二值图</h2>
             <canvas id="binaryCanvas" width="120" height="60"></canvas>
           </div>
-          <div class="canvas-wrap">
+
+          <div class="canvas-wrap inspector">
             <h2>二值像素检查器</h2>
             <div class="inspect-grid">
               <div class="inspect-view">
@@ -388,30 +499,34 @@
                 <div class="inspect-scroll">
                   <canvas id="binaryInspectCanvas" class="inspect-canvas" width="120" height="60"></canvas>
                 </div>
-                <p class="inspect-note">整幅二值图按 16x 显示，红色为左赛道线，绿色为右赛道线，橙色高亮为当前选中的像素。</p>
+                <p class="inspect-note">整幅二值图按 16x 显示，红色为左赛道线，绿色为右赛道线，橙色高亮为当前选中的像素。点击画布查看该像素在右侧的读数。</p>
               </div>
               <div class="inspect-meta">
+                <div class="subgroup-label">选中像素</div>
                 <div class="stat"><span class="key">选中坐标</span><span id="inspectCoord" class="val">-</span></div>
                 <div class="stat"><span class="key">灰度值</span><span id="inspectGray" class="val">-</span></div>
                 <div class="stat"><span class="key">二值化值</span><span id="inspectBinary" class="val">-</span></div>
                 <div class="stat"><span class="key">像素状态</span><span id="inspectState" class="val">idle</span></div>
                 <div class="stat"><span class="key">阈值</span><span id="inspectThreshold" class="val">186</span></div>
+                <div class="subgroup-label">边界有效性</div>
                 <div class="stat"><span class="key">左有效标记</span><span id="inspectLeftValid" class="val">-</span></div>
                 <div class="stat"><span class="key">右有效标记</span><span id="inspectRightValid" class="val">-</span></div>
                 <div class="stat"><span class="key">左边界值</span><span id="inspectLeftBorder" class="val">-</span></div>
                 <div class="stat"><span class="key">右边界值</span><span id="inspectRightBorder" class="val">-</span></div>
                 <div class="stat"><span class="key">左原始边界</span><span id="inspectLeftBorderRaw" class="val">-</span></div>
                 <div class="stat"><span class="key">右原始边界</span><span id="inspectRightBorderRaw" class="val">-</span></div>
-                <div class="stat"><span class="key">左break_row</span><span id="inspectLeftBreakRow" class="val">-</span></div>
-                <div class="stat"><span class="key">右break_row</span><span id="inspectRightBreakRow" class="val">-</span></div>
+                <div class="subgroup-label">断点 / 拐点</div>
+                <div class="stat"><span class="key">左 break_row</span><span id="inspectLeftBreakRow" class="val">-</span></div>
+                <div class="stat"><span class="key">右 break_row</span><span id="inspectRightBreakRow" class="val">-</span></div>
                 <div class="stat"><span class="key">左拐点</span><span id="inspectLeftInflectRow" class="val">-</span></div>
                 <div class="stat"><span class="key">右拐点</span><span id="inspectRightInflectRow" class="val">-</span></div>
-                <div class="stat"><span class="key">左break_row2</span><span id="inspectLeftBreakRow2" class="val">-</span></div>
-                <div class="stat"><span class="key">右break_row2</span><span id="inspectRightBreakRow2" class="val">-</span></div>
-                <div class="stat"><span class="key">左Circle改写</span><span id="inspectLeftCircleRewrite" class="val">-</span></div>
-                <div class="stat"><span class="key">右Circle改写</span><span id="inspectRightCircleRewrite" class="val">-</span></div>
-                <div class="stat"><span class="key">左Cross改写</span><span id="inspectLeftCrossRewrite" class="val">-</span></div>
-                <div class="stat"><span class="key">右Cross改写</span><span id="inspectRightCrossRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">左 break_row2</span><span id="inspectLeftBreakRow2" class="val">-</span></div>
+                <div class="stat"><span class="key">右 break_row2</span><span id="inspectRightBreakRow2" class="val">-</span></div>
+                <div class="subgroup-label">改写 / 命中</div>
+                <div class="stat"><span class="key">左环岛改写</span><span id="inspectLeftCircleRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">右环岛改写</span><span id="inspectRightCircleRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">左十字改写</span><span id="inspectLeftCrossRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">右十字改写</span><span id="inspectRightCrossRewrite" class="val">-</span></div>
                 <div class="stat"><span class="key">左命中数</span><span id="inspectLeftHits" class="val">-</span></div>
                 <div class="stat"><span class="key">右命中数</span><span id="inspectRightHits" class="val">-</span></div>
                 <div class="stat"><span class="key">左选中索引</span><span id="inspectLeftIndex" class="val">-</span></div>
@@ -419,7 +534,8 @@
               </div>
             </div>
           </div>
-          <div class="canvas-wrap">
+
+          <div class="canvas-wrap inspector">
             <h2>赛道线检查器</h2>
             <div class="inspect-grid">
               <div class="inspect-view">
@@ -429,30 +545,34 @@
                 <div class="inspect-scroll">
                   <canvas id="borderInspectCanvas" class="inspect-canvas" width="120" height="60"></canvas>
                 </div>
-                <p class="inspect-note">整幅赛道线图按 16x 显示，红色为左边界，橙色为中线，绿色为右边界，橙色框为当前选中的像素。</p>
+                <p class="inspect-note">整幅赛道线图按 16x 显示，红色为左边界，橙色为中线，绿色为右边界，橙色框为当前选中的像素。点击画布查看该像素在右侧的读数。</p>
               </div>
               <div class="inspect-meta">
+                <div class="subgroup-label">选中像素</div>
                 <div class="stat"><span class="key">选中坐标</span><span id="borderInspectCoord" class="val">-</span></div>
                 <div class="stat"><span class="key">灰度值</span><span id="borderInspectGray" class="val">-</span></div>
                 <div class="stat"><span class="key">二值化值</span><span id="borderInspectBinary" class="val">-</span></div>
                 <div class="stat"><span class="key">像素状态</span><span id="borderInspectState" class="val">idle</span></div>
                 <div class="stat"><span class="key">阈值</span><span id="borderInspectThreshold" class="val">186</span></div>
+                <div class="subgroup-label">边界有效性</div>
                 <div class="stat"><span class="key">左有效标记</span><span id="borderInspectLeftValid" class="val">-</span></div>
                 <div class="stat"><span class="key">右有效标记</span><span id="borderInspectRightValid" class="val">-</span></div>
                 <div class="stat"><span class="key">左边界值</span><span id="borderInspectLeftBorder" class="val">-</span></div>
                 <div class="stat"><span class="key">右边界值</span><span id="borderInspectRightBorder" class="val">-</span></div>
                 <div class="stat"><span class="key">左原始边界</span><span id="borderInspectLeftBorderRaw" class="val">-</span></div>
                 <div class="stat"><span class="key">右原始边界</span><span id="borderInspectRightBorderRaw" class="val">-</span></div>
-                <div class="stat"><span class="key">左break_row</span><span id="borderInspectLeftBreakRow" class="val">-</span></div>
-                <div class="stat"><span class="key">右break_row</span><span id="borderInspectRightBreakRow" class="val">-</span></div>
+                <div class="subgroup-label">断点 / 拐点</div>
+                <div class="stat"><span class="key">左 break_row</span><span id="borderInspectLeftBreakRow" class="val">-</span></div>
+                <div class="stat"><span class="key">右 break_row</span><span id="borderInspectRightBreakRow" class="val">-</span></div>
                 <div class="stat"><span class="key">左拐点</span><span id="borderInspectLeftInflectRow" class="val">-</span></div>
                 <div class="stat"><span class="key">右拐点</span><span id="borderInspectRightInflectRow" class="val">-</span></div>
-                <div class="stat"><span class="key">左break_row2</span><span id="borderInspectLeftBreakRow2" class="val">-</span></div>
-                <div class="stat"><span class="key">右break_row2</span><span id="borderInspectRightBreakRow2" class="val">-</span></div>
-                <div class="stat"><span class="key">左Circle改写</span><span id="borderInspectLeftCircleRewrite" class="val">-</span></div>
-                <div class="stat"><span class="key">右Circle改写</span><span id="borderInspectRightCircleRewrite" class="val">-</span></div>
-                <div class="stat"><span class="key">左Cross改写</span><span id="borderInspectLeftCrossRewrite" class="val">-</span></div>
-                <div class="stat"><span class="key">右Cross改写</span><span id="borderInspectRightCrossRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">左 break_row2</span><span id="borderInspectLeftBreakRow2" class="val">-</span></div>
+                <div class="stat"><span class="key">右 break_row2</span><span id="borderInspectRightBreakRow2" class="val">-</span></div>
+                <div class="subgroup-label">改写 / 命中</div>
+                <div class="stat"><span class="key">左环岛改写</span><span id="borderInspectLeftCircleRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">右环岛改写</span><span id="borderInspectRightCircleRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">左十字改写</span><span id="borderInspectLeftCrossRewrite" class="val">-</span></div>
+                <div class="stat"><span class="key">右十字改写</span><span id="borderInspectRightCrossRewrite" class="val">-</span></div>
                 <div class="stat"><span class="key">左命中数</span><span id="borderInspectLeftHits" class="val">-</span></div>
                 <div class="stat"><span class="key">右命中数</span><span id="borderInspectRightHits" class="val">-</span></div>
                 <div class="stat"><span class="key">左选中索引</span><span id="borderInspectLeftIndex" class="val">-</span></div>
@@ -460,14 +580,7 @@
               </div>
             </div>
           </div>
-          <div class="canvas-wrap">
-            <h2>赛道线叠加图</h2>
-            <canvas id="overlayCanvas" width="120" height="60"></canvas>
-          </div>
-          <div class="canvas-wrap">
-            <h2>仅线条结果</h2>
-            <canvas id="lineCanvas" width="120" height="60"></canvas>
-          </div>
+
         </div>
       </main>
     </section>
