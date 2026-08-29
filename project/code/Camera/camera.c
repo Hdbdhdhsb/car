@@ -38,7 +38,6 @@ TrackType current_track_type = NORMAL_TRACK;
 StateType current_state = SEARCH_MODE;
 uint8 lost_counter = 0;            /* 丢线计数器*/
 uint8 cross_detected = 0;          /* 十字检测标志*/
-int16 open_speed = 0;            /* 开环速度*/
 
 /* 斑马线相关变量 */
 uint8 zebra_detected = 0;          /* 斑马线检测标志*/
@@ -542,7 +541,6 @@ void detect_zebra_line(uint8 row) {
 
 /* 状态机初始化 */
 void state_machine_init(void) {
-    open_speed = VISION_OPEN_SPEED;   /* 电机开环(值见 config.h) */
     current_track_type = NORMAL_TRACK;
     current_state = SEARCH_MODE;
     lost_counter = 0;
@@ -690,7 +688,6 @@ void image_process() {
                         if(zebra_count == ZEBRA_STOP_COUNT)
                         {
                             normal_track_process();
-                            open_speed = 0;
                         }
                     break;
                     

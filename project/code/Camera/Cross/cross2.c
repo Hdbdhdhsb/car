@@ -12,6 +12,7 @@
  ******************************************************************************/
 #include "cross2.h"
 #include "camera.h"
+#include "elem_geometry.h"
 
 #define false 0
 #define true 1
@@ -23,25 +24,16 @@ uint8        cross2_timeout = 0;
 static void  _cr_extract_break(uint16 *l, uint16 *r, Cross2Feature *f);
 static void   _cr_extract_dir_break(Cross2Feature *f);
 static void   _cr_extract_width(uint16 *l, uint16 *r, Cross2Feature *f);
-static void   _cr_extract_lost(uint16 *l, uint16 *r, Cross2Feature *f);
-static void   _cr_extract_corner(uint8 (*img)[MT9V03X_W], Cross2Feature *f);
 static void   _cr_calc_slope(uint8 status, uint16 *border, uint8 break_row, uint8 break_row2, float *slope, float *intercept);
 
 static uint8  _cr_check_entry(Cross2Feature *f);
 static uint8  _cr_check_recover(Cross2Feature *f);
 
 static void   _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f);
-static void   _cr_recalc_midline(uint16 *l, uint16 *r);
 
 /*======================== 辅助宏 ========================*/
 #define CLAMP(x, lo, hi) ((x) < (lo) ? (lo) : ((x) > (hi) ? (hi) : (x)))
 #define CROSS2_REPAIR_VALID 2
-
-static void _cr_set_repaired_point(uint16 *border, uint8 *valid, uint8 row, int16 val)
-{
-    border[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
-    valid[row] = CROSS2_REPAIR_VALID;
-}
 
 /*******************************************************************************
  * cross2_init - 复位十字状态
@@ -86,8 +78,8 @@ uint8 cross2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
     _cr_extract_break(l, r, feat);
     _cr_extract_dir_break(feat);
     _cr_extract_width(l, r, feat);
-    _cr_extract_lost(l, r, feat);
-    _cr_extract_corner(img, feat);
+    elem_extract_lost(l, r, CROSS2_SCAN_TOP, CROSS2_SCAN_BOT, &feat->l_lost_cnt, &feat->r_lost_cnt, &feat->both_lost_cnt);
+    elem_extract_corner(img, &feat->corner_bl, &feat->corner_br, 0, 0, 3, MT9V03X_W - 4, 0, 0);
 
     /* 在断点上方拟合斜率，后续补线用 */
     if (feat->l_break_row > CROSS2_FIT_LEN + CROSS2_SCAN_TOP&&feat->r_break_row > CROSS2_FIT_LEN + CROSS2_SCAN_TOP){
@@ -131,7 +123,7 @@ uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
 
             /* 立即补一次线 */
             _cr_repair_both(status, l, r, &feat);
-            _cr_recalc_midline(l, r);
+            elem_recalc_midline(l, r);
         }
         break;
     }
@@ -141,7 +133,7 @@ uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     {
         /* 每帧都补线 */
         _cr_repair_both(status, l, r, &feat);
-        _cr_recalc_midline(l, r);
+        elem_recalc_midline(l, r);
 
         /* 判断是否开始恢复 */
         if (_cr_check_recover(&feat))
@@ -166,7 +158,7 @@ uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     {
         /* 恢复阶段仍然做轻量补线（断口可能还有残余） */
         _cr_repair_both(status, l, r, &feat);
-        _cr_recalc_midline(l, r);
+        elem_recalc_midline(l, r);
 
         /* 判断是否完全恢复正常 */
         if (feat.l_lost_cnt < CROSS2_RECOVER_LOST && feat.r_lost_cnt < CROSS2_RECOVER_LOST &&
@@ -338,33 +330,6 @@ static void _cr_extract_width(uint16 *l, uint16 *r, Cross2Feature *f)
         if (row == MT9V03X_H / 2)
             f->width_mid = w;
     }
-}
-
-/*--------------------------------------------------------------------------
- * _cr_extract_lost - 边线丢失统计
- *--------------------------------------------------------------------------*/
-static void _cr_extract_lost(uint16 *l, uint16 *r, Cross2Feature *f)
-{
-    uint8 row;
-
-    for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++)
-    {
-        uint8 l_lost = (l[row] <= BORDER_MIN + 1) ? 1 : 0;
-        uint8 r_lost = (r[row] >= BORDER_MAX - 1) ? 1 : 0;
-
-        if (l_lost) f->l_lost_cnt++;
-        if (r_lost) f->r_lost_cnt++;
-        if (l_lost && r_lost) f->both_lost_cnt++;
-    }
-}
-
-/*--------------------------------------------------------------------------
- * _cr_extract_corner - 底部两角像素采样
- *--------------------------------------------------------------------------*/
-static void _cr_extract_corner(uint8 (*img)[MT9V03X_W], Cross2Feature *f)
-{
-    f->corner_bl = img[MT9V03X_H - 2][3];
-    f->corner_br = img[MT9V03X_H - 2][MT9V03X_W - 4];
 }
 
 /*--------------------------------------------------------------------------
@@ -565,7 +530,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             for (row = repair_start; row <=CROSS2_SCAN_BOT ; row++)
             {
                 int16 val = (int16)(k * row + b);
-                _cr_set_repaired_point(l, l_border_valid, (uint8)row, val);
+                elem_set_repaired_point(l, l_border_valid, (uint8)row, val);
             }
         }else{
             /* 从下断点往上补线 */
@@ -574,7 +539,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             for (row = repair_start; row >= repair_stop; row--)
             {
                 int16 val = (int16)(k * row + b);
-                _cr_set_repaired_point(l, l_border_valid, (uint8)row, val);
+                elem_set_repaired_point(l, l_border_valid, (uint8)row, val);
             }
         }
 
@@ -590,7 +555,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             if (l[row] <= BORDER_MIN + 1)
             {
                 int16 val = (int16)r[row] - (int16)est_w;
-                _cr_set_repaired_point(l, l_border_valid, (uint8)row, val);
+                elem_set_repaired_point(l, l_border_valid, (uint8)row, val);
             }
         }
     }
@@ -611,7 +576,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             for (row = repair_start; row <=CROSS2_SCAN_BOT ; row++)
             {
                 int16 val = (int16)(k * row + b);
-                _cr_set_repaired_point(r, r_border_valid, (uint8)row, val);
+                elem_set_repaired_point(r, r_border_valid, (uint8)row, val);
             }
         }else{
             /* 从下断点往上补线 */
@@ -620,7 +585,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             for (row = repair_start; row >= repair_stop; row--)
             {
                 int16 val = (int16)(k * row + b);
-                _cr_set_repaired_point(r, r_border_valid, (uint8)row, val);
+                elem_set_repaired_point(r, r_border_valid, (uint8)row, val);
             }
         }
     }
@@ -633,28 +598,8 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
             if (r[row] >= BORDER_MAX - 1)
             {
                 int16 val = (int16)l[row] + (int16)est_w;
-                _cr_set_repaired_point(r, r_border_valid, (uint8)row, val);
+                elem_set_repaired_point(r, r_border_valid, (uint8)row, val);
             }
         }
-    }
-}
-
-/*--------------------------------------------------------------------------
- * _cr_recalc_midline - 补线后重算中线（感知 valid 标记）
- *--------------------------------------------------------------------------*/
-static void _cr_recalc_midline(uint16 *l, uint16 *r)
-{
-    uint8 row;
-    int last_good = MT9V03X_W / 2;
-    for (row = 0; row < MT9V03X_H; row++)
-    {
-        if (l_border_valid[row] && r_border_valid[row]) {
-            midline[row]   = (int)(l[row] + r[row]) / 2;
-            last_good      = midline[row];
-        } else {
-            midline[row]   = last_good;
-        }
-        leftline[row]  = (int)l[row];
-        rightline[row] = (int)r[row];
     }
 }

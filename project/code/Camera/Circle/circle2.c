@@ -1,5 +1,6 @@
 #include "circle2.h"
 #include "camera.h"
+#include "elem_geometry.h"
 /*******************************************************************************
  * circle2.c - 新版圆环处理模块
  *
@@ -34,8 +35,6 @@ static uint8  cir2_entry_hold_cnt = 0;//入口计数
 static void   _extract_break(uint16 *l, uint16 *r, Circle2Feature *f);
 static void   _extract_inflect(uint16 *l, uint16 *r, Circle2Feature *f);
 static void   _extract_width(uint16 *l, uint16 *r, Circle2Feature *f);
-static void   _extract_lost(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W], Circle2Feature *f);
-static void   _extract_corner(uint8 (*img)[MT9V03X_W], Circle2Feature *f);
 static uint8  _check_left_inflect_trend(uint16 *l, uint8 row);
 static uint8  _check_right_inflect_trend(uint16 *r, uint8 row);
 static uint8  _check_left_rebound_trend(uint16 *l, Circle2Feature *f);
@@ -48,13 +47,11 @@ static uint8  _check_inside(Circle2Feature *f);
 static uint8  _check_exit(Circle2Feature *f);
 
 static void   _calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept);
-static void   _set_repaired_point(uint16 *border, uint8 *valid, uint8 row, int16 val);
 static uint8  _calc_entry_pull(uint8 anchor_top, uint8 anchor_bot, uint8 row);
 static void   _repair_approach(uint16 *l, uint16 *r, Circle2Feature *f);
 static uint8  _repair_approach_end(uint16 *l, uint16 *r, Circle2Feature *f);
 static void   _repair_left(uint16 *l, uint16 *r, Circle2Feature *f);
 static void   _repair_right(uint16 *l, uint16 *r, Circle2Feature *f);
-static void   _recalc_midline(uint16 *l, uint16 *r);
 static uint8  _get_model_width(Circle2Feature *f);
 static uint8  _get_model_ratio_num(void);
 static uint8  _get_model_ratio_den(void);
@@ -119,8 +116,9 @@ void circle2_extract_feature(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
     f->r_rebound_trend = _check_right_rebound_trend(r, f);
     _extract_inflect(l, r, f);
     _extract_width(l, r, f);
-    _extract_lost(l, r, img, f);
-    _extract_corner(img, f);
+    elem_extract_lost(l, r, CIR2_SCAN_TOP, CIR2_SCAN_BOT, &f->l_lost_cnt, &f->r_lost_cnt, 0);
+    elem_extract_corner(img, &f->corner_bl, &f->corner_br, &f->corner_tl, &f->corner_tr,
+                        2, MT9V03X_W - 3, 2, MT9V03X_W - 3);
 }
 
 /*******************************************************************************
@@ -175,16 +173,16 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
             /* 第一个入口消失，进入Approach_END状态 */
             cir2_state = CIR2_APPROACH_END;
             _repair_approach_end(l, r, &feat);
-            _recalc_midline(l, r);
+            elem_recalc_midline(l, r);
             break;
         }
         if (_check_approach(&feat) )
         {
             _repair_approach_end(l, r, &feat);
-            _recalc_midline(l, r);
+            elem_recalc_midline(l, r);
         }else{
              _repair_approach_end(l, r, &feat);
-            _recalc_midline(l, r);
+            elem_recalc_midline(l, r);
         }
 
         break;
@@ -203,7 +201,7 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
             _recalc_circle_midline(l, r, &feat);/*宽度模型算中�?*/
         }
         _repair_approach_end(l, r, &feat);
-        _recalc_midline(l, r);
+        elem_recalc_midline(l, r);
         break;
     }
 
@@ -225,7 +223,7 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     /*---------- INSIDE: 行驶在圆环内�?----------*/
     case CIR2_INSIDE:
     {
-        _recalc_midline(l, r);
+        elem_recalc_midline(l, r);
 
         /* 判断是否进入出口阶段 */
         if (_check_exit(&feat))
@@ -518,31 +516,6 @@ static void _extract_width(uint16 *l, uint16 *r, Circle2Feature *f)
     f->width_diff = (int16)w_top - (int16)f->width_bottom;
 }
 
-/*--------------------------------------------------------------------------
- * _extract_lost - 边线丢失统计
- *--------------------------------------------------------------------------*/
-static void _extract_lost(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W],
-                           Circle2Feature *f)
-{
-    uint8 row;
-
-    for (row = CIR2_SCAN_TOP; row <= CIR2_SCAN_BOT; row++)
-    {
-        if (l[row] <= BORDER_MIN + 1) f->l_lost_cnt++;
-        if (r[row] >= BORDER_MAX - 1) f->r_lost_cnt++;
-    }
-}
-
-/*--------------------------------------------------------------------------
- * _extract_corner - 四角像素采样
- *--------------------------------------------------------------------------*/
-static void _extract_corner(uint8 (*img)[MT9V03X_W], Circle2Feature *f)
-{
-    f->corner_bl = img[MT9V03X_H - 2][2];
-    f->corner_br = img[MT9V03X_H - 2][MT9V03X_W - 3];
-    f->corner_tl = img[MT9V03X_H / 2][2];
-    f->corner_tr = img[MT9V03X_H / 2][MT9V03X_W - 3];
-}
 
 static void _calc_slope(uint16 *border, uint8 break_row, float *slope, float *intercept)
 {
@@ -587,16 +560,6 @@ static void _calc_slope(uint16 *border, uint8 break_row, float *slope, float *in
         *slope = 0;
         *intercept = (float)border[break_row];
     }
-}
-
-/*
- * Mark repaired rows as valid at the same time we overwrite the border.
- * Without this, downstream midline code may ignore the repaired segment.
- */
-static void _set_repaired_point(uint16 *border, uint8 *valid, uint8 row, int16 val)
-{
-    border[row] = (uint16)CLAMP(val, BORDER_MIN, BORDER_MAX);
-    valid[row] = CIR2_REPAIR_VALID;
 }
 
 /*
@@ -657,7 +620,7 @@ static void _repair_approach(uint16 *l, uint16 *r, Circle2Feature *f)
     for (row = (int16)break_row; row >= stop_row; row--)
     {
         int16 val = (int16)(k * row + b);
-        _set_repaired_point(border, valid, (uint8)row, val);
+        elem_set_repaired_point(border, valid, (uint8)row, val);
     }
 }
 
@@ -991,7 +954,7 @@ static void _repair_left(uint16 *l, uint16 *r, Circle2Feature *f)
                 if (l[row] <= BORDER_MIN + 1)
                 {
                     int16 val = (int16)r[row] - (int16)est_width;
-                    _set_repaired_point(l, l_border_valid, row, val);
+                    elem_set_repaired_point(l, l_border_valid, row, val);
                 }
             }
             return;
@@ -1067,7 +1030,7 @@ static void _repair_left(uint16 *l, uint16 *r, Circle2Feature *f)
                 val -= (int16)_calc_entry_pull(anchor_top, anchor_bot, row);
             }
 
-            _set_repaired_point(l, l_border_valid, row, val);
+            elem_set_repaired_point(l, l_border_valid, row, val);
         }
         return;
     }
@@ -1096,7 +1059,7 @@ static void _repair_right(uint16 *l, uint16 *r, Circle2Feature *f)
                 if (r[row] >= BORDER_MAX - 1)
                 {
                     int16 val = (int16)l[row] + (int16)est_width;
-                    _set_repaired_point(r, r_border_valid, row, val);
+                    elem_set_repaired_point(r, r_border_valid, row, val);
                 }
             }
             return;
@@ -1172,7 +1135,7 @@ static void _repair_right(uint16 *l, uint16 *r, Circle2Feature *f)
                 val += (int16)_calc_entry_pull(anchor_top, anchor_bot, row);
             }
 
-            _set_repaired_point(r, r_border_valid, row, val);
+            elem_set_repaired_point(r, r_border_valid, row, val);
         }
         return;
     }
@@ -1274,7 +1237,7 @@ static uint8 _repair_approach_end(uint16 *l, uint16 *r, Circle2Feature *f)
         int16 val = bottom_x +
                     (int16)(((int32)((int16)bulge_x - bottom_x) * rel + (dy >> 1)) / dy);
 
-        _set_repaired_point(border, valid, row, val);
+        elem_set_repaired_point(border, valid, row, val);
     }
 
         return 1;
@@ -1377,7 +1340,7 @@ static void _repair_right_to_left_anchor(uint16 *r, Circle2Feature *f)
         int16 val = anchor_x +
                     (int16)(((int32)(break_x - anchor_x) * rel + (dy >> 1)) / dy);
 
-        _set_repaired_point(r, r_border_valid, row, val);
+        elem_set_repaired_point(r, r_border_valid, row, val);
     }
 }
 
@@ -1489,22 +1452,3 @@ static void _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f)
     }
 }
 
-/*--------------------------------------------------------------------------
- * _recalc_midline - 修复后重算中线（感知 valid 标记�?
- *--------------------------------------------------------------------------*/
-static void _recalc_midline(uint16 *l, uint16 *r)
-{
-    uint8 row;
-    int last_good = MT9V03X_W / 2;
-    for (row = 0; row < MT9V03X_H; row++)
-    {
-        if (l_border_valid[row] && r_border_valid[row]) {
-            midline[row]   = (int)(l[row] + r[row]) / 2;
-            last_good      = midline[row];
-        } else {
-            midline[row]   = last_good;
-        }
-        leftline[row]  = (int)l[row];
-        rightline[row] = (int)r[row];
-    }
-}

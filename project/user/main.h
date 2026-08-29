@@ -8,7 +8,7 @@
 #define UART4_RX UART4_RX_P02
 #define UART2_TX UART2_TX_P11
 #define UART2_RX UART2_RX_P10
-#define CTRL_PIN IO_P14
+#define CTRL_PIN IO_P01  /* 下位机使能引脚：以实际接线为准(main.c 统一用此) */
 
 #define DEBUG_DATA_UART         UART_4
 #define LOWER_CTRL_UART         UART_4

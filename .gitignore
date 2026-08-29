@@ -25,7 +25,7 @@ SEEKFREE
 out_file/
 
 # ===== 日志 / 备份 / 临时 =====
-codex_build.log
+*.log
 MDK删除临时文件.bat
 *.bak
 *~

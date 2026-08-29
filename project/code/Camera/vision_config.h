@@ -36,18 +36,12 @@
 #define ZEBRA_DETECT_ROW_OFF3    7     /* 斑马线检测行3：MT9V03X_H-7 */
 #define ZEBRA_STOP_COUNT         2     /* 第几次检测到斑马线后停车 */
 
-/* -------------------- 开环速度(视觉状态机引用) -------------------- */
-/* 注：open_speed 属运动参数，但由视觉状态机 state_machine_init() 写入 */
-#define VISION_OPEN_SPEED        1800  /* 正常跟踪时的电机开环速度 */
-
 /* -------------------- 圆环 circle2 -------------------- */
 #define CIR2_BREAK_THRESH         8    //断口判定阈值
 #define CIR2_INFLECT_RANGE        5    //拐点范围
 #define CIR2_LOST_THRESH          10   //丢线阈值
 #define CIR2_WIDTH_NARROW         20   //最小赛道宽度
-#define CIR2_WIDTH_WIDE           120  //最大赛道宽度
 #define CIR2_TIMEOUT_MAX          80   //环岛处理超时(帧)
-#define CIR2_APPROACH_TIMEOUT     25   //approach阶段超时(帧)
 #define CIR2_BREAK_MIN_ROW        10   //断口行下限(需 > 10)
 #define CIR2_FIT_LEN              10   //斜率拟合长度(行)
 #define CIR2_APPROACH_REPAIR_LEN  20   //approach阶段补线长度(行)
@@ -69,11 +63,7 @@
 #define CIR2_EXIT_RATIO_DEN       20   //EXIT 单侧中线宽度系数分母
 #define CIR2_ENTRY_ERR_ROW_A      24   //入口前瞻采样行 A(由 camera.c 控制采样用)
 #define CIR2_ENTRY_ERR_ROW_B      16   //入口前瞻采样行 B
-#define CIR2_EXIT_CHECK_FRAMES    2    //出口检查帧数
-#define CIR2_EXIT_MIN_FRAMES      1    //出口阶段最小帧数
 #define CIR2_EXITING_MIN_FRAMES   1    //EXITING 阶段最小帧数
-#define CIR2_EXIT_END_LEFT_LOST   28   //出口结束判定: 左侧丢线上限
-#define CIR2_EXIT_END_RIGHT_OK    12   //出口结束判定: 右侧有效阈值
 #define CIR2_EXIT_RECOVER_LOST    5    //出口恢复判定: 单侧丢线上限
 #define CIR2_EXIT_WIDTH_TOP       18   //出口宽度模型-顶部半宽
 #define CIR2_EXIT_WIDTH_BOTTOM    44   //出口宽度模型-底部半宽
@@ -90,6 +80,16 @@
 #define CROSS2_RECOVER_WIDE      3     //恢复判定: 过宽行需 < 此值
 #define CROSS2_RECOVER_BREAK_ROW 10    //恢复判定: 断口行 <= 此值即认为断口已消失
 #define CROSS2_FALLBACK_MIN_WIDTH 20   //丢线兜底补线时, 估计轨道最小宽度
+
+/* -------------------- PID 转向闭环 -------------------- */
+/* 经验初值，需上赛道实调。track_error(像素) 经位置式 PID 得到转向角(度)。 */
+#define PID_DEFAULT_KP         1.0f   /* 比例：像素误差 -> 转向角度 */
+#define PID_DEFAULT_KI         0.0f   /* 积分：先关，上赛道后按需 */
+#define PID_DEFAULT_KD         0.05f  /* 微分：经验初值 */
+#define PID_INTEGRAL_MAX       10.0f  /* 积分限幅(Ki=0 时仅作上限保护) */
+#define PID_OUTPUT_MAX         90.0f  /* 转向限幅：对应下位机 ±90° */
+#define PID_STEER_SIGN         1.0f   /* 转向符号：待断电/架车实测 track_error 正方向；±1 反转 */
+#define PID_TARGET_SPEED       5.0f   /* 目标车速：先沿用 LOWER_START_SPEED0(开环常量) */
 
 /* -------------------- 圆检测 circle_detection -------------------- */
 /* 注: circle_detection_process 当前未接入状态机(状态机用的是 circle2_process)，

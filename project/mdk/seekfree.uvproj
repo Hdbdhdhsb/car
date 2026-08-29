@@ -860,6 +860,16 @@
               <FilePath>..\code\Camera\camera.h</FilePath>
             </File>
             <File>
+              <FileName>elem_geometry.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\Camera\elem_geometry.c</FilePath>
+            </File>
+            <File>
+              <FileName>elem_geometry.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\code\Camera\elem_geometry.h</FilePath>
+            </File>
+            <File>
               <FileName>circle2.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\Camera\Circle\circle2.c</FilePath>
