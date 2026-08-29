@@ -169,9 +169,9 @@ uint8 cross2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
         _cr_recalc_midline(l, r);
 
         /* 判断是否完全恢复正常 */
-        if (feat.l_lost_cnt < 3 && feat.r_lost_cnt < 3 &&
+        if (feat.l_lost_cnt < CROSS2_RECOVER_LOST && feat.r_lost_cnt < CROSS2_RECOVER_LOST &&
             feat.l_break_row == 0 && feat.r_break_row == 0 &&
-            feat.wide_cnt < 3)
+            feat.wide_cnt < CROSS2_RECOVER_WIDE)
         {
             normal = 1;
         }
@@ -504,7 +504,7 @@ static uint8 _cr_check_recover(Cross2Feature *f)
 
     // if (breaks_gone && width_ok)  return 1;
     // if (breaks_gone && lost_ok)   return 1;
-    breaks_gone = (f->l_break_row <=  10|| f->r_break_row <=  10) ? 1 : 0;
+    breaks_gone = (f->l_break_row <= CROSS2_RECOVER_BREAK_ROW || f->r_break_row <= CROSS2_RECOVER_BREAK_ROW) ? 1 : 0;
     in_break = (f->l_break_row2 > 0 && f->r_break_row2 > 0) ? 1 : 0;
     if (breaks_gone && in_break)  return 1;
 
@@ -584,7 +584,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
     {
         /* 大面积丢线兜底: 用右边线 - 底部宽度估计 */
         est_w = f->width_bottom;
-        if (est_w < 20) est_w = 20;
+        if (est_w < CROSS2_FALLBACK_MIN_WIDTH) est_w = CROSS2_FALLBACK_MIN_WIDTH;
         for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++)
         {
             if (l[row] <= BORDER_MIN + 1)
@@ -627,7 +627,7 @@ static void _cr_repair_both(uint8 status, uint16 *l, uint16 *r, Cross2Feature *f
     else if (f->r_lost_cnt > CROSS2_LOST_THRESH)
     {
         est_w = f->width_bottom;
-        if (est_w < 20) est_w = 20;
+        if (est_w < CROSS2_FALLBACK_MIN_WIDTH) est_w = CROSS2_FALLBACK_MIN_WIDTH;
         for (row = CROSS2_SCAN_TOP; row <= CROSS2_SCAN_BOT; row++)
         {
             if (r[row] >= BORDER_MAX - 1)

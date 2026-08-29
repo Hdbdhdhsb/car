@@ -3,9 +3,7 @@
 CircleType circle_state = CIRC_NONE;
 uint8 is_detection = 0;
 
-#define CIRCLE_MIN_LINE_WIDTH       2U
-#define CIRCLE_MIN_BLACK_SEGMENTS   2U
-/* 圆环检测行*/
+/* 圆环检测行(属派生, 保留在实现里; CIRCLE_MIN_* 调参已集中到 config.h) */
 #define detect_row      (MT9V03X_H / 2)
 
 static uint8 circle_row_test(uint16 *l_border, uint16 *r_border, uint8 (*img)[MT9V03X_W])

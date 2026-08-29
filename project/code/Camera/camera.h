@@ -2,6 +2,7 @@
 #define _CAMERA_H_
 
 #include "zf_common_headfile.h"
+#include "vision_config.h"
 #include "circle2.h"
 #include "cross2.h"
 #include "circle_detection.h"
@@ -68,7 +69,7 @@ extern uint8 zebra_detected;     /* 斑马线检测标志 */
 extern uint16 change_point;      /* 变化点计数器 */
 extern uint32 last_zebra_time_ms;
 extern uint8 zebra_count;             /* 斑马线检测计数 */
-#define ZEBRA_MIN_INTERVAL 3000       /* 两次斑马线检测的最小间隔时间(ms) */
+/* ZEBRA_MIN_INTERVAL 等斑马线调参已集中到 config.h */
 
 
 

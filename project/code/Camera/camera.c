@@ -1,7 +1,7 @@
 ﻿#include "camera.h"
 #include "main.h"
 
-#define threshold 170 /* 二值化阈值 */
+/* 二值化阈值等调参已集中到 config.h (见 VISION_BIN_THRESHOLD) */
 
 //方案2：detect_track_type 改成隔帧或条件触发
 
@@ -49,8 +49,8 @@ uint8 zebra_count = 0;       /* 斑马线检测计数*/
 
 /* 使用图像下方采样行作为控制误差，减去屏幕中心得到横向偏差 */
 static void update_track_error(void) {
-    uint8 sample_row = (MT9V03X_H > 14) ? (MT9V03X_H - 14) : (MT9V03X_H - 1);
-    uint8 sample_row2 = (MT9V03X_H > 8) ? (MT9V03X_H - 8) : (MT9V03X_H - 1);
+    uint8 sample_row  = (MT9V03X_H > TRACK_SAMPLE_OFFSET_NEAR) ? (MT9V03X_H - TRACK_SAMPLE_OFFSET_NEAR) : (MT9V03X_H - 1);
+    uint8 sample_row2 = (MT9V03X_H > TRACK_SAMPLE_OFFSET_FAR) ? (MT9V03X_H - TRACK_SAMPLE_OFFSET_FAR) : (MT9V03X_H - 1);
     int16 screen_center = MT9V03X_W / 2;
     float track_error1;
     float track_error2;
@@ -67,7 +67,7 @@ static void update_track_error(void) {
 
     track_error1 = (float)((int16)screen_center - midline[sample_row]);
     track_error2 = (float)((int16)screen_center - midline[sample_row2]);
-    track_error = 0.6 * track_error1 +0.4 * track_error2;
+    track_error = TRACK_ERROR_W_NEAR * track_error1 + TRACK_ERROR_W_FAR * track_error2;
 }
 
 
@@ -77,7 +77,7 @@ void turn_to_bin(void) {
     
     for(i = 0; i < MT9V03X_H; i++) {
         for(j = 0; j < MT9V03X_W; j++) {
-            bin_image[i][j] = (mt9v03x_image[i][j] > threshold) ? WHITE_PIXEL : BLACK_PIXEL;
+            bin_image[i][j] = (mt9v03x_image[i][j] > VISION_BIN_THRESHOLD) ? WHITE_PIXEL : BLACK_PIXEL;
         }
     }
 }
@@ -282,7 +282,7 @@ void search_l_r(uint16 break_flag, uint8(*image)[MT9V03X_W], uint16 *l_stastic, 
 }
 
 /* 获取左边界线(赛道线) —— 允许跳行 + 有效标记 + 短缺口插值 */
-#define BORDER_GAP_MAX  3   /* 允许跳过的最大多行数 */
+/* BORDER_GAP_MAX 已集中到 config.h */
 void get_left(uint16 total_L) {
     uint8 i = 0;
     uint16 j = 0;
@@ -520,7 +520,7 @@ void detect_zebra_line(uint8 row) {
     }
     
     /* 如果变化点超过阈值，判定为斑马线 */
-    if(change_point > 15) {
+    if(change_point > ZEBRA_CHANGE_PT_THRESH) {
         current_time = g_sysTick_ms;
         last_time = last_zebra_time_ms;
         
@@ -530,7 +530,7 @@ void detect_zebra_line(uint8 row) {
             last_zebra_time_ms = current_time; /* 更新最后检测时间 */
             
             /* 第二次检测到斑马线时才停车 */
-            if(zebra_count == 2) {
+            if(zebra_count == ZEBRA_STOP_COUNT) {
                 zebra_detected = 1;
                 current_track_type = ZEBRA_TRACK;
             }
@@ -542,7 +542,7 @@ void detect_zebra_line(uint8 row) {
 
 /* 状态机初始化 */
 void state_machine_init(void) {
-    open_speed=1800;   /*电机开环 */
+    open_speed = VISION_OPEN_SPEED;   /* 电机开环(值见 config.h) */
     current_track_type = NORMAL_TRACK;
     current_state = SEARCH_MODE;
     lost_counter = 0;
@@ -567,9 +567,9 @@ void detect_track_type(void) {
     /* 3. 检查是否斑马线 */
     if(!zebra_detected) {
         /* 检测图像中下部三行 */
-        detect_zebra_line(MT9V03X_H - 3);
-        if(!zebra_detected) detect_zebra_line(MT9V03X_H - 5);
-        if(!zebra_detected) detect_zebra_line(MT9V03X_H - 7);
+        detect_zebra_line(MT9V03X_H - ZEBRA_DETECT_ROW_OFF1);
+        if(!zebra_detected) detect_zebra_line(MT9V03X_H - ZEBRA_DETECT_ROW_OFF2);
+        if(!zebra_detected) detect_zebra_line(MT9V03X_H - ZEBRA_DETECT_ROW_OFF3);
         
         if(zebra_detected) {
             current_track_type = ZEBRA_TRACK;
@@ -583,8 +583,8 @@ void detect_track_type(void) {
 /* 提取本帧边界（供所有后续模块使用）*/
 uint8 extract_borders(void) {
     uint8 hightest = 0;
-    uint8 start_row = MT9V03X_H - 2;
-    uint8 min_row = MT9V03X_H / 3;
+    uint8 start_row = MT9V03X_H - EDGE_START_ROW_OFF;
+    uint8 min_row = MT9V03X_H / EDGE_MIN_ROW_DIV;
     uint8 found = 0;
 
     for(start_row = MT9V03X_H - 2; start_row >= min_row; start_row--) {
@@ -657,7 +657,7 @@ void image_process() {
     border_ok = extract_borders();
     if(!border_ok) {
         lost_counter++;
-        if(lost_counter > 5) {
+        if(lost_counter > LOST_TO_SEARCH_THRESH) {
             current_state = SEARCH_MODE;
         }
     }
@@ -687,7 +687,7 @@ void image_process() {
                     break;
         
                 case ZEBRA_TRACK:
-                        if(zebra_count == 2) 
+                        if(zebra_count == ZEBRA_STOP_COUNT)
                         {
                             normal_track_process();
                             open_speed = 0;

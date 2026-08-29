@@ -1,0 +1,100 @@
+#ifndef _VISION_CONFIG_H_
+#define _VISION_CONFIG_H_
+
+/* =============================================================================
+ * config.h — 视觉参数集中配置
+ *
+ * 只收【需要调】的视觉参数；派生结构常量(BORDER_MAX / USE_NUM / CIR2_SCAN_TOP /
+ * CROSS2_SCAN_TOP / CIR2_EXIT_ANCHOR_Y 等)与协议 ABI 常量留在各自模块，
+ * 避免 include 顺序冲突与对端同步问题。
+ *
+ * 本文件零依赖：不接受 MT9V03X_W/H 等，纯数字常量，可被任意头文件安全包含。
+ * ============================================================================= */
+
+/* -------------------- 二值化 / 灰度 -------------------- */
+#define VISION_BIN_THRESHOLD     170   /* 二值化阈值：像素灰度>此值判为白 */
+
+/* -------------------- 赛道边线补线 -------------------- */
+#define BORDER_GAP_MAX           3     /* 短缺口允许跳过的最大行数(<=此值才线性插值补线) */
+
+/* -------------------- 控制采样行 / 误差加权 -------------------- */
+#define TRACK_SAMPLE_OFFSET_NEAR 14    /* 主采样行：自屏底向上偏移14行(即 MT9V03X_H-14) */
+#define TRACK_SAMPLE_OFFSET_FAR  8     /* 副采样行：自屏底向上偏移8行 (即 MT9V03X_H-8)  */
+#define TRACK_ERROR_W_NEAR       0.6f  /* 主采样行误差权重(error1) */
+#define TRACK_ERROR_W_FAR        0.4f  /* 副采样行误差权重(error2) */
+
+/* -------------------- 提边搜索 -------------------- */
+#define EDGE_START_ROW_OFF       2     /* 提边起始行：自屏底向上偏移2行 */
+#define EDGE_MIN_ROW_DIV         3     /* 提边最小行：取 MT9V03X_H/3 之上才开始扫描 */
+#define LOST_TO_SEARCH_THRESH    5     /* 连续丢线>此值 -> 退回 SEARCH_MODE */
+
+/* -------------------- 斑马线 -------------------- */
+#define ZEBRA_MIN_INTERVAL       3000  /* 两次斑马线检测最小间隔(ms) */
+#define ZEBRA_CHANGE_PT_THRESH   15    /* 黑白变化点>此值 -> 判为斑马线 */
+#define ZEBRA_DETECT_ROW_OFF1    3     /* 斑马线检测行1：MT9V03X_H-3 */
+#define ZEBRA_DETECT_ROW_OFF2    5     /* 斑马线检测行2：MT9V03X_H-5 */
+#define ZEBRA_DETECT_ROW_OFF3    7     /* 斑马线检测行3：MT9V03X_H-7 */
+#define ZEBRA_STOP_COUNT         2     /* 第几次检测到斑马线后停车 */
+
+/* -------------------- 开环速度(视觉状态机引用) -------------------- */
+/* 注：open_speed 属运动参数，但由视觉状态机 state_machine_init() 写入 */
+#define VISION_OPEN_SPEED        1800  /* 正常跟踪时的电机开环速度 */
+
+/* -------------------- 圆环 circle2 -------------------- */
+#define CIR2_BREAK_THRESH         8    //断口判定阈值
+#define CIR2_INFLECT_RANGE        5    //拐点范围
+#define CIR2_LOST_THRESH          10   //丢线阈值
+#define CIR2_WIDTH_NARROW         20   //最小赛道宽度
+#define CIR2_WIDTH_WIDE           120  //最大赛道宽度
+#define CIR2_TIMEOUT_MAX          80   //环岛处理超时(帧)
+#define CIR2_APPROACH_TIMEOUT     25   //approach阶段超时(帧)
+#define CIR2_BREAK_MIN_ROW        10   //断口行下限(需 > 10)
+#define CIR2_FIT_LEN              10   //斜率拟合长度(行)
+#define CIR2_APPROACH_REPAIR_LEN  20   //approach阶段补线长度(行)
+#define CIR2_INFLECT_TREND_THRESH 6    //拐点趋势阈值
+#define CIR2_REBOUND_TREND_THRESH 4    //突跳后回摆趋势阈值
+#define CIR2_BREAK_DELTA_MARGIN   4    //双断口主次差阈值
+#define CIR2_WIDTH_DIFF_MIN       6    //入口宽度变化阈值
+#define CIR2_ENTRY_SCORE_MIN      5    //入口判定最小得分
+#define CIR2_ENTRY_HOLD_FRAMES    3    //入口锚点保持帧数
+#define CIR2_ENTRY_PULL_MIN       4    //入口补线最小内拉
+#define CIR2_ENTRY_PULL_MAX       18   //入口补线最大内拉
+#define CIR2_MODEL_WIDTH_MIN      24   //宽度模型最小宽度
+#define CIR2_MODEL_WIDTH_MAX      70   //宽度模型最大宽度
+#define CIR2_ENTRY_RATIO_NUM      2    //ENTRY 单侧中线宽度系数分子
+#define CIR2_ENTRY_RATIO_DEN      5    //ENTRY 单侧中线宽度系数分母
+#define CIR2_INSIDE_RATIO_NUM     1    //INSIDE 单侧中线宽度系数分子
+#define CIR2_INSIDE_RATIO_DEN     2    //INSIDE 单侧中线宽度系数分母
+#define CIR2_EXIT_RATIO_NUM       9    //EXIT 单侧中线宽度系数分子
+#define CIR2_EXIT_RATIO_DEN       20   //EXIT 单侧中线宽度系数分母
+#define CIR2_ENTRY_ERR_ROW_A      24   //入口前瞻采样行 A(由 camera.c 控制采样用)
+#define CIR2_ENTRY_ERR_ROW_B      16   //入口前瞻采样行 B
+#define CIR2_EXIT_CHECK_FRAMES    2    //出口检查帧数
+#define CIR2_EXIT_MIN_FRAMES      1    //出口阶段最小帧数
+#define CIR2_EXITING_MIN_FRAMES   1    //EXITING 阶段最小帧数
+#define CIR2_EXIT_END_LEFT_LOST   28   //出口结束判定: 左侧丢线上限
+#define CIR2_EXIT_END_RIGHT_OK    12   //出口结束判定: 右侧有效阈值
+#define CIR2_EXIT_RECOVER_LOST    5    //出口恢复判定: 单侧丢线上限
+#define CIR2_EXIT_WIDTH_TOP       18   //出口宽度模型-顶部半宽
+#define CIR2_EXIT_WIDTH_BOTTOM    44   //出口宽度模型-底部半宽
+
+/* -------------------- 十字 cross2 -------------------- */
+#define CROSS2_BREAK_THRESH      8     //边线跳变阈值
+#define CROSS2_WIDE_THRESH       100   //赛道"过宽"阈值(像素)
+#define CROSS2_WIDE_CNT_MIN      5     //过宽行数阈值(认定为十字)
+#define CROSS2_LOST_THRESH       10    //丢线行数阈值
+#define CROSS2_TIMEOUT_MAX       40    //超时帧数上限
+#define CROSS2_FIT_LEN           10    //拟合用行数(断点上方取多少行做最小二乘)
+#define CROSS2_FIX_LEN           25    //补线固定长度(行)
+#define CROSS2_RECOVER_LOST      3     //恢复判定: 单侧丢线需 < 此值
+#define CROSS2_RECOVER_WIDE      3     //恢复判定: 过宽行需 < 此值
+#define CROSS2_RECOVER_BREAK_ROW 10    //恢复判定: 断口行 <= 此值即认为断口已消失
+#define CROSS2_FALLBACK_MIN_WIDTH 20   //丢线兜底补线时, 估计轨道最小宽度
+
+/* -------------------- 圆检测 circle_detection -------------------- */
+/* 注: circle_detection_process 当前未接入状态机(状态机用的是 circle2_process)，
+ * 这两个常量暂为休眠参数，保留以便复用。 */
+#define CIRCLE_MIN_LINE_WIDTH     2U  //圆形检测: 单段黑色最小宽(像素)
+#define CIRCLE_MIN_BLACK_SEGMENTS 2U  //圆形检测: 最少黑色段数
+
+#endif /* _VISION_CONFIG_H_ */

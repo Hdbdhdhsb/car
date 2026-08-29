@@ -3,6 +3,7 @@
 #define _CIRCLE_DETECTION_H_
 
 #include "zf_common_headfile.h"
+#include "vision_config.h"
 
 
 
