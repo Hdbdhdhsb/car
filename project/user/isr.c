@@ -35,6 +35,41 @@
 
 #include "zf_common_headfile.h"
 
+/* ================================================================ */
+/* planB: Keil C251 "interrupt N" only supports 0..31.              */
+/* The >31 hardware vectors are remapped to free low vectors;       */
+/* stc32g144k_isr.asm LJMPs from the high hardware vector to these.  */
+/* ================================================================ */
+#undef  DMA_UR1R_VECTOR
+#define DMA_UR1R_VECTOR       5
+#undef  DMA_UR2R_VECTOR
+#define DMA_UR2R_VECTOR       6
+#undef  DMA_UR3R_VECTOR
+#define DMA_UR3R_VECTOR       7
+#undef  DMA_UR4R_VECTOR
+#define DMA_UR4R_VECTOR       9
+#undef  DMA_UR5R_VECTOR
+#define DMA_UR5R_VECTOR       13
+#undef  DMA_UR6R_VECTOR
+#define DMA_UR6R_VECTOR       21
+#undef  DMA_UR7R_VECTOR
+#define DMA_UR7R_VECTOR       22
+#undef  DMA_UR8R_VECTOR
+#define DMA_UR8R_VECTOR       23
+#undef  TMR5_TMR6_VECTOR
+#define TMR5_TMR6_VECTOR      24
+#undef  TMR7_TMR8_VECTOR
+#define TMR7_TMR8_VECTOR      30
+#undef  TMR9_TMR10_VECTOR
+#define TMR9_TMR10_VECTOR     26
+#undef  TMR11_VECTOR
+#define TMR11_VECTOR          27
+#undef  TMR17_TMR18_VECTOR
+#define TMR17_TMR18_VECTOR    28
+#undef  DMA_LCM_VECTOR
+#define DMA_LCM_VECTOR        29
+
+
 
 void INT0_IRQHandler() interrupt INT0_VECTOR
 {

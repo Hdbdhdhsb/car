@@ -17,8 +17,14 @@
 #define BLACK_PIXEL 0
 #define BORDER_MAX  MT9V03X_W-2 
 #define BORDER_MIN  1 
-#define USE_NUM     MT9V03X_H*3 
+#define USE_NUM     MT9V03X_W
 
+/* 起点识别：从中心往外扫时，候选黑线段再往外连续黑像素达到此值，
+ * 才认为它外侧是背景 -> 真边界。赛道上的黑色圆环/黑斑外侧还是白色，会被跳过。
+ * 若圆环画得很粗导致仍被误判，把此值调大(如 12)。 */
+#define START_BLACK_RUN_KEEP  8
+
+int my_abs(int);
 /* 赛道元素类型 */
 typedef enum {
     NORMAL_TRACK = 0,   /* 普通赛道 */
@@ -38,7 +44,8 @@ typedef enum {
 extern int midline[MT9V03X_H];/* 图像中线 */
 extern int leftline[MT9V03X_H];
 extern int rightline[MT9V03X_H];
-extern float track_error;         /* 赛道中线与屏幕中线的偏差（用于PID反馈） */
+extern float track_error;
+extern volatile uint8 track_lost_stop;   /* 1 = 冲出赛道视野，要求停车 */
 
 extern uint8 binaryArray[MT9V03X_H][MT9V03X_W];
 
@@ -56,6 +63,8 @@ extern uint16 points_l[USE_NUM][2]; /* 左线点 */
 extern uint16 points_r[USE_NUM][2]; /* 右线点 */
 extern uint16 dir_r[USE_NUM];       /* 右边生长方向 */
 extern uint16 dir_l[USE_NUM];       /* 左边生长方向 */
+extern uint16 l_border_raw[MT9V03X_H];
+extern uint16 r_border_raw[MT9V03X_H];
 extern uint16 l_border[MT9V03X_H]; /* 左线数组 */
 extern uint16 r_border[MT9V03X_H]; /* 右线数组 */
 extern uint8  l_border_valid[MT9V03X_H]; /* 左边界有效标记 (1=实测, 2=插值, 0=无效) */
@@ -83,7 +92,7 @@ int16 limit1(int16 x, int16 y);
 void turn_to_bin(void);
 
 uint8 get_start_point(uint8 start_row);
-void search_l_r(uint16 break_flag, uint8(*image)[MT9V03X_W], uint16 *l_stastic, uint16 *r_stastic, uint8 l_start_x, uint8 l_start_y, uint8 r_start_x, uint8 r_start_y, uint8*hightest);
+void search_l_r(uint16 break_flag, uint8(*image)[MT9V03X_W], uint16 *l_stastic, uint16 *r_stastic, uint8 l_start_x, uint8 l_start_y, uint8 r_start_x, uint8 r_start_y);
 void get_left(uint16 total_L);
 void get_right(uint16 total_R);
 uint8 extract_borders(void);

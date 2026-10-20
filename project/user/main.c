@@ -4,17 +4,21 @@
 #include "PID.h"
 #include "vision_config.h"
 #include <string.h>
+#include <stdio.h>
 
 #define false 0
 #define true 1
 
 extern float track_error;
+extern volatile uint8 track_lost_stop;   /* 1 = 冲出赛道视野 -> 停车 */
+static uint8 track_stop_pid_reset = 0;   /* 停车时只清一次 PID，防积分残留 */
 uint32 g_sysTick_ms = 0;
 static pid_ctrl_block_handle_t steer_pid = NULL;   /* 转向 PID(位置式)，main() 建立 */
 
 #define BOUNDARY_NUM            MT9V03X_H
 #define ASSISTANT_SEND_DIV      3U
 #define ASSISTANT_SEND_IMAGE    1U
+#define SERVO_TEST 0   /* 1=servo test via control frames, 0=normal */
 
 uint8 xy_x1_boundary[BOUNDARY_NUM], xy_x2_boundary[BOUNDARY_NUM], xy_x3_boundary[BOUNDARY_NUM];
 uint8 xy_y1_boundary[BOUNDARY_NUM], xy_y2_boundary[BOUNDARY_NUM], xy_y3_boundary[BOUNDARY_NUM];
@@ -23,8 +27,8 @@ uint8 x1_boundary[MT9V03X_H], x2_boundary[MT9V03X_H], x3_boundary[MT9V03X_H];
 uint8 y1_boundary[MT9V03X_W], y2_boundary[MT9V03X_W], y3_boundary[MT9V03X_W];
 
 #define LED1                    (P33)
-#define WIFI_SSID_TEST          "y"
-#define WIFI_PASSWORD_TEST      "ksh12345"
+#define WIFI_SSID_TEST          "parafume"
+#define WIFI_PASSWORD_TEST      "39lym520"
 
 int32 j;
 int32 i = MT9V03X_H - 1;
@@ -35,6 +39,10 @@ static uint8 wifi_ctrl_running = false;
 static uint32 last_wifi_ctrl_tick = 0;
 static uint32 last_ctrl_send_tick = 0;
 static float  last_turn = 0.0f;   /* 最近一次转向输出，供 50ms 保活帧复用(避免与 PID 帧打架) */
+
+/* 现场调速：跑态把这两个值（千分比占空比 0..1000）发给下位机，SPD 命令可改 */
+static float  g_run_speed0 = LOWER_START_SPEED0;
+static float  g_run_speed1 = LOWER_START_SPEED1;
 
 //更新图像边界
 static void update_camera_boundary_overlay(void)
@@ -58,12 +66,35 @@ static void wifi_ctrl_send_ack(const char *message)
 
 static void send_lower_start_frame(void)
 {
-    send_ctrl_data(LOWER_START_SPEED0, LOWER_START_SPEED1, LOWER_START_TURN, LOWER_CTRL_UART);
+    send_ctrl_data(g_run_speed0, g_run_speed1, LOWER_START_TURN, LOWER_CTRL_UART);
 }
 
 static void send_lower_stop_frame(void)
 {
     send_ctrl_data(LOWER_STOP_SPEED0, LOWER_STOP_SPEED1, LOWER_STOP_TURN, LOWER_CTRL_UART);
+}
+
+/* 极简 float 解析：支持 "400" / "400.5" / "-400"，前后可有空格，尾部有垃圾则判非法 */
+static uint8 parse_float_simple(const char *p, float *out)
+{
+    float v = 0.0f;
+    float div = 1.0f;
+    uint8 neg = 0;
+    uint8 digits = 0;
+
+    while(' ' == *p) { p++; }
+    if('-' == *p) { neg = 1; p++; }
+    while(*p >= '0' && *p <= '9') { v = v * 10.0f + (float)(*p - '0'); p++; digits++; }
+    if('.' == *p)
+    {
+        p++;
+        while(*p >= '0' && *p <= '9') { div *= 10.0f; v += (float)(*p - '0') / div; p++; digits++; }
+    }
+    if(0 == digits) { return 0; }
+    while(' ' == *p) { p++; }
+    if('\0' != *p) { return 0; }
+    *out = neg ? -v : v;
+    return 1;
 }
 
 static void handle_wifi_ctrl_command(const char *command)
@@ -93,6 +124,36 @@ static void handle_wifi_ctrl_command(const char *command)
     else if(0 == strcmp(command, "PING"))
     {
         wifi_ctrl_send_ack("PONG");
+    }
+    else if(0 == strncmp(command, "SPD", 3))
+    {
+        /* SPD <千分比占空比 0..1000>  现场调速，不用重烧
+         * SPD      -> 回读当前值
+         * SPD 400  -> 两轮一起设成 40% */
+        const char *arg = command + 3;
+        float v = 0.0f;
+        char  ack_buf[32];
+
+        while(' ' == *arg) { arg++; }
+
+        if('\0' == *arg)
+        {
+            sprintf(ack_buf, "ACK SPD %.0f", (double)g_run_speed0);
+            wifi_ctrl_send_ack(ack_buf);
+        }
+        else if(parse_float_simple(arg, &v))
+        {
+            if(v < 0.0f)    { v = 0.0f;    }
+            if(v > 1000.0f) { v = 1000.0f; }
+            g_run_speed0 = v;
+            g_run_speed1 = v;
+            sprintf(ack_buf, "ACK SPD %.0f", (double)v);
+            wifi_ctrl_send_ack(ack_buf);
+        }
+        else
+        {
+            wifi_ctrl_send_ack("ERR SPD ARG");
+        }
     }
     else if('\0' != command[0])
     {
@@ -142,14 +203,24 @@ static void poll_wifi_ctrl_command(void)
  */
 static void service_wifi_ctrl_loop(uint32 current_tick)
 {
+    /* ── 停车态：不再直接 return，而是每 50ms 持续发一帧“停”。
+     *   下位机只认“最新一帧”，若停车只发一帧，会被主循环里
+     *   持续发送的调试帧(send_error_data)覆盖 → 车停不住。
+     *   让“停”和“跑”对称地持续发，下位机收到的最新帧才稳定是“停”。 */
     if(!wifi_ctrl_running)
     {
+        if((current_tick - last_ctrl_send_tick) >= WIFI_CTRL_SEND_PERIOD_MS)
+        {
+            last_ctrl_send_tick = current_tick;
+            send_lower_stop_frame();   /* 持续发停帧，刷新下位机的“最新指令” */
+        }
         return;
     }
 
     if((current_tick - last_wifi_ctrl_tick) > WIFI_CTRL_COMMAND_TIMEOUT_MS)
     {
         wifi_ctrl_running = false;
+        last_ctrl_send_tick = current_tick;   /* 超时后交给上面的停车态按周期续发停帧 */
         send_lower_stop_frame();
         if(steer_pid) pid_reset_ctrl_block(steer_pid);   /* 超时停车清零，防积分残留 */
         last_turn = 0.0f;
@@ -160,8 +231,19 @@ static void service_wifi_ctrl_loop(uint32 current_tick)
     if((current_tick - last_ctrl_send_tick) >= WIFI_CTRL_SEND_PERIOD_MS)
     {
         last_ctrl_send_tick = current_tick;
-        /* 运行态保活帧：复用最近一次转向，避免静态 turn=0 帧与 PID 闭环转向打架 */
-        send_ctrl_data(PID_TARGET_SPEED, PID_TARGET_SPEED, PID_STEER_SIGN * last_turn, LOWER_CTRL_UART);
+        /* 用同一个状态变量分流：跑 → 控制帧；停 → 停帧 */
+        if(wifi_ctrl_running && !track_lost_stop)
+        {
+            /* ★★实验：跑态停发控制帧，让下位机稳定在“误差帧/闭环”模式。
+             *   控制帧的 target_speed=PID_TARGET_SPEED=5.0 会被下位机当占空比(5/1000=0.5%)
+             *   直接写电机 → 与控制帧交叉到来时把电机瞬间拉停 → 一卡一卡/忽快忽停。
+             *   验证：本行 + 摄像头块内那行同时注释掉。 */
+            send_ctrl_data(g_run_speed0, g_run_speed1, PID_STEER_SIGN * last_turn, LOWER_CTRL_UART);
+        }
+        else
+        {
+            send_lower_stop_frame();
+        }
     }
 }
 
@@ -209,7 +291,7 @@ void main(void)
 
     pit_ms_init(TIM0_PIT, 1, sys_tick_handler);
     uart_init(DEBUG_DATA_UART, 115200, UART4_TX, UART4_RX);
-    state_machine_init();
+    state_machine_init();//状态机初始化
 
     /* Boot into a known-safe state so the lower controller does not keep stale motion commands. */
     send_lower_stop_frame();
@@ -242,6 +324,7 @@ void main(void)
         enable_control(CTRL_PIN); /* 使能下位机 */
     while(1)
     {
+
         poll_wifi_ctrl_command();
         current_tick = g_sysTick_ms;
         service_wifi_ctrl_loop(current_tick);
@@ -277,17 +360,36 @@ void main(void)
             
             /* 转向闭环：track_error 经位置式 PID 得转向角；车速先开环常量。
              * 经验初值(见 vision_config.h)，转向符号/量级需在断电/架车状态实测后再上赛道。 */
-            if(wifi_ctrl_running && steer_pid != NULL)
+            if(wifi_ctrl_running && steer_pid != NULL && !track_lost_stop)
             {
                 float turn = 0.0f;
+                track_stop_pid_reset = 0;
                 if(pid_compute(steer_pid, track_error, &turn) == PID_OK)
                 {
                     last_turn = turn;
-                    send_ctrl_data(PID_TARGET_SPEED, PID_TARGET_SPEED, PID_STEER_SIGN * turn, LOWER_CTRL_UART);
+                    /* ★★实验：与 service_wifi_ctrl_loop 同步关闭控制帧 */
+                    send_ctrl_data(g_run_speed0, g_run_speed1, PID_STEER_SIGN * turn, LOWER_CTRL_UART);
                 }
             }
+            else if(wifi_ctrl_running && track_lost_stop)
+            {
+                /* 冲出赛道视野(下方全黑) -> 停车，不再发控制帧 */
+                if(!track_stop_pid_reset)
+                {
+                    track_stop_pid_reset = 1;
+                    if(steer_pid) pid_reset_ctrl_block(steer_pid);
+                    last_turn = 0.0f;
+                }
+                send_lower_stop_frame();
+            }
 
-            send_error_data(track_error, LOWER_START_SPEED0, DEBUG_DATA_UART);
+            /* 调试帧（误差遥测）只在“跑”态发；停车态若不门控，
+             * 它会和控制帧/停帧共用 UART_4，且发送频率更高，
+             * 会把“停”覆盖掉 → 下位机继续跑。 */
+            if(wifi_ctrl_running && !track_lost_stop)
+            {
+                send_error_data(PID_STEER_SIGN * last_turn, g_run_speed0, DEBUG_DATA_UART);
+            }
         }
     }
 }
@@ -296,3 +398,4 @@ void sys_tick_handler(void)
 {
     g_sysTick_ms += 1;
 }
+

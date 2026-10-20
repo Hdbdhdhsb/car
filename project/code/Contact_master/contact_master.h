@@ -8,11 +8,12 @@
 #define RX_BUF_SIZE      128               /* 最大数据长度 */
 #define FRAME_CRC_LEN    1                /* CRC8 宽度 */
 
-/* 发送前防御钳制：NaN/Inf 归 0，越界夹到边界，防止脏浮点下发到下位机 */
-#define CTRL_SPEED_MIN      (-10.0f)
-#define CTRL_SPEED_MAX      (10.0f)
-#define CTRL_TURN_MIN       (-90.0f)
-#define CTRL_TURN_MAX       (90.0f)
+/* 发送前防御钳制：NaN/Inf 归 0，越界夹到边界，防止脏浮点下发到下位机
+ * 注意：无编码器方案下 speed 字段语义 = 电机占空比(千分比 0..1000)，故上界放到 1000。 */
+#define CTRL_SPEED_MIN      (-1000.0f)
+#define CTRL_SPEED_MAX      (1000.0f)
+#define CTRL_TURN_MIN       (-150.0f)    /* servo pulse offset: 1310us (measured lower limit) */
+#define CTRL_TURN_MAX       (150.0f)     /* servo pulse offset: 1610us (measured upper limit) */
 #define CTRL_ERROR_MAX      (500.0f)
 
 /* 发送缓冲区最大尺寸 */

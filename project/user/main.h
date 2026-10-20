@@ -8,7 +8,7 @@
 #define UART4_RX UART4_RX_P02
 #define UART2_TX UART2_TX_P11
 #define UART2_RX UART2_RX_P10
-#define CTRL_PIN IO_P01  /* 下位机使能引脚：以实际接线为准(main.c 统一用此) */
+#define CTRL_PIN IO_P01  /* 下位机使能引脚：以实际接线为�?main.c 统一用此) */
 
 #define DEBUG_DATA_UART         UART_4
 #define LOWER_CTRL_UART         UART_4
@@ -19,8 +19,8 @@
 #define WIFI_CTRL_COMMAND_TIMEOUT_MS 800U
 
 /* Default control values sent while the GUI keeps the car in run mode. */
-#define LOWER_START_SPEED0          5.0f
-#define LOWER_START_SPEED1          5.0f
+#define LOWER_START_SPEED0          150.0f   /* duty permille: 150 = 15% */
+#define LOWER_START_SPEED1          150.0f   /* 无编码器 -> 开环固定车�?*/
 #define LOWER_START_TURN            0.0f
 
 /* Stop command required by the user request. */

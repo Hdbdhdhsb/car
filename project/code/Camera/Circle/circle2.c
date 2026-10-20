@@ -29,7 +29,8 @@ static int16  cir2_exit_bottom_mid_x = MT9V03X_W / 2;
 static uint8  cir2_exit_check_cnt = 0;
 static uint8  cir2_cached_anchor_top = 0;//上描�?
 static uint8  cir2_cached_anchor_bot = 0;//下描�?
-static uint8  cir2_entry_hold_cnt = 0;//入口计数
+static uint8  cir2_entry_hold_cnt = 0;
+static uint8  cir2_app_end_cnt    = 0;
 
 /*======================== 内部辅助函数声明 ========================*/
 static void   _extract_break(uint16 *l, uint16 *r, Circle2Feature *f);
@@ -83,6 +84,7 @@ void circle2_init(void)
     cir2_cached_anchor_top = 0;
     cir2_cached_anchor_bot = 0;
     cir2_entry_hold_cnt = 0;
+    cir2_app_end_cnt    = 0;
 }
 
 /*******************************************************************************
@@ -139,7 +141,7 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     Circle2Dir cand_dir = CIR2_NONE;
 
     /* 1. 特征提取 */
-    circle2_extract_feature(l, r, img, &feat);
+    circle2_extract_feature(l_border_raw, r_border_raw, img, &feat);
 
     if (feat.l_break_row && !feat.r_break_row)
         cand_dir = CIR2_LEFT;
@@ -169,7 +171,9 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     /*---------- APPROACH: 第一入口直行补线 ----------*/
     case CIR2_APPROACH:
     {
-        if(_check_approch_exit(&feat) ){
+        if(cir2_entry_cnt < 255) cir2_entry_cnt++;   /* APPROACH 驻留帧数 */
+        if(_check_approch_exit(&feat) ||
+           cir2_entry_cnt >= CIR2_APPROACH_FORCE_FRAMES){
             /* 第一个入口消失，进入Approach_END状态 */
             cir2_state = CIR2_APPROACH_END;
             _repair_approach_end(l, r, &feat);
@@ -190,7 +194,11 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     /*---------- APPROACH_END: 等待进入第二入口 ----------*/
     case CIR2_APPROACH_END:
     {
-         if (_check_entry(&feat) )
+         /* 强制进岛计数器：补线会把缺口特征抹掉，_check_entry() 可能永远不成立 */
+         if(cir2_app_end_cnt < 255) cir2_app_end_cnt++;
+
+         if (_check_entry(&feat) ||
+             cir2_app_end_cnt >= CIR2_ENTRY_FORCE_FRAMES)
         {
             cir2_state     = CIR2_ENTRY;
             cir2_timeout   = 0;
@@ -270,7 +278,7 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
         {
             circle2_init();
             current_track_type = NORMAL_TRACK;
-            current_state      = SEARCH_MODE;
+            current_state      = TRACKING_MODE;
             return 0;
         }
         break;
@@ -279,11 +287,11 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
     {
         _repair_exit_by_right_width(l, r);
 
-        if (_check_exit_recovered(&feat))
+        if (cir2_timeout >= CIR2_EXIT_END_MIN_FRAMES && _check_exit_recovered(&feat))
         {
             circle2_init();
             current_track_type = NORMAL_TRACK;
-            current_state      = SEARCH_MODE;
+            current_state      = TRACKING_MODE;
             return 0;
         }
 
@@ -292,7 +300,7 @@ uint8 circle2_process(uint16 *l, uint16 *r, uint8 (*img)[MT9V03X_W])
         {
             circle2_init();
             current_track_type = NORMAL_TRACK;
-            current_state      = SEARCH_MODE;
+            current_state      = TRACKING_MODE;
             return 0;
         }
         break;
@@ -668,6 +676,13 @@ static uint8 _check_approach(Circle2Feature *f)
     if (left_asym)                           left_score += 1;
     if (width_open)                          left_score += 1;
     if (f->l_rebound_trend)                              left_score += 1;
+    /* B-fix: mirror right-side scoring (right_score was never incremented) */
+    if (right_break)                         right_score += 2;
+    if(right_break&&!left_break)             right_score += 2;
+    if (f->r_inflect_row > 0)                right_score += 2;
+    if (right_asym)                          right_score += 1;
+    if (width_open)                          right_score += 1;
+    if (f->r_rebound_trend)                  right_score += 1;
 
     if (left_score >= CIR2_ENTRY_SCORE_MIN &&
         right_score >= CIR2_ENTRY_SCORE_MIN &&
@@ -675,6 +690,10 @@ static uint8 _check_approach(Circle2Feature *f)
     {
         return 0;
     }
+
+    /* hard gate: a real break must exist, otherwise a plain curve
+     * (e.g. cross right after a corner) is misread as a circle */
+    if(!left_break && !right_break) return 0;
 
     return (left_score >= CIR2_ENTRY_SCORE_MIN ||
             right_score >= CIR2_ENTRY_SCORE_MIN) ? 1 : 0;
@@ -696,7 +715,7 @@ static uint8 _check_approch_exit(Circle2Feature *f)
 
         for (row = roi_top; row <= roi_bot; row++)
         {
-            x = l_border[row];
+            x = l_border_raw[row];
             if ( x <= BORDER_MIN + 1 )
             {
                 lost_cnt++;
@@ -718,7 +737,7 @@ static uint8 _check_approch_exit(Circle2Feature *f)
 
         for (row = roi_top; row <= roi_bot; row++)
         {
-            x = r_border[row];
+            x = r_border_raw[row];
 
             if (x >= BORDER_MAX - 1)
             {
@@ -727,7 +746,8 @@ static uint8 _check_approch_exit(Circle2Feature *f)
             }
         }
 
-        if (lost_cnt > 0)
+        /* B-fix: make symmetric with left branch (was: lost_cnt > 0) */
+        if (lost_cnt <= 5)
         {
             lost = 1;
         }
@@ -748,57 +768,40 @@ static uint8 _check_entry(Circle2Feature *f)
     uint8 roi_top = 5;
     uint8 roi_bot = 55;
     uint8 lost_cnt = 0;
-    uint8 lost = 0;
-    uint8 lower_found = 0;
-    uint8 bulge_row = 0;
-    uint16 bulge_x;
-    uint16 base_x = 0;
-    uint16 x;
-    int16 delta;
+    uint8 open = 0;
 
+    /* B-fix: was counting only border-hugging rows (a normal turn also hugs
+     * the border -> false trigger). Now also require a real feature
+     * (break or rebound) to accept a circle mouth. */
     if (cir2_dir == CIR2_LEFT)
     {
-        bulge_x = BORDER_MIN;
-
         for (row = roi_top; row <= roi_bot; row++)
         {
-            x = l_border[row];
-            if ( x <= BORDER_MIN + 1 )
-            {
+            if (l_border_raw[row] <= BORDER_MIN + 1)
                 lost_cnt++;
-                continue;
-            }
         }
+        if (lost_cnt >= 12) open = 1;
 
-        if (lost_cnt >= 30 )
-        {
-            lost = 1;
-        }
+        if (open &&
+            (f->l_rebound_trend ||
+             (f->l_break_row > CIR2_BREAK_MIN_ROW &&
+              f->l_break_delta >= CIR2_BREAK_THRESH)))
+            return 1;
     }
     else if (cir2_dir == CIR2_RIGHT)
     {
-        bulge_x = BORDER_MAX;
-
         for (row = roi_top; row <= roi_bot; row++)
         {
-            x = r_border[row];
-
-            if (x >= BORDER_MAX - 1)
-            {
+            if (r_border_raw[row] >= BORDER_MAX - 1)
                 lost_cnt++;
-                continue;
-            }
         }
+        if (lost_cnt >= 12) open = 1;   /* fix: was !(lost_cnt>5); inverted, then 30 -> 12 */
 
-        if (!(lost_cnt > 5) )
-        {
-            lost = 1;
-        }
-
-    }
-    if(lost == 1)
-    {
-        return 1;
+        if (open &&
+            (f->r_rebound_trend ||
+             (f->r_break_row > CIR2_BREAK_MIN_ROW &&
+              f->r_break_delta >= CIR2_BREAK_THRESH)))
+            return 1;
     }
     return 0;
 }
@@ -824,9 +827,10 @@ static uint8 _check_inside(Circle2Feature *f)
     }
     else if (cir2_dir == CIR2_RIGHT)
     {
-        if (f->corner_br == BLACK_PIXEL && f->r_lost_cnt >= CIR2_LOST_THRESH)
+        /* B-fix: symmetric with left branch, add opposite-side lost guard */
+        if (f->corner_br == BLACK_PIXEL && f->r_lost_cnt >= CIR2_LOST_THRESH && f->l_lost_cnt <= 40)
             return 1;
-        if (f->l_lost_cnt >= CIR2_LOST_THRESH && f->r_lost_cnt >= CIR2_LOST_THRESH)
+        if (f->r_lost_cnt >= CIR2_LOST_THRESH && f->l_lost_cnt <= 30)
             return 1;
     }
     return 0;
@@ -853,7 +857,7 @@ static uint8 _check_exit(Circle2Feature *f)
 
         for (row = roi_top; row <= roi_bot; row++)
         {
-            x = r_border[row];
+            x = r_border_raw[row];
             if ( x >= BORDER_MAX - 1 )
             {
                 lost_cnt++;
@@ -865,7 +869,24 @@ static uint8 _check_exit(Circle2Feature *f)
         {
             lost = 1;
         }
-        
+    }
+    else if (cir2_dir == CIR2_RIGHT)
+    {
+        /* B-fix: add right-circle exit (only left branch existed) */
+        for (row = roi_top; row <= roi_bot; row++)
+        {
+            x = l_border_raw[row];
+            if ( x <= BORDER_MIN + 1 )
+            {
+                lost_cnt++;
+                continue;
+            }
+        }
+
+        if (lost_cnt >= 40)
+        {
+            lost = 1;
+        }
     }
     
     if(lost == 1)
@@ -890,8 +911,26 @@ static uint8 _check_exit_end(Circle2Feature *f)
 
         for (row = roi_top; row <= roi_bot; row++)
         {
-            x = r_border[row];
+            x = r_border_raw[row];
             if ( x >= BORDER_MAX - 1 )
+            {
+                lost_cnt++;
+                continue;
+            }
+        }
+
+        if (lost_cnt <= 5)
+        {
+            lost = 1;
+        }
+    }
+    else if (cir2_dir == CIR2_RIGHT)
+    {
+        /* B-fix: add right-circle exit-end check */
+        for (row = roi_top; row <= roi_bot; row++)
+        {
+            x = l_border_raw[row];
+            if ( x <= BORDER_MIN + 1 )
             {
                 lost_cnt++;
                 continue;
@@ -1416,7 +1455,7 @@ static void _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f)
 
         if (cir2_dir == CIR2_LEFT)
         {
-            if (l_border_valid[row])
+            if (l_border_valid[row] && l[row] > BORDER_MIN + 1)
             {
                 mid_val = (int16)l[row] + offset + right_bias;
                 midline[row] = CLAMP(mid_val, BORDER_MIN, BORDER_MAX);
@@ -1424,12 +1463,14 @@ static void _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f)
             }
             else
             {
-                midline[row] = last_good;
+                /* border saturated / no info: KEEP last frame's midline value,
+                 * so the turn direction is preserved instead of snapping to a
+                 * fixed vertical line. */
             }
         }
         else if (cir2_dir == CIR2_RIGHT)
         {
-            if (r_border_valid[row])
+            if (r_border_valid[row] && r[row] < BORDER_MAX - 1)
             {
                 mid_val = (int16)r[row] - offset + right_bias;
                 midline[row] = CLAMP(mid_val, BORDER_MIN, BORDER_MAX);
@@ -1437,7 +1478,9 @@ static void _recalc_circle_midline(uint16 *l, uint16 *r, Circle2Feature *f)
             }
             else
             {
-                midline[row] = last_good;
+                /* border saturated / no info: KEEP last frame's midline value,
+                 * so the turn direction is preserved instead of snapping to a
+                 * fixed vertical line. */
             }
         }
         else if (l_border_valid[row] && r_border_valid[row])
