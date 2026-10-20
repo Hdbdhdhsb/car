@@ -345,6 +345,11 @@
               <FilePath>..\..\libraries\zf_common\START251.A51</FilePath>
             </File>
             <File>
+              <FileName>stc32g144k_isr.asm</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\..\libraries\zf_common\stc32g144k_isr.asm</FilePath>
+            </File>
+            <File>
               <FileName>zf_common_headfile.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\libraries\zf_common\zf_common_headfile.h</FilePath>
